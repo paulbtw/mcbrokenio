@@ -59,9 +59,11 @@ export const main: Handler = async (_, context) => {
     Body: JSON.stringify(finalJson),
     ContentType: 'application/json',
   };
-  await s3.putObject(params, (err, data) => {
-    logger.debug('CALLBACK');
-    if (err) logger.errorObject('Error: ', err);
-    else logger.debugObject('Put to s3 should have worked: ', data);
-  });
+  await s3
+    .putObject(params, (err, data) => {
+      logger.debug('CALLBACK');
+      if (err) logger.errorObject('Error: ', err);
+      else logger.debugObject('Put to s3 should have worked: ', data);
+    })
+    .promise();
 };
