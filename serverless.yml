@@ -1,0 +1,87 @@
+org: paulbtw
+app: mcbrokenio
+service: mcbrokenio
+variablesResolutionMode: 20210326
+useDotenv: true
+
+frameworkVersion: '2'
+
+package:
+  excludeDevDependencies: true
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-plugin-log-subscription
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: 20201221
+  region: ${opt:region, 'eu-central-1'}
+  stage: ${opt:stage, 'dev'}
+  deploymentBucket:
+    name: mcbrokenio-paulbtw
+  tags:
+    project: mcbrokenio
+    owner: paulbtw
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+        - ssm:GetParameters
+      Resource: '*'
+    - Effect: Allow
+      Action:
+        - secretmanager:GetSecretValue
+      Resource:
+        - 'arn:aws:secretsmanager:eu-central-1:*:secret:*'
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:GetObjectVersion
+      Resource:
+        - arn:aws:s3:::*
+
+custom:
+  mcdInfo:
+    basicToken: ${env:BASIC_TOKEN, ssm:/mcdonalds/de/basictoken~true}
+    databaseUrl: ${env:DATABASE_URL, ssm:/mcdonalds/database~true}
+    mcdUsername: ${env:MCD_USERNAME, ssm:/mcdonalds/de/username~true}
+    mcdPassword: ${env:MCD_PASSWORD, ssm:/mcdonalds/de/password~true}
+    mcdDeviceId: ${env:MCD_DEVICEID, ssm:/mcdonalds/de/deviceId~true}
+    exportBucket: ${env:EXPORT_BUCKET, ssm:/mcdonalds/export/bucket~true}
+
+functions:
+  getIceMaschineStatus:
+    handler: src/functions/getIceMaschineStatus/handler.main
+    memorySize: 512
+    timeout: 595
+    environment:
+      BASIC_TOKEN: ${self:custom.mcdInfo.basicToken}
+      DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
+      MCD_USERNAME: ${self:custom.mcdInfo.mcdUsername}
+      MCD_PASSWORD: ${self:custom.mcdInfo.mcdPassword}
+      MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
+    events:
+      - schedule:
+          rate: rate(10 minutes)
+  getAllStores:
+    handler: src/functions/getAllStores/handler.main
+    memorySize: 512
+    timeout: 900
+    environment:
+      BASIC_TOKEN: ${self:custom.mcdInfo.basicToken}
+      DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
+    events:
+      - schedule: cron(30 8 * * ? *)
+  createJson:
+    handler: src/functions/createJson/handler.main
+    memorySize: 512
+    timeout: 60
+    environment:
+      BUCKET: ${self:custom.mcdInfo.exportBucket}
+      DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
+    events:
+      - schedule:
+          rate: rate(30 minutes)
