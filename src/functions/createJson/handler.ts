@@ -18,7 +18,13 @@ export const main: Handler = async (_, context) => {
   const json = allObject.map((pos) => {
     let dot = 'GREEN';
     if (!pos.hasMilchshake || !pos.hasMcFlurry || !pos.hasMcSundae) {
-      if (!pos.hasMilchshake && !pos.hasMcFlurry && !pos.hasMcSundae) {
+      if (
+        pos.hasMilchshake === null &&
+        pos.hasMcFlurry === null &&
+        pos.hasMcSundae === null
+      ) {
+        dot = 'GREY';
+      } else if (!pos.hasMilchshake && !pos.hasMcFlurry && !pos.hasMcSundae) {
         dot = 'RED';
       } else {
         dot = 'YELLOW';
@@ -26,14 +32,14 @@ export const main: Handler = async (_, context) => {
     }
     return {
       geometry: {
-        coordinates: [`${pos.latitude}`, `${pos.longitude}`, 0],
+        coordinates: [Number(pos.longitude), Number(pos.latitude), 0],
         type: 'Point',
       },
       properties: {
         hasMilchshake: pos.hasMilchshake,
         hasMcSundae: pos.hasMcSundae,
         hasMcFlurry: pos.hasMcFlurry,
-        lastChecked: pos.lastCheck,
+        lastChecked: new Date(pos.lastCheck).getTime(),
         name: pos.name,
         dot,
         open: pos.restaurantStatus,
