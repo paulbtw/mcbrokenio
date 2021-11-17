@@ -68,7 +68,7 @@ export const main: Handler = async (_, context) => {
 
         const newPos = Pos.create({
           nationalStoreNumber: restaurant.nationalStoreNumber,
-          name: restaurant.name,
+          name: restaurant.address.addressLine1,
           restaurantStatus: restaurant.restaurantStatus,
           latitude: `${restaurant.location.latitude}`,
           longitude: `${restaurant.location.longitude}`,
