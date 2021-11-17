@@ -45,12 +45,12 @@ provider:
 
 custom:
   mcdInfo:
-    basicToken: ${env:BASIC_TOKEN, ssm:/mcdonalds/de/basictoken~true}
-    databaseUrl: ${env:DATABASE_URL, ssm:/mcdonalds/database~true}
-    mcdUsername: ${env:MCD_USERNAME, ssm:/mcdonalds/de/username~true}
-    mcdPassword: ${env:MCD_PASSWORD, ssm:/mcdonalds/de/password~true}
-    mcdDeviceId: ${env:MCD_DEVICEID, ssm:/mcdonalds/de/deviceId~true}
-    exportBucket: ${env:EXPORT_BUCKET, ssm:/mcdonalds/export/bucket~true}
+    basicToken: ${ssm:/mcdonalds/de/basictoken}
+    databaseUrl: ${ssm:/mcdonalds/database}
+    mcdUsername: ${ssm:/mcdonalds/de/username}
+    mcdPassword: ${ssm:/mcdonalds/de/password}
+    mcdDeviceId: ${ssm:/mcdonalds/de/deviceId}
+    exportBucket: ${ssm:/mcdonalds/export/bucket}
 
 functions:
   getIceMaschineStatus:
