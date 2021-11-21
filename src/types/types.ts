@@ -6,7 +6,23 @@ export enum Locations {
   FI = 'FI',
   IE = 'IE',
   GB = 'GB',
-  NO = 'NO'
+  NO = 'NO',
+  AT = 'AT',
+  CH = 'CH',
+  BE = 'BE',
+  FR = 'FR',
+  ES = 'ES',
+  IT = 'IT',
+  US = 'US',
+  CA = 'CA',
+  VN = 'VN',
+  HR = 'HR',
+  GR = 'GR',
+  PT = 'PT',
+  BG = 'BG',
+  BA = 'BA',
+  BY = 'BY',
+  UNKNOWN = 'UNKNOWN',
 }
 
 export interface ILocation {
@@ -19,7 +35,7 @@ export interface IRestaurantLocationResponse {
     message: string;
     code: number;
     type: string;
-};
+  };
   response: {
     restaurants: {
       restaurantStatus: string;
@@ -29,14 +45,14 @@ export interface IRestaurantLocationResponse {
         cityTown: string;
         country: string;
         postalZip: string;
-    };
+      };
       mcDeliveries: {
         mcDelivery: any[];
-    };
+      };
       location: {
         latitude: number;
         longitude: number;
-    };
+      };
       name: string;
       nationalStoreNumber: number;
       phoneNumber: string;
@@ -48,11 +64,11 @@ export interface IRestaurantLocationResponse {
           isOpen: boolean;
           serviceName: string;
           startTime: string;
-      }[];
+        }[];
         dayOfWeekId: number;
+      }[];
     }[];
-  }[];
-};
+  };
 }
 
 export interface IRestaurantInfoResponse {
@@ -60,7 +76,7 @@ export interface IRestaurantInfoResponse {
     message: string;
     code: number;
     type: string;
-};
+  };
   response: {
     restaurant: {
       address: {
@@ -69,18 +85,18 @@ export interface IRestaurantInfoResponse {
         country: string;
         postalZip: string;
         stateProvince: string;
-    };
+      };
       catalog: {
         pointsOfDistribution: {
           digitalServices: {
             key: string;
             technologies: {
               key: string;
+            }[];
           }[];
-        }[];
           locationID: number;
           pod: number;
-      }[];
+        }[];
         tableService: {
           enablePOSTableService: boolean;
           enableTableServiceEatin: string;
@@ -93,9 +109,9 @@ export interface IRestaurantInfoResponse {
           digitalTableServiceMode: string;
           tableServiceTableNumberMinNumberValue: number;
           tableServiceTableNumberMaxNumberValue: number;
-      };
+        };
         outageProductCodes: string[];
-    };
+      };
       facilities: string[];
       nationalStoreNumber: number;
       name: string;
@@ -104,7 +120,7 @@ export interface IRestaurantInfoResponse {
       location: {
         latitude: number;
         longitude: number;
-    };
+      };
       order: {
         autoBagSaleInformation: {
           bagChoiceProductCode: number;
@@ -112,14 +128,14 @@ export interface IRestaurantInfoResponse {
           bagProductCode: number;
           enabled: boolean;
           noBagProductCode: number;
-      };
+        };
         expectedDeliveryTime: Date;
         storeMenuTypeCalendar: {
           endTime: string;
           menuTypeID: number;
           startTime: string;
           weekDay: number;
-      }[];
+        }[];
         minimumOrderValue: number;
         largeOrderAllowed: boolean;
         linkedPaymentInformation: boolean;
@@ -129,15 +145,15 @@ export interface IRestaurantInfoResponse {
         daypartTransitionOffset: number;
         readyOnArrivalInformation: boolean;
         orderAheadLane: boolean;
-    };
+      };
       deposits: {
         code: string;
         description: string;
         pricing: {
           code: string;
           value: number;
+        }[];
       }[];
-    }[];
       phoneNumber: string;
       timeZone: string;
       url: string;
@@ -150,18 +166,18 @@ export interface IRestaurantInfoResponse {
           startTime: string;
           podType: number;
           saleTypes: any[];
-      }[];
+        }[];
         startTime: string;
         weekDay: string;
         endTime: string;
         isOpen: boolean;
-    }[];
+      }[];
       acceptOffer: boolean;
       areas: any[];
       contacts: {
         title: string;
         name: string;
-    }[];
+      }[];
       countryCode: string;
       distance: number;
       gblNumber: string;
@@ -172,19 +188,18 @@ export interface IRestaurantInfoResponse {
       nutrition: {
         customerSelfPour: boolean;
         recalculateEnergyOnGrill: boolean;
-    };
+      };
       offerConfiguration: {
         enableMultipleOffers: boolean;
         offerBuckets: {
           offerBucket: string;
           limit: number;
-      }[];
-    };
+        }[];
+      };
       specialDayservice: any[];
       statusID: number;
       tinThresholdAmout: number;
-      storeType: {
-      };
+      storeType: {};
       todCutoffTime: Date;
       dayPart: number;
       npVersion: string;
@@ -196,20 +211,55 @@ export interface IRestaurantInfoResponse {
         saleTypeOther: boolean;
         saleTypeTakeOut: boolean;
         paymentMethods: number[];
-    }[];
+      }[];
       generalStatus: {
         status: number;
-    };
+      };
       availableMenuProducts: {
         2: number[];
         3: number[];
+      };
     };
   };
-};
 }
 
 export enum IceType {
   MILCHSHAKE = 'MILCHSHAKE',
   MCSUNDAE = 'MCSUNDAE',
   MCFLURRY = 'MCFLURRY',
+}
+
+export enum Availability {
+  AVAILABLE = 'AVAILABLE',
+  NOT_AVAILABLE = 'NOT_AVAILABLE',
+  UNKNOWN = 'UNKNOWN',
+  NOT_APPLICABLE = 'NOT_APPLICABLE',
+}
+
+export interface IRestaurantsEL {
+  restaurants: {
+    rid: string;
+    name: string;
+    longitude: number;
+    latitude: number;
+    addressLine1: string;
+    zipCode: string;
+    city: string;
+    phone: string;
+    email: string;
+    facilities: string[];
+    openingHours: {
+      categoryName: string;
+      hours: {
+        weekday: string;
+        start: string;
+        end: string;
+        status: string;
+      }[];
+    }[];
+    lab: boolean;
+    acceptsOffers: boolean;
+    mopEnabled: boolean;
+  }[];
+  facilities: string[];
 }
