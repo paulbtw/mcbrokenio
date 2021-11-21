@@ -1,9 +1,8 @@
 import axios from 'axios';
 import { Logger } from '@sailplane/logger';
-import { KEY } from '../../../utils';
+import { CountryInfos, KEY } from '../../../utils';
 import { Pos } from '../../../entities';
-import { IRestaurantsEL } from '../../../types';
-import { storeArray } from './storeArray';
+import { APIType, IRestaurantsEL } from '../../../types';
 
 const logger = new Logger('getStoreListEL');
 
@@ -12,10 +11,14 @@ export const getStoreListEL = async () => {
     logger.debug('No key found');
     throw Error('You need to provide a key');
   }
+
+  const countriesEl = Object.values(CountryInfos).filter(
+    (country) => country.getStores.api === APIType.EL,
+  );
   // eslint-disable-next-line no-restricted-syntax
-  for await (const store of storeArray) {
+  for await (const store of countriesEl) {
     const response = await axios.get(
-      `${store.url}?acceptOffers=all&lab=false&key=${KEY}`,
+      `${store.getStores.url}?acceptOffers=all&lab=false&key=${KEY}`,
     );
     const data = response.data as IRestaurantsEL;
 
@@ -30,7 +33,9 @@ export const getStoreListEL = async () => {
         latitude: `${restaurant.latitude}`,
         longitude: `${restaurant.longitude}`,
         country: store.country,
-        hasMobileOrdering: restaurant.facilities.includes(store.mobileString),
+        hasMobileOrdering: store.getStores.mobileString
+          ? restaurant.facilities.includes(store.getStores.mobileString)
+          : false,
       });
 
       logger.debugObject('New Pos: ', newPos);
