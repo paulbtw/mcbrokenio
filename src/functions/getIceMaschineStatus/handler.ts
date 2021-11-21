@@ -1,8 +1,14 @@
 import { Logger } from '@sailplane/logger';
 import { Handler } from 'aws-lambda';
 import { Pos } from '../../entities';
-import { Availability, Locations } from '../../types';
-import { createDatabaseConnection, getNewBearerToken } from '../../utils';
+import { APIType, Availability } from '../../types';
+import {
+  BASIC_TOKEN_EL,
+  CountryInfos,
+  createDatabaseConnection,
+  getClientId,
+  getNewBearerToken,
+} from '../../utils';
 import { checkForMaschine } from './utils';
 
 const logger = new Logger('getIceMaschineStatus');
@@ -11,16 +17,21 @@ export const main: Handler = async (_, context) => {
   logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
 
   logger.debug('Get new Bearer token');
-  const bearerToken = await getNewBearerToken();
-  logger.debug('new Token: ', bearerToken);
+  const bearerTokenEU = await getNewBearerToken(APIType.EU);
+  logger.debug('new Token EU: ', bearerTokenEU);
+
+  const bearerTokenEL = await getNewBearerToken(APIType.EL);
+  logger.debug('new Token EL: ', bearerTokenEL);
+
+  const clientIdEl = getClientId(BASIC_TOKEN_EL);
 
   logger.debug('Ensure Database Connection');
-  const connection = await createDatabaseConnection();
+  await createDatabaseConnection();
 
   const posToCheck = await Pos.find({
-    where: { country: Locations.DE, hasMobileOrdering: true },
+    where: { hasMobileOrdering: true },
     order: { updatedAt: 'ASC' },
-    take: 250,
+    take: 750,
   });
 
   const now = new Date();
@@ -30,8 +41,23 @@ export const main: Handler = async (_, context) => {
     logger.debugObject('Checking Pos: ', pos);
     const posId = pos.nationalStoreNumber;
 
+    const countryInfo = CountryInfos[pos.country];
+
+    const storeApi = countryInfo.getStores.api;
+    let bearerToken = '';
+    if (storeApi === APIType.EU) {
+      bearerToken = bearerTokenEU;
+    } else if (storeApi === APIType.EL) {
+      bearerToken = bearerTokenEL;
+    }
+
     const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
-      await checkForMaschine(bearerToken, posId);
+      await checkForMaschine[storeApi](
+        bearerToken,
+        `${posId}`,
+        pos.country,
+        clientIdEl,
+      );
 
     if (hasMilchshake === Availability.NOT_AVAILABLE) {
       if (pos.hasMilchshake === Availability.NOT_AVAILABLE) {
@@ -64,10 +90,5 @@ export const main: Handler = async (_, context) => {
     pos.lastCheck = now;
 
     await pos.save();
-  }
-
-  if (connection.isConnected) {
-    logger.debug('Closing DB connection');
-    await connection.close();
   }
 };

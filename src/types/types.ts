@@ -1,84 +1,103 @@
 export enum Locations {
-  DE = 'DE',
-  NL = 'NL',
-  DK = 'DK',
-  SE = 'SE',
-  FI = 'FI',
-  IE = 'IE',
-  GB = 'GB',
-  NO = 'NO',
-  AT = 'AT',
-  CH = 'CH',
-  BE = 'BE',
-  FR = 'FR',
-  ES = 'ES',
-  IT = 'IT',
-  US = 'US',
-  CA = 'CA',
-  VN = 'VN',
-  HR = 'HR',
-  GR = 'GR',
-  PT = 'PT',
-  BG = 'BG',
-  BA = 'BA',
-  BY = 'BY',
+  AE = 'AE', // United Arab Emirates
+  AT = 'AT', // Austria
+  BA = 'BA', // Bosnia and Herzegovina
+  BE = 'BE', // Belgium
+  BG = 'BG', // Bulgaria
+  BY = 'BY', // Belarus
+  CA = 'CA', // Canada
+  CH = 'CH', // Switzerland
+  DE = 'DE', // Germany
+  DK = 'DK', // Denmark
+  EE = 'EE', // Estonia
+  ES = 'ES', // Spain
+  FI = 'FI', // Finland
+  FR = 'FR', // France
+  GB = 'GB', // United Kingdom
+  GE = 'GE', // Georgia
+  GR = 'GR', // Greece
+  GT = 'GT', // Guatemala
+  HN = 'HN', // Honduras
+  HR = 'HR', // Croatia
+  ID = 'ID', // Indonesia
+  IE = 'IE', // Ireland
+  IT = 'IT', // Italy
+  LT = 'LT', // Lithuania
+  MA = 'MA', // Morocco
+  MT = 'MT', // Malta
+  MU = 'MU', // Mauritius
+  MY = 'MY', // Malaysia
+  NI = 'NI', // Nicaragua
+  NL = 'NL', // Netherlands
+  NO = 'NO', // Norway
+  PK = 'PK', // Pakistan
+  PL = 'PL', // Poland
+  PT = 'PT', // Portugal
+  PY = 'PY', // Paraguay
+  RE = 'RE', // Reunion
+  RO = 'RO', // Romania
+  RS = 'RS', // Serbia
+  SAR = 'SAR', // Saudi Arabia
+  SE = 'SE', // Sweden
+  SI = 'SI', // Slovenia
+  SV = 'SV', // El Salvador
+  TH = 'TH', // Thailand
+  UA = 'UA', // Ukraine
   UNKNOWN = 'UNKNOWN',
+  US = 'US', // United States
+  VN = 'VN', // Vietnam
 }
 
 export interface ILocation {
-  longitude: number | string;
   latitude: number | string;
+  longitude: number | string;
 }
 
 export interface IRestaurantLocationResponse {
-  status: {
-    message: string;
-    code: number;
-    type: string;
-  };
   response: {
     restaurants: {
-      restaurantStatus: string;
-      facilities: string[];
       address: {
         addressLine1: string;
         cityTown: string;
         country: string;
         postalZip: string;
       };
-      mcDeliveries: {
-        mcDelivery: any[];
-      };
+      facilities: string[];
       location: {
         latitude: number;
         longitude: number;
       };
+      mcDeliveries: {
+        mcDelivery: any[];
+      };
       name: string;
       nationalStoreNumber: number;
       phoneNumber: string;
+      restaurantStatus: string;
       status: number;
       timeZone: string;
       weekOpeningHours: {
+        dayOfWeekId: number;
         services: {
           endTime: string;
           isOpen: boolean;
           serviceName: string;
           startTime: string;
         }[];
-        dayOfWeekId: number;
       }[];
     }[];
+  };
+  status: {
+    code: number;
+    message: string;
+    type: string;
   };
 }
 
 export interface IRestaurantInfoResponse {
-  status: {
-    message: string;
-    code: number;
-    type: string;
-  };
   response: {
     restaurant: {
+      acceptOffer: boolean;
       address: {
         addressLine1: string;
         cityTown: string;
@@ -86,7 +105,13 @@ export interface IRestaurantInfoResponse {
         postalZip: string;
         stateProvince: string;
       };
+      areas: any[];
+      availableMenuProducts: {
+        2: number[];
+        3: number[];
+      };
       catalog: {
+        outageProductCodes: string[];
         pointsOfDistribution: {
           digitalServices: {
             key: string;
@@ -98,6 +123,7 @@ export interface IRestaurantInfoResponse {
           pod: number;
         }[];
         tableService: {
+          digitalTableServiceMode: string;
           enablePOSTableService: boolean;
           enableTableServiceEatin: string;
           enableTableServiceTakeout: string;
@@ -106,20 +132,52 @@ export interface IRestaurantInfoResponse {
           tableServiceLocatorEnabled: boolean;
           tableServiceLocatorMaxNumberValue: number;
           tableServiceLocatorMinNumberValue: number;
-          digitalTableServiceMode: string;
-          tableServiceTableNumberMinNumberValue: number;
           tableServiceTableNumberMaxNumberValue: number;
+          tableServiceTableNumberMinNumberValue: number;
         };
-        outageProductCodes: string[];
       };
+      contacts: {
+        name: string;
+        title: string;
+      }[];
+      countryCode: string;
+      dayPart: number;
+      deposits: {
+        code: string;
+        description: string;
+        pricing: {
+          code: string;
+          value: number;
+        }[];
+      }[];
+      distance: number;
       facilities: string[];
-      nationalStoreNumber: number;
-      name: string;
-      status: number;
-      restaurantStatus: string;
+      gblNumber: string;
+      generalStatus: {
+        status: number;
+      };
+      id: string;
+      isValid: boolean;
+      legalName: string;
       location: {
         latitude: number;
         longitude: number;
+      };
+      marketCode: string;
+      name: string;
+      nationalStoreNumber: number;
+      nowInStoreLocalTimeDate: Date;
+      npVersion: string;
+      nutrition: {
+        customerSelfPour: boolean;
+        recalculateEnergyOnGrill: boolean;
+      };
+      offerConfiguration: {
+        enableMultipleOffers: boolean;
+        offerBuckets: {
+          limit: number;
+          offerBucket: string;
+        }[];
       };
       order: {
         autoBagSaleInformation: {
@@ -129,137 +187,252 @@ export interface IRestaurantInfoResponse {
           enabled: boolean;
           noBagProductCode: number;
         };
+        daypartTransitionOffset: number;
         expectedDeliveryTime: Date;
+        largeOrderAllowed: boolean;
+        linkedPaymentInformation: boolean;
+        loyaltyEnabled: boolean;
+        maximumTimeMinutes: number;
+        minimumOrderValue: number;
+        minimumTimeMinutes: number;
+        orderAheadLane: boolean;
+        readyOnArrivalInformation: boolean;
         storeMenuTypeCalendar: {
           endTime: string;
           menuTypeID: number;
           startTime: string;
           weekDay: number;
         }[];
-        minimumOrderValue: number;
-        largeOrderAllowed: boolean;
-        linkedPaymentInformation: boolean;
-        loyaltyEnabled: boolean;
-        maximumTimeMinutes: number;
-        minimumTimeMinutes: number;
-        daypartTransitionOffset: number;
-        readyOnArrivalInformation: boolean;
-        orderAheadLane: boolean;
       };
-      deposits: {
-        code: string;
-        description: string;
-        pricing: {
-          code: string;
-          value: number;
-        }[];
-      }[];
       phoneNumber: string;
-      timeZone: string;
-      url: string;
-      weekOpeningHours: {
-        dayOfWeekId: number;
-        services: {
-          endTime: string;
-          isOpen: boolean;
-          serviceName: string;
-          startTime: string;
-          podType: number;
-          saleTypes: any[];
-        }[];
-        startTime: string;
-        weekDay: string;
-        endTime: string;
-        isOpen: boolean;
-      }[];
-      acceptOffer: boolean;
-      areas: any[];
-      contacts: {
-        title: string;
-        name: string;
-      }[];
-      countryCode: string;
-      distance: number;
-      gblNumber: string;
-      id: string;
-      isValid: boolean;
-      marketCode: string;
-      nowInStoreLocalTimeDate: Date;
-      nutrition: {
-        customerSelfPour: boolean;
-        recalculateEnergyOnGrill: boolean;
-      };
-      offerConfiguration: {
-        enableMultipleOffers: boolean;
-        offerBuckets: {
-          offerBucket: string;
-          limit: number;
-        }[];
-      };
-      specialDayservice: any[];
-      statusID: number;
-      tinThresholdAmout: number;
-      storeType: {};
-      todCutoffTime: Date;
-      dayPart: number;
-      npVersion: string;
-      storeCutoffTime: Date;
-      legalName: string;
+      restaurantStatus: string;
       servicePayments: {
-        serviceID: number;
+        paymentMethods: number[];
         saleTypeEatIn: boolean;
         saleTypeOther: boolean;
         saleTypeTakeOut: boolean;
-        paymentMethods: number[];
+        serviceID: number;
       }[];
-      generalStatus: {
-        status: number;
-      };
-      availableMenuProducts: {
-        2: number[];
-        3: number[];
-      };
+      specialDayservice: any[];
+      status: number;
+      statusID: number;
+      storeCutoffTime: Date;
+      storeType: {};
+      timeZone: string;
+      tinThresholdAmout: number;
+      todCutoffTime: Date;
+      url: string;
+      weekOpeningHours: {
+        dayOfWeekId: number;
+        endTime: string;
+        isOpen: boolean;
+        services: {
+          endTime: string;
+          isOpen: boolean;
+          podType: number;
+          saleTypes: any[];
+          serviceName: string;
+          startTime: string;
+        }[];
+        startTime: string;
+        weekDay: string;
+      }[];
     };
+  };
+  status: {
+    code: number;
+    message: string;
+    type: string;
   };
 }
 
 export enum IceType {
-  MILCHSHAKE = 'MILCHSHAKE',
-  MCSUNDAE = 'MCSUNDAE',
   MCFLURRY = 'MCFLURRY',
+  MCSUNDAE = 'MCSUNDAE',
+  MILCHSHAKE = 'MILCHSHAKE',
 }
 
 export enum Availability {
   AVAILABLE = 'AVAILABLE',
+  NOT_APPLICABLE = 'NOT_APPLICABLE',
   NOT_AVAILABLE = 'NOT_AVAILABLE',
   UNKNOWN = 'UNKNOWN',
-  NOT_APPLICABLE = 'NOT_APPLICABLE',
 }
 
 export interface IRestaurantsEL {
+  facilities: string[];
   restaurants: {
-    rid: string;
-    name: string;
-    longitude: number;
-    latitude: number;
+    acceptsOffers: boolean;
     addressLine1: string;
-    zipCode: string;
     city: string;
-    phone: string;
     email: string;
     facilities: string[];
+    lab: boolean;
+    latitude: number;
+    longitude: number;
+    mopEnabled: boolean;
+    name: string;
     openingHours: {
       categoryName: string;
       hours: {
-        weekday: string;
-        start: string;
         end: string;
+        start: string;
         status: string;
+        weekday: string;
       }[];
     }[];
-    lab: boolean;
-    acceptsOffers: boolean;
-    mopEnabled: boolean;
+    phone: string;
+    rid: string;
+    zipCode: string;
   }[];
-  facilities: string[];
+}
+
+export enum APIType {
+  EL = 'EL',
+  EU = 'EU',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export interface ICountryInfos {
+  country: Locations;
+  getStores: {
+    api: APIType;
+    mobileString: string | null;
+    url: string;
+  };
+  productCodes: {
+    [IceType.MILCHSHAKE]: string[];
+    [IceType.MCSUNDAE]: string[];
+    [IceType.MCFLURRY]: string[];
+  };
+}
+
+export interface IRestaurantInfoResponseEL {
+  response: {
+    ResultCode: number;
+    restaurant: {
+      AcceptsOffer: boolean;
+      AdvancedOrderMaximumTimeLimitMinutes: number;
+      AdvancedOrderMinimumTimeLimitMinutes: number;
+      AutoBagSaleInformation: {
+        BagChoiceProductCode: number;
+        BagDummyProductCode: number;
+        BagProductCode: number;
+        Enabled: boolean;
+        NoBagProductCode: number;
+      };
+      AvailableMenuProducts: {
+        1: number[];
+        2: number[];
+      };
+      CytIngredientGroups?: any;
+      DayPart: number;
+      DayPartTransitionOffset: number;
+      DeliverEarlyMode?: any;
+      DeliverLaterProductCode?: any;
+      DepositTypes?: any;
+      Distance: number;
+      ExpectedDeliveryTime: Date;
+      IsValid: boolean;
+      LargeOrderAllowed: boolean;
+      LegalName: string;
+      LinkedPaymentInformation: {
+        isEnabled: boolean;
+      };
+      Locations: {
+        FulfilmentFacilityCode: string;
+        LocationID: number;
+        PaymentMethods: any[];
+        SaleTypeEatIn: boolean;
+        SaleTypeOther: boolean;
+        SaleTypeTakeOut: boolean;
+        StoreAreaOpeningHours: {
+          DayOfWeekID: number;
+          FromTime: string;
+          ToTime: string;
+        }[];
+      }[];
+      LoyaltyInformation: {
+        isEnabled: boolean;
+      };
+      MinimumOrderValue: number;
+      NPVersion: string;
+      NowInStoreLocalTimeDate: Date;
+      NowInStoreLocalTimeDateTime: Date;
+      NutritionalInformation: {
+        CustomerSelfPour: boolean;
+        EnergyUnit?: any;
+        RecalculateEnergyOnGrill: boolean;
+      };
+      OfferConfiguration: {
+        EnableMultipleOffers: boolean;
+        MaxNumberOfLoyaltyRewards: number;
+        MaxNumberOfPrizeOffers: number;
+        MaxNumberOfPunchCardRewards: number;
+        MaxNumberOfRegularOffers: number;
+      };
+      OpeningHours: {
+        DayOfTheWeek: number;
+        FromTime: string;
+        ToTime: string;
+      }[];
+      OrderMaximumTimeMinutes: number;
+      OrderMinimumTimeMinutes: number;
+      OutageProductCodes: string[];
+      PointsOfDistribution: {
+        DigitalServices: {
+          Key: string;
+          Technologies: {
+            Key: string;
+          }[];
+        }[];
+        FulFillmentFacilityCode: string;
+        LocationID: number;
+        POD: number;
+      }[];
+      ReadyOnArrivalInformation: {
+        enableGMAFoodReadyOnArrivalFlow: boolean;
+        isOrderAheadLaneEnabled: boolean;
+      };
+      RestaurantID: number;
+      StatusID: number;
+      StoreCutoffTime: Date;
+      StoreMenuTypeCalendar: {
+        EndTime: string;
+        MenuTypeID: number;
+        StartTime: string;
+        Weekday: number;
+      }[];
+      StoreNumber: string;
+      StoreStatus: number;
+      SuppressChoiceDiscount?: any;
+      TINThresholdAmount: number;
+      TODCutoffTime: Date;
+      TableService: {
+        DigitalTableServiceMode: string;
+        EnablePOSTableService: boolean;
+        EnableTableServiceEatin: string;
+        EnableTableServiceTakeout: string;
+        MinimumPurchaseAmount: number;
+        TableServiceEnableMap: boolean;
+        TableServiceLocatorEnabled: boolean;
+        TableServiceLocatorMaxNumberValue: number;
+        TableServiceLocatorMinNumberValue: number;
+        TableServiceTableNumberMaxNumberValue: number;
+        TableServiceTableNumberMinNumberValue: number;
+        TableServiceTimeRange: {
+          Enabled: boolean;
+          EndTime: string;
+          StartTime: string;
+        };
+        ZoneDefinitions?: any;
+      };
+      TimeZone: number;
+    };
+  };
+  status: {
+    code: number;
+    message: string;
+    type: string;
+  };
 }

@@ -12,7 +12,7 @@ export const main: Handler = async (_, context) => {
   logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
 
   logger.debug('Ensure Database Connection');
-  const connection = await createDatabaseConnection();
+  await createDatabaseConnection();
 
   const allObject = await Pos.find();
 
@@ -64,8 +64,4 @@ export const main: Handler = async (_, context) => {
       else logger.debugObject('Put to s3 should have worked: ', data);
     })
     .promise();
-
-  if (connection.isConnected) {
-    await connection.close();
-  }
 };

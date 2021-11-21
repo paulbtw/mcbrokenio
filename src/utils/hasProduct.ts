@@ -1,19 +1,45 @@
-import { IceType } from '../types';
+import { CountryInfos } from '.';
+import { Availability, IceType, Locations } from '../types';
 
-const hasIceType = (outrageProductList: string[], productsToCheck: string[]) => {
-  let hasProducts = true;
+const hasIceType = (
+  outrageProductList: string[],
+  productsToCheck: string[],
+) => {
+  if (productsToCheck.length === 0) {
+    return Availability.NOT_AVAILABLE;
+  }
+  if (productsToCheck.includes('UNAVAILABLE')) {
+    return Availability.NOT_APPLICABLE;
+  }
+
+  let hasProducts = Availability.AVAILABLE;
 
   productsToCheck.forEach((product) => {
     if (outrageProductList.includes(product)) {
-      hasProducts = false;
+      hasProducts = Availability.NOT_AVAILABLE;
     }
   });
 
   return hasProducts;
 };
 
-export const hasProduct: Record<IceType, (outrageProductList: string[]) => boolean> = {
-  [IceType.MCFLURRY]: (outrageProductList) => hasIceType(outrageProductList, ['4237', '4252', '4255', '4256', '4258']),
-  [IceType.MCSUNDAE]: (outrageProductList) => hasIceType(outrageProductList, ['4603', '4604', '4651']),
-  [IceType.MILCHSHAKE]: (outrageProductList) => hasIceType(outrageProductList, ['5000', '5010', '5020']),
+export const hasProduct: Record<
+  IceType,
+  (outrageProductList: string[], location: Locations) => Availability
+> = {
+  [IceType.MCFLURRY]: (outrageProductList, location) =>
+    hasIceType(
+      outrageProductList,
+      CountryInfos[location].productCodes.MCFLURRY,
+    ),
+  [IceType.MCSUNDAE]: (outrageProductList, location) =>
+    hasIceType(
+      outrageProductList,
+      CountryInfos[location].productCodes.MCSUNDAE,
+    ),
+  [IceType.MILCHSHAKE]: (outrageProductList, location) =>
+    hasIceType(
+      outrageProductList,
+      CountryInfos[location].productCodes.MILCHSHAKE,
+    ),
 };

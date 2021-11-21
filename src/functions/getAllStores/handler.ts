@@ -9,13 +9,8 @@ export const main: Handler = async (_, context) => {
   logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
 
   logger.debug('Ensure Database Connection');
-  const connection = await createDatabaseConnection();
+  await createDatabaseConnection();
 
   await getStoreListEL();
   await getStoreListEU();
-
-  if (connection.isConnected) {
-    logger.debug('Closing Database Connection');
-    // await connection.close();
-  }
 };

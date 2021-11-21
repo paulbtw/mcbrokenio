@@ -45,34 +45,36 @@ provider:
 
 custom:
   mcdInfo:
-    basicToken: ${ssm:/mcdonalds/de/basictoken}
+    basicTokenEU: ${ssm:/mcdonalds/eu/basictoken}
+    mcdUsername: ${ssm:/mcdonalds/eu/username}
+    mcdPassword: ${ssm:/mcdonalds/eu/password}
+    mcdDeviceId: ${ssm:/mcdonalds/eu/deviceId}
     databaseUrl: ${ssm:/mcdonalds/database}
-    mcdUsername: ${ssm:/mcdonalds/de/username}
-    mcdPassword: ${ssm:/mcdonalds/de/password}
-    mcdDeviceId: ${ssm:/mcdonalds/de/deviceId}
     exportBucket: ${ssm:/mcdonalds/export/bucket}
     mcdElKey: ${ssm:/mcdonalds/el/key}
+    basicTokenEL: ${ssm:/mcdonalds/el/basictoken}
 
 functions:
   getIceMaschineStatus:
     handler: src/functions/getIceMaschineStatus/handler.main
     memorySize: 512
-    timeout: 595
+    timeout: 600
     environment:
-      BASIC_TOKEN: ${self:custom.mcdInfo.basicToken}
+      BASIC_TOKEN_EU: ${self:custom.mcdInfo.basicTokenEU}
+      BASIC_TOKEN_EL: ${self:custom.mcdInfo.basicTokenEL}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       MCD_USERNAME: ${self:custom.mcdInfo.mcdUsername}
       MCD_PASSWORD: ${self:custom.mcdInfo.mcdPassword}
       MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
     events:
       - schedule:
-          rate: rate(10 minutes)
+          rate: rate(5 minutes)
   getAllStores:
     handler: src/functions/getAllStores/handler.main
     memorySize: 512
     timeout: 900
     environment:
-      BASIC_TOKEN: ${self:custom.mcdInfo.basicToken}
+      BASIC_TOKEN: ${self:custom.mcdInfo.basicTokenEU}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       KEY: ${self:custom.mcdInfo.mcdElKey}
     events:

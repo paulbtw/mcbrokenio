@@ -2,23 +2,30 @@ import { Logger } from '@sailplane/logger';
 import axios from 'axios';
 import { getAllLocation } from '.';
 import { Pos } from '../../../entities';
-import { IRestaurantLocationResponse, Locations } from '../../../types';
-import { getClientId, getNewBearerToken } from '../../../utils';
+import { APIType, IRestaurantLocationResponse } from '../../../types';
+import {
+  BASIC_TOKEN_EU,
+  CountryInfos,
+  getClientId,
+  getNewBearerToken,
+} from '../../../utils';
 
 const logger = new Logger('getStoreListEU');
 
 export const getStoreListEU = async () => {
-  const availableLocations = Object.keys(getAllLocation);
-
-  const bearerToken = await getNewBearerToken();
+  const bearerToken = await getNewBearerToken(APIType.EU);
   logger.debug('new Bearer Token: ', bearerToken);
 
-  const clientId = getClientId();
+  const clientId = getClientId(BASIC_TOKEN_EU);
   logger.debug(`clientId: ${clientId}`);
 
+  const countriesEu = Object.values(CountryInfos).filter(
+    (country) => country.getStores.api === APIType.EU,
+  );
+
   // eslint-disable-next-line no-restricted-syntax
-  for await (const country of availableLocations) {
-    const countryFormatted = country as Locations;
+  for await (const country of countriesEu) {
+    const countryFormatted = country.country;
 
     const locations = getAllLocation[countryFormatted];
 
@@ -26,8 +33,12 @@ export const getStoreListEU = async () => {
     for await (const location of locations) {
       logger.debugObject('location: ', location);
 
+      if (!location) {
+        return;
+      }
+
       const response = await axios.get(
-        `https://eu-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&latitude=${location.latitude}&longitude=${location.longitude}`,
+        `${country.getStores.url}latitude=${location.latitude}&longitude=${location.longitude}`,
         {
           headers: {
             authorization: `Bearer ${bearerToken}`,
@@ -54,7 +65,9 @@ export const getStoreListEU = async () => {
           latitude: `${restaurant.location.latitude}`,
           longitude: `${restaurant.location.longitude}`,
           country: countryFormatted,
-          hasMobileOrdering: restaurant.facilities.includes('MOBILEORDERS'),
+          hasMobileOrdering: country.getStores.mobileString
+            ? restaurant.facilities.includes(country.getStores.mobileString)
+            : false,
         });
 
         posArray.push(newPos);
