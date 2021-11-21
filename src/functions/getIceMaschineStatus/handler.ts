@@ -1,12 +1,9 @@
 import { Logger } from '@sailplane/logger';
 import { Handler } from 'aws-lambda';
 import { Pos } from '../../entities';
-import { Locations } from '../../types';
-import {
-  createDatabaseConnection,
-  getNewBearerToken,
-  checkForMaschine,
-} from '../../utils';
+import { Availability, Locations } from '../../types';
+import { createDatabaseConnection, getNewBearerToken } from '../../utils';
+import { checkForMaschine } from './utils';
 
 const logger = new Logger('getIceMaschineStatus');
 
@@ -21,10 +18,12 @@ export const main: Handler = async (_, context) => {
   const connection = await createDatabaseConnection();
 
   const posToCheck = await Pos.find({
-    where: { country: Locations.DE },
+    where: { country: Locations.DE, hasMobileOrdering: true },
     order: { updatedAt: 'ASC' },
     take: 250,
   });
+
+  const now = new Date();
 
   // eslint-disable-next-line no-restricted-syntax
   for await (const pos of posToCheck) {
@@ -34,27 +33,27 @@ export const main: Handler = async (_, context) => {
     const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
       await checkForMaschine(bearerToken, posId);
 
-    if (hasMilchshake === false) {
-      if (pos.hasMilchshake === false) {
-        pos.timeSinceBrokenMilchshake = new Date();
+    if (hasMilchshake === Availability.NOT_AVAILABLE) {
+      if (pos.hasMilchshake === Availability.NOT_AVAILABLE) {
+        pos.timeSinceBrokenMilchshake = now;
       }
     } else {
       pos.timeSinceBrokenMilchshake = null;
     }
     pos.hasMilchshake = hasMilchshake;
 
-    if (hasMcFlurry === false) {
-      if (pos.hasMcFlurry === false) {
-        pos.timeSinceBrokenMcFlurry = new Date();
+    if (hasMcFlurry === Availability.NOT_AVAILABLE) {
+      if (pos.hasMcFlurry === Availability.NOT_AVAILABLE) {
+        pos.timeSinceBrokenMcFlurry = now;
       }
     } else {
       pos.timeSinceBrokenMcFlurry = null;
     }
     pos.hasMcFlurry = hasMcFlurry;
 
-    if (hasMcSundae === false) {
-      if (pos.hasMcSundae === false) {
-        pos.timeSinceBrokenMcSundae = new Date();
+    if (hasMcSundae === Availability.NOT_AVAILABLE) {
+      if (pos.hasMcSundae === Availability.NOT_AVAILABLE) {
+        pos.timeSinceBrokenMcSundae = now;
       }
     } else {
       pos.timeSinceBrokenMcSundae = null;
@@ -62,7 +61,7 @@ export const main: Handler = async (_, context) => {
     pos.hasMcSundae = hasMcSundae;
 
     pos.restaurantStatus = status;
-    pos.lastCheck = new Date();
+    pos.lastCheck = now;
 
     await pos.save();
   }

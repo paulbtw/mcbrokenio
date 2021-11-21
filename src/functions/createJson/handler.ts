@@ -4,6 +4,7 @@ import { S3 } from 'aws-sdk';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { Pos } from '../../entities';
 import { createDatabaseConnection } from '../../utils';
+import { getColorDot } from './utils';
 
 const logger = new Logger('createJson');
 
@@ -11,25 +12,16 @@ export const main: Handler = async (_, context) => {
   logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
 
   logger.debug('Ensure Database Connection');
-  await createDatabaseConnection();
+  const connection = await createDatabaseConnection();
 
   const allObject = await Pos.find();
 
   const json = allObject.map((pos) => {
-    let dot = 'GREEN';
-    if (!pos.hasMilchshake || !pos.hasMcFlurry || !pos.hasMcSundae) {
-      if (
-        pos.hasMilchshake === null &&
-        pos.hasMcFlurry === null &&
-        pos.hasMcSundae === null
-      ) {
-        dot = 'GREY';
-      } else if (!pos.hasMilchshake && !pos.hasMcFlurry && !pos.hasMcSundae) {
-        dot = 'RED';
-      } else {
-        dot = 'YELLOW';
-      }
-    }
+    const dot = getColorDot(
+      pos.hasMilchshake,
+      pos.hasMcSundae,
+      pos.hasMcFlurry,
+    );
     return {
       geometry: {
         coordinates: [Number(pos.longitude), Number(pos.latitude), 0],
@@ -72,4 +64,8 @@ export const main: Handler = async (_, context) => {
       else logger.debugObject('Put to s3 should have worked: ', data);
     })
     .promise();
+
+  if (connection.isConnected) {
+    await connection.close();
+  }
 };

@@ -1,10 +1,14 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
-import { hasProduct } from '.';
-import { IceType, IRestaurantInfoResponse } from '../types';
+import { hasProduct } from '../../../utils';
+import { Availability, IceType, IRestaurantInfoResponse } from '../../../types';
 
 const logger = new Logger('checkForMaschine');
 
+/**
+ * Need to add a check based on the Country
+ * They all have different Product ids unfortunatly
+ */
 export const checkForMaschine = async (
   bearerToken: string,
   nationalStoreNumber: number,
@@ -32,17 +36,23 @@ export const checkForMaschine = async (
       hasMcSundae = hasProduct[IceType.MCSUNDAE](outageProductCodes);
     }
     return {
-      hasMilchshake,
-      hasMcFlurry,
-      hasMcSundae,
+      hasMilchshake: hasMilchshake
+        ? Availability.AVAILABLE
+        : Availability.NOT_AVAILABLE,
+      hasMcFlurry: hasMcFlurry
+        ? Availability.AVAILABLE
+        : Availability.NOT_AVAILABLE,
+      hasMcSundae: hasMcSundae
+        ? Availability.AVAILABLE
+        : Availability.NOT_AVAILABLE,
       status: data.response.restaurant.restaurantStatus ?? 'UNKNOWN',
     };
   } catch (error) {
     logger.error(error);
     return {
-      hasMilchshake: null,
-      hasMcSundae: null,
-      hasMcFlurry: null,
+      hasMilchshake: Availability.UNKNOWN,
+      hasMcSundae: Availability.UNKNOWN,
+      hasMcFlurry: Availability.UNKNOWN,
       status: 'UNKNOWN',
     };
   }

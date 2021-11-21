@@ -51,6 +51,7 @@ custom:
     mcdPassword: ${ssm:/mcdonalds/de/password}
     mcdDeviceId: ${ssm:/mcdonalds/de/deviceId}
     exportBucket: ${ssm:/mcdonalds/export/bucket}
+    mcdElKey: ${ssm:/mcdonalds/el/key}
 
 functions:
   getIceMaschineStatus:
@@ -73,6 +74,7 @@ functions:
     environment:
       BASIC_TOKEN: ${self:custom.mcdInfo.basicToken}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
+      KEY: ${self:custom.mcdInfo.mcdElKey}
     events:
       - schedule: cron(30 8 * * ? *)
   createJson:
