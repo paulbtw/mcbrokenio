@@ -50,7 +50,7 @@ export const main: Handler = async (_, context) => {
     },
   };
 
-  const s3 = new S3({ region: 'eu-central-1', apiVersion: '2012-10-17' });
+  const s3 = new S3({ region: 'us-east-2', apiVersion: '2012-10-17' });
   const params: PutObjectRequest = {
     Bucket: process.env.BUCKET as string,
     Key: 'marker.json',
