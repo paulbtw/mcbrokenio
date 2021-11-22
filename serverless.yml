@@ -17,10 +17,10 @@ provider:
   name: aws
   runtime: nodejs14.x
   lambdaHashingVersion: 20201221
-  region: ${opt:region, 'eu-central-1'}
+  region: ${opt:region, 'us-east-2'}
   stage: ${opt:stage, 'dev'}
   deploymentBucket:
-    name: mcbrokenio-paulbtw
+    name: mcbrokenio-paulbtw-dev
   tags:
     project: mcbrokenio
     owner: paulbtw
@@ -45,36 +45,40 @@ provider:
 
 custom:
   mcdInfo:
-    basicTokenEU: ${ssm:/mcdonalds/eu/basictoken}
-    mcdUsername: ${ssm:/mcdonalds/eu/username}
-    mcdPassword: ${ssm:/mcdonalds/eu/password}
-    mcdDeviceId: ${ssm:/mcdonalds/eu/deviceId}
-    databaseUrl: ${ssm:/mcdonalds/database}
-    exportBucket: ${ssm:/mcdonalds/export/bucket}
-    mcdElKey: ${ssm:/mcdonalds/el/key}
-    basicTokenEL: ${ssm:/mcdonalds/el/basictoken}
+    basicTokenEU: ${ssm(eu-central-1):/mcdonalds/eu/basictoken}
+    mcdUsername: ${ssm(eu-central-1):/mcdonalds/eu/username}
+    mcdPassword: ${ssm(eu-central-1):/mcdonalds/eu/password}
+    mcdDeviceId: ${ssm(eu-central-1):/mcdonalds/eu/deviceId}
+    databaseUrl: ${ssm(eu-central-1):/mcdonalds/database}
+    exportBucket: ${ssm(eu-central-1):/mcdonalds/export/bucket}-${opt:stage, 'dev'}
+    mcdElKey: ${ssm(eu-central-1):/mcdonalds/el/key}
+    basicTokenEL: ${ssm(eu-central-1):/mcdonalds/el/basictoken}
+    basicTokenUS: ${ssm(eu-central-1):/mcdonalds/us/basictoken}
 
 functions:
   getIceMaschineStatus:
     handler: src/functions/getIceMaschineStatus/handler.main
     memorySize: 512
-    timeout: 600
+    timeout: 179
     environment:
       BASIC_TOKEN_EU: ${self:custom.mcdInfo.basicTokenEU}
       BASIC_TOKEN_EL: ${self:custom.mcdInfo.basicTokenEL}
+      BASIC_TOKEN_US: ${self:custom.mcdInfo.basicTokenUS}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       MCD_USERNAME: ${self:custom.mcdInfo.mcdUsername}
       MCD_PASSWORD: ${self:custom.mcdInfo.mcdPassword}
       MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
     events:
       - schedule:
-          rate: rate(5 minutes)
+          rate: rate(3 minutes)
   getAllStores:
     handler: src/functions/getAllStores/handler.main
     memorySize: 512
     timeout: 900
     environment:
-      BASIC_TOKEN: ${self:custom.mcdInfo.basicTokenEU}
+      BASIC_TOKEN_EU: ${self:custom.mcdInfo.basicTokenEU}
+      BASIC_TOKEN_EL: ${self:custom.mcdInfo.basicTokenEL}
+      BASIC_TOKEN_US: ${self:custom.mcdInfo.basicTokenUS}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       KEY: ${self:custom.mcdInfo.mcdElKey}
     events:
@@ -88,4 +92,4 @@ functions:
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
     events:
       - schedule:
-          rate: rate(30 minutes)
+          rate: rate(15 minutes)
