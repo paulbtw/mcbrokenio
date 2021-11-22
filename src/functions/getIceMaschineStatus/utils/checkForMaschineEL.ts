@@ -1,12 +1,12 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
+import { hasProduct } from '.';
 import {
   Availability,
   IceType,
   IRestaurantInfoResponseEL,
   Locations,
 } from '../../../types';
-import { hasProduct } from '../../../utils';
 
 const logger = new Logger('checkForMaschineEL');
 

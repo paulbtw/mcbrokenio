@@ -13,16 +13,28 @@ export const getColorDot = (
     return 'GREY';
   }
   if (
-    hasMcFlurry === Availability.AVAILABLE &&
-    hasMcSundae === Availability.AVAILABLE &&
-    hasMilchshake === Availability.AVAILABLE
+    [Availability.AVAILABLE, Availability.NOT_APPLICABLE].includes(
+      hasMcFlurry,
+    ) &&
+    [Availability.AVAILABLE, Availability.NOT_APPLICABLE].includes(
+      hasMcSundae,
+    ) &&
+    [Availability.AVAILABLE, Availability.NOT_APPLICABLE].includes(
+      hasMilchshake,
+    )
   ) {
     return 'GREEN';
   }
   if (
-    hasMcFlurry === Availability.NOT_AVAILABLE &&
-    hasMcSundae === Availability.NOT_AVAILABLE &&
-    hasMilchshake === Availability.NOT_AVAILABLE
+    [Availability.NOT_AVAILABLE, Availability.NOT_APPLICABLE].includes(
+      hasMcFlurry,
+    ) &&
+    [Availability.NOT_AVAILABLE, Availability.NOT_APPLICABLE].includes(
+      hasMcSundae,
+    ) &&
+    [Availability.NOT_AVAILABLE, Availability.NOT_APPLICABLE].includes(
+      hasMilchshake,
+    )
   ) {
     return 'RED';
   }

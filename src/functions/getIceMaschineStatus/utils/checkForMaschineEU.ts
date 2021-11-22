@@ -1,6 +1,6 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
-import { hasProduct } from '../../../utils';
+import { hasProduct } from '.';
 import {
   Availability,
   IceType,
