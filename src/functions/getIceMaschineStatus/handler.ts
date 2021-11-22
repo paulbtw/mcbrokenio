@@ -23,6 +23,9 @@ export const main: Handler = async (_, context) => {
   const bearerTokenEL = await getNewBearerToken(APIType.EL);
   logger.debug('new Token EL: ', bearerTokenEL);
 
+  const bearerTokenUS = await getNewBearerToken(APIType.US);
+  logger.debug('new Token US: ', bearerTokenUS);
+
   const clientIdEl = getClientId(BASIC_TOKEN_EL);
 
   logger.debug('Ensure Database Connection');
@@ -31,64 +34,72 @@ export const main: Handler = async (_, context) => {
   const posToCheck = await Pos.find({
     where: { hasMobileOrdering: true },
     order: { updatedAt: 'ASC' },
-    take: 750,
+    take: 2500,
   });
 
   const now = new Date();
 
-  // eslint-disable-next-line no-restricted-syntax
-  for await (const pos of posToCheck) {
-    logger.debugObject('Checking Pos: ', pos);
-    const posId = pos.nationalStoreNumber;
+  const newPosArray: Pos[] = [];
 
-    const countryInfo = CountryInfos[pos.country];
+  await Promise.all([
+    posToCheck.map(async (pos) => {
+      const newPos = pos;
+      logger.debug(`Checking Pos: ${pos.nationalStoreNumber}`);
+      const posId = newPos.nationalStoreNumber;
 
-    const storeApi = countryInfo.getStores.api;
-    let bearerToken = '';
-    if (storeApi === APIType.EU) {
-      bearerToken = bearerTokenEU;
-    } else if (storeApi === APIType.EL) {
-      bearerToken = bearerTokenEL;
-    }
+      const countryInfo = CountryInfos[newPos.country];
 
-    const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
-      await checkForMaschine[storeApi](
-        bearerToken,
-        `${posId}`,
-        pos.country,
-        clientIdEl,
-      );
-
-    if (hasMilchshake === Availability.NOT_AVAILABLE) {
-      if (pos.hasMilchshake === Availability.NOT_AVAILABLE) {
-        pos.timeSinceBrokenMilchshake = now;
+      const storeApi = countryInfo.getStores.api;
+      let bearerToken = '';
+      if (storeApi === APIType.EU) {
+        bearerToken = bearerTokenEU;
+      } else if (storeApi === APIType.EL) {
+        bearerToken = bearerTokenEL;
+      } else if (storeApi === APIType.US) {
+        bearerToken = bearerTokenUS;
       }
-    } else {
-      pos.timeSinceBrokenMilchshake = null;
-    }
-    pos.hasMilchshake = hasMilchshake;
 
-    if (hasMcFlurry === Availability.NOT_AVAILABLE) {
-      if (pos.hasMcFlurry === Availability.NOT_AVAILABLE) {
-        pos.timeSinceBrokenMcFlurry = now;
+      const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
+        await checkForMaschine[storeApi](
+          bearerToken,
+          `${posId}`,
+          newPos.country,
+          clientIdEl,
+        );
+
+      if (hasMilchshake === Availability.NOT_AVAILABLE) {
+        if (newPos.hasMilchshake === Availability.NOT_AVAILABLE) {
+          newPos.timeSinceBrokenMilchshake = now;
+        }
+      } else {
+        newPos.timeSinceBrokenMilchshake = null;
       }
-    } else {
-      pos.timeSinceBrokenMcFlurry = null;
-    }
-    pos.hasMcFlurry = hasMcFlurry;
+      newPos.hasMilchshake = hasMilchshake;
 
-    if (hasMcSundae === Availability.NOT_AVAILABLE) {
-      if (pos.hasMcSundae === Availability.NOT_AVAILABLE) {
-        pos.timeSinceBrokenMcSundae = now;
+      if (hasMcFlurry === Availability.NOT_AVAILABLE) {
+        if (newPos.hasMcFlurry === Availability.NOT_AVAILABLE) {
+          newPos.timeSinceBrokenMcFlurry = now;
+        }
+      } else {
+        newPos.timeSinceBrokenMcFlurry = null;
       }
-    } else {
-      pos.timeSinceBrokenMcSundae = null;
-    }
-    pos.hasMcSundae = hasMcSundae;
+      newPos.hasMcFlurry = hasMcFlurry;
 
-    pos.restaurantStatus = status;
-    pos.lastCheck = now;
+      if (hasMcSundae === Availability.NOT_AVAILABLE) {
+        if (newPos.hasMcSundae === Availability.NOT_AVAILABLE) {
+          newPos.timeSinceBrokenMcSundae = now;
+        }
+      } else {
+        newPos.timeSinceBrokenMcSundae = null;
+      }
+      newPos.hasMcSundae = hasMcSundae;
 
-    await pos.save();
-  }
+      newPos.restaurantStatus = status;
+      newPos.lastCheck = now;
+
+      newPosArray.push(newPos);
+    }),
+  ]);
+
+  await Pos.save(newPosArray);
 };

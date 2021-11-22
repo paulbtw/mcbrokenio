@@ -118,7 +118,7 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       mobileString: 'Pedidos Mobile',
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: [],
+      [IceType.MILCHSHAKE]: ['UNAVAILABLE'],
       [IceType.MCFLURRY]: [
         '8643',
         '5099',
@@ -154,9 +154,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       mobileString: 'Mobilbestilling',
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: [],
+      [IceType.MILCHSHAKE]: ['1802', '1801', '1803'],
+      [IceType.MCFLURRY]: ['2106', '2107', '8025', '8946', '8366'],
+      [IceType.MCSUNDAE]: ['2104', '2102', '2103'],
     },
   },
   [Locations.FI]: {
@@ -255,20 +255,6 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: [],
     },
   },
-  [Locations.IE]: {
-    // Has no mobile ordering
-    country: Locations.IE,
-    getStores: {
-      api: APIType.EU,
-      url: 'https://eu-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
-      mobileString: null,
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: [],
-    },
-  },
   [Locations.GB]: {
     // TODO
     country: Locations.GB,
@@ -301,8 +287,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     // Only works with USA IP
     country: Locations.US,
     getStores: {
-      api: APIType.UNKNOWN,
-      url: '',
+      api: APIType.US,
+      url: 'https://us-prod.api.mcd.com/exp/v1/restaurant/location?distance=100000&filter=summary&pageSize=250&',
       mobileString: 'MOBILEORDERS',
     },
     productCodes: {
@@ -412,7 +398,7 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     country: Locations.TH,
     getStores: {
       api: APIType.EL,
-      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ua/uk-ua',
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/th/th-th',
       mobileString: null,
     },
     productCodes: {
@@ -495,8 +481,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     country: Locations.PL,
     getStores: {
       api: APIType.EL,
-      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/re/en-gb',
-      mobileString: null,
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/pl/pl-pl',
+      mobileString: 'Zamów i odbierz',
     },
     productCodes: {
       [IceType.MILCHSHAKE]: ['4365', '4070', '4010', '4040'],

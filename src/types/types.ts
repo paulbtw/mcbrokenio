@@ -291,6 +291,7 @@ export enum APIType {
   EL = 'EL',
   EU = 'EU',
   UNKNOWN = 'UNKNOWN',
+  US = 'US',
 }
 
 export interface ICountryInfos {

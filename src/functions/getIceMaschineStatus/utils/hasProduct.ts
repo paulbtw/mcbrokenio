@@ -1,5 +1,5 @@
-import { CountryInfos } from '.';
-import { Availability, IceType, Locations } from '../types';
+import { CountryInfos } from '../../../utils';
+import { Availability, IceType, Locations } from '../../../types';
 
 const hasIceType = (
   outrageProductList: string[],

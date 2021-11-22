@@ -4,6 +4,7 @@ import {
   checkForMaschineUNKNOWN,
 } from '.';
 import { APIType, Availability, Locations } from '../../../types';
+import { checkForMaschineUS } from './checkForMaschineUS';
 
 export const checkForMaschine: Record<
   APIType,
@@ -25,4 +26,6 @@ export const checkForMaschine: Record<
     checkForMaschineEL(bearerToken, posId, location, clientId),
   [APIType.UNKNOWN]: (bearerToken, posId, location) =>
     checkForMaschineUNKNOWN(bearerToken, posId, location),
+  [APIType.US]: (bearerToken, posId, location) =>
+    checkForMaschineUS(bearerToken, posId, location),
 };
