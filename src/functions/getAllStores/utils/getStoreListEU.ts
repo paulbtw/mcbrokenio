@@ -23,6 +23,8 @@ export const getStoreListEU = async () => {
     (country) => country.getStores.api === APIType.EU,
   );
 
+  const posArray: Pos[] = [];
+
   // eslint-disable-next-line no-restricted-syntax
   for await (const country of countriesEu) {
     const countryFormatted = country.country;
@@ -33,52 +35,52 @@ export const getStoreListEU = async () => {
       throw new Error(`No locations found for ${countryFormatted}`);
     }
 
-    const posArray: Pos[] = [];
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const location of locations) {
+      logger.debugObject('location: ', location);
 
-    await Promise.all([
-      locations.map(async (location) => {
-        logger.debugObject('location: ', location);
+      if (!location) {
+        return;
+      }
 
-        if (!location) {
-          return;
-        }
-
-        const response = await axios.get(
-          `${country.getStores.url}latitude=${location.latitude}&longitude=${location.longitude}`,
-          {
-            headers: {
-              authorization: `Bearer ${bearerToken}`,
-              'mcd-clientId': clientId,
-              'mcd-marketid': countryFormatted,
-              'mcd-uuid': '"', // needs to be a truthy value
-              'accept-language': countryFormatted === 'UK' ? 'en-GB' : 'de-DE',
-            },
+      const response = await axios.get(
+        `${country.getStores.url}latitude=${location.latitude}&longitude=${location.longitude}`,
+        {
+          headers: {
+            authorization: `Bearer ${bearerToken}`,
+            'mcd-clientId': clientId,
+            'mcd-marketid': countryFormatted,
+            'mcd-uuid': '"', // needs to be a truthy value
+            'accept-language': countryFormatted === 'UK' ? 'en-GB' : 'de-DE',
           },
-        );
+        },
+      );
 
-        const data = response.data as IRestaurantLocationResponse;
+      const data = response.data as IRestaurantLocationResponse;
 
-        // eslint-disable-next-line no-restricted-syntax
-        for await (const restaurant of data.response.restaurants) {
-          // logger.debugObject('restaurant: ', restaurant.nationalStoreNumber);
+      // eslint-disable-next-line no-restricted-syntax
+      for (const restaurant of data.response.restaurants) {
+        const newPos = Pos.create({
+          nationalStoreNumber: restaurant.nationalStoreNumber,
+          name: restaurant.address.addressLine1,
+          restaurantStatus: restaurant.restaurantStatus,
+          latitude: `${restaurant.location.latitude}`,
+          longitude: `${restaurant.location.longitude}`,
+          country: countryFormatted,
+          hasMobileOrdering: country.getStores.mobileString
+            ? restaurant.facilities.includes(country.getStores.mobileString)
+            : false,
+        });
 
-          const newPos = Pos.create({
-            nationalStoreNumber: restaurant.nationalStoreNumber,
-            name: restaurant.address.addressLine1,
-            restaurantStatus: restaurant.restaurantStatus,
-            latitude: `${restaurant.location.latitude}`,
-            longitude: `${restaurant.location.longitude}`,
-            country: countryFormatted,
-            hasMobileOrdering: country.getStores.mobileString
-              ? restaurant.facilities.includes(country.getStores.mobileString)
-              : false,
-          });
-
-          posArray.push(newPos);
-        }
-      }),
-    ]);
-
-    await Pos.save(posArray);
+        posArray.push(newPos);
+      }
+    }
   }
+  const uniquePosArrayEU = posArray.filter(
+    (obj, index, self) =>
+      index ===
+      self.findIndex((t) => t.nationalStoreNumber === obj.nationalStoreNumber),
+  );
+
+  await Pos.save(uniquePosArrayEU);
 };

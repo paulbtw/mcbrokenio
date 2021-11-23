@@ -255,7 +255,6 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     },
   },
   [Locations.UK]: {
-    // TODO
     country: Locations.UK,
     getStores: {
       api: APIType.EU,
