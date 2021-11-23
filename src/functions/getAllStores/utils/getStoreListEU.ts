@@ -51,7 +51,7 @@ export const getStoreListEU = async () => {
               'mcd-clientId': clientId,
               'mcd-marketid': countryFormatted,
               'mcd-uuid': '"', // needs to be a truthy value
-              'accept-language': 'de-DE',
+              'accept-language': countryFormatted === 'UK' ? 'en-GB' : 'de-DE',
             },
           },
         );

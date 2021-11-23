@@ -146,7 +146,6 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     },
   },
   [Locations.DK]: {
-    // TODO
     country: Locations.DK,
     getStores: {
       api: APIType.EL,
@@ -255,18 +254,18 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: [],
     },
   },
-  [Locations.GB]: {
+  [Locations.UK]: {
     // TODO
-    country: Locations.GB,
+    country: Locations.UK,
     getStores: {
-      api: APIType.UNKNOWN,
-      url: '',
-      mobileString: null,
+      api: APIType.EU,
+      url: 'https://eu-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
+      mobileString: 'MOBILEORDERS',
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: [],
+      [IceType.MILCHSHAKE]: ['4300', '4310', '4330', '4320'],
+      [IceType.MCFLURRY]: ['4467', '4694', '4397', '6554'],
+      [IceType.MCSUNDAE]: ['UNAVAILABLE'],
     },
   },
   [Locations.FR]: {

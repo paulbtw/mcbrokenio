@@ -26,6 +26,6 @@ export const checkForMaschine: Record<
     checkForMaschineEL(bearerToken, posId, location, clientId),
   [APIType.UNKNOWN]: (bearerToken, posId, location) =>
     checkForMaschineUNKNOWN(bearerToken, posId, location),
-  [APIType.US]: (bearerToken, posId, location) =>
-    checkForMaschineUS(bearerToken, posId, location),
+  [APIType.US]: (bearerToken, posId, location, clientId) =>
+    checkForMaschineUS(bearerToken, posId, location, clientId),
 };
