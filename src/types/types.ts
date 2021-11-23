@@ -12,8 +12,7 @@ export enum Locations {
   EE = 'EE', // Estonia
   ES = 'ES', // Spain
   FI = 'FI', // Finland
-  FR = 'FR', // France
-  GB = 'GB', // United Kingdom
+  FR = 'FR', // United Kingdom
   GE = 'GE', // Georgia
   GR = 'GR', // Greece
   GT = 'GT', // Guatemala
@@ -43,6 +42,7 @@ export enum Locations {
   SV = 'SV', // El Salvador
   TH = 'TH', // Thailand
   UA = 'UA', // Ukraine
+  UK = 'UK', // United Kingdom
   UNKNOWN = 'UNKNOWN',
   US = 'US', // United States
   VN = 'VN', // Vietnam
