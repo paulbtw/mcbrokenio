@@ -17,7 +17,7 @@ export const checkForMaschineEU = async (
 ) => {
   try {
     const response = await axios.get(
-      `https://eu-prod.api.mcd.com/exp/v1/restaurant/${nationalStoreNumber}?filter=full&storeUniqueIdType=ECPID`,
+      `https://eu-prod.api.mcd.com/exp/v1/restaurant/${nationalStoreNumber}?filter=full&storeUniqueIdType=NatlStrNumber`,
       {
         headers: {
           authorization: `Bearer ${bearerToken}`,
