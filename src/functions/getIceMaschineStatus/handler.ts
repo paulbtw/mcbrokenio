@@ -4,6 +4,7 @@ import { Pos } from '../../entities';
 import { APIType, Availability } from '../../types';
 import {
   BASIC_TOKEN_EL,
+  BASIC_TOKEN_EU,
   BASIC_TOKEN_US,
   CountryInfos,
   createDatabaseConnection,
@@ -29,6 +30,7 @@ export const main: Handler = async (_, context) => {
 
   const clientIdEl = getClientId(BASIC_TOKEN_EL);
   const clientIdUs = getClientId(BASIC_TOKEN_US);
+  const clientIdEu = getClientId(BASIC_TOKEN_EU);
 
   logger.debug('Ensure Database Connection');
   await createDatabaseConnection();
@@ -66,7 +68,11 @@ export const main: Handler = async (_, context) => {
       clientId = clientIdEl;
     } else if (storeApi === APIType.US) {
       clientId = clientIdUs;
+    } else if (storeApi === APIType.EU) {
+      clientId = clientIdEu;
     }
+
+    clientId = clientId.trim();
 
     const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
       await checkForMaschine[storeApi](

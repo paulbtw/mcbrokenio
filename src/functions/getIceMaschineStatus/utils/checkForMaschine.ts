@@ -20,8 +20,8 @@ export const checkForMaschine: Record<
     status: string;
   }>
 > = {
-  [APIType.EU]: (bearerToken, posId, location) =>
-    checkForMaschineEU(bearerToken, posId, location),
+  [APIType.EU]: (bearerToken, posId, location, clientId) =>
+    checkForMaschineEU(bearerToken, posId, location, clientId),
   [APIType.EL]: (bearerToken, posId, location, clientId) =>
     checkForMaschineEL(bearerToken, posId, location, clientId),
   [APIType.UNKNOWN]: (bearerToken, posId, location) =>
