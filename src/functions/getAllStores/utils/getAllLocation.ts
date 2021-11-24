@@ -39,6 +39,26 @@ const locationsUK: ILocation[] = [
   { latitude: 50.743876, longitude: -3.15845 },
 ];
 
+const locationsCA: ILocation[] = [
+  { latitude: 46.125723, longitude: -66.244151 },
+  { latitude: 46.762276, longitude: -70.958766 },
+  { latitude: 45.425713, longitude: -73.443605 },
+  { latitude: 45.343649, longitude: -75.799948 },
+  { latitude: 43.572817, longitude: -80.055971 },
+  { latitude: 54.497647, longitude: -74.149337 },
+  { latitude: 54.00202, longitude: -95.251385 },
+  { latitude: 49.659338, longitude: -97.545186 },
+  { latitude: 51.604697, longitude: -106.495157 },
+  { latitude: 52.47045, longitude: -114.975976 },
+  { latitude: 50.124322, longitude: -121.291479 },
+  { latitude: 49.095435, longitude: -124.034212 },
+  { latitude: 59.401207, longitude: -125.87473 },
+  { latitude: 59.18005, longitude: -104.221575 },
+  { latitude: 42.36184, longitude: -82.170519 },
+  { latitude: 45.109611, longitude: -80.633293 },
+  { latitude: 68.039713, longitude: -87.251269 },
+];
+
 const locationsUS: ILocation[] = [
   { latitude: 40.717629, longitude: -73.843184 },
   { latitude: 40.743396, longitude: -74.171882 },
@@ -142,6 +162,7 @@ const locationsUS: ILocation[] = [
   { latitude: 40.112617, longitude: -77.345731 },
   { latitude: 41.485903, longitude: -81.564369 },
   { latitude: 45.369573, longitude: -89.447306 },
+  { latitude: 66.047167, longitude: -158.818198 },
 ];
 
 export const getAllLocation: Record<string, ILocation[]> = {
@@ -149,4 +170,5 @@ export const getAllLocation: Record<string, ILocation[]> = {
   [Locations.NL]: locationsNL,
   [Locations.US]: locationsUS,
   [Locations.UK]: locationsUK,
+  [Locations.CA]: locationsCA,
 };

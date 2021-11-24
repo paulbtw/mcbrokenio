@@ -8,6 +8,7 @@ import {
   getClientId,
   BASIC_TOKEN_US,
   CountryInfos,
+  chunk,
 } from '../../../utils';
 
 const logger = new Logger('getStoreListUS');
@@ -35,8 +36,7 @@ export const getStoreListUS = async () => {
       throw new Error(`No locations found for ${countryFormatted}`);
     }
 
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const location of locations) {
+    const promiseArrayUs = locations.map(async (location) => {
       logger.debugObject('location: ', location);
 
       if (!location) {
@@ -59,7 +59,7 @@ export const getStoreListUS = async () => {
       const data = response.data as IRestaurantLocationResponse;
 
       // eslint-disable-next-line no-restricted-syntax
-      for await (const restaurant of data.response.restaurants) {
+      for (const restaurant of data.response.restaurants) {
         const newPos = Pos.create({
           nationalStoreNumber: restaurant.nationalStoreNumber,
           name: restaurant.address.addressLine1,
@@ -74,8 +74,16 @@ export const getStoreListUS = async () => {
 
         posArray.push(newPos);
       }
+    });
+
+    const batchedPromisesArray = chunk(promiseArrayUs, 5);
+
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const batchedPromises of batchedPromisesArray) {
+      await Promise.all(batchedPromises);
     }
   }
+
   const uniquePosArrayUS = posArray.filter(
     (obj, index, self) =>
       index ===

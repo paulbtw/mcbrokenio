@@ -299,9 +299,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     // TODO
     country: Locations.CA,
     getStores: {
-      api: APIType.UNKNOWN,
-      url: '',
-      mobileString: null,
+      api: APIType.US,
+      url: 'https://us-prod.api.mcd.com/exp/v1/restaurant/location?distance=100000&filter=summary&pageSize=250&',
+      mobileString: 'MOBILEORDERS',
     },
     productCodes: {
       [IceType.MILCHSHAKE]: [],
