@@ -6,7 +6,7 @@ const logger = new Logger('makeTestOrder');
 /**
  * Currently not working...
  * You can place an order even if the Store has a broken machine.
- * Need to look into this, maybe you need to add it to the card first to receive an error.
+ * Need to look into this, maybe you need to add it to the cart first to receive an error.
  */
 export const makeTestOrder = async (
   bearerToken: string,

@@ -1,12 +1,17 @@
 import { Logger } from '@sailplane/logger';
 import { Handler } from 'aws-lambda';
 import { Pos } from '../../entities';
-import { Locations } from '../../types';
+import { APIType, Availability } from '../../types';
 import {
+  BASIC_TOKEN_EL,
+  BASIC_TOKEN_EU,
+  BASIC_TOKEN_US,
+  CountryInfos,
   createDatabaseConnection,
+  getClientId,
   getNewBearerToken,
-  checkForMaschine,
 } from '../../utils';
+import { checkForMaschine } from './utils';
 
 const logger = new Logger('getIceMaschineStatus');
 
@@ -14,61 +19,101 @@ export const main: Handler = async (_, context) => {
   logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
 
   logger.debug('Get new Bearer token');
-  const bearerToken = await getNewBearerToken();
-  logger.debug('new Token: ', bearerToken);
+  const bearerTokenEU = await getNewBearerToken(APIType.EU);
+  logger.debug('new Token EU: ', bearerTokenEU);
+
+  const bearerTokenEL = await getNewBearerToken(APIType.EL);
+  logger.debug('new Token EL: ', bearerTokenEL);
+
+  const bearerTokenUS = await getNewBearerToken(APIType.US);
+  logger.debug('new Token US: ', bearerTokenUS);
+
+  const clientIdEl = getClientId(BASIC_TOKEN_EL);
+  const clientIdUs = getClientId(BASIC_TOKEN_US);
+  const clientIdEu = getClientId(BASIC_TOKEN_EU);
 
   logger.debug('Ensure Database Connection');
-  const connection = await createDatabaseConnection();
+  await createDatabaseConnection();
 
   const posToCheck = await Pos.find({
-    where: { country: Locations.DE },
+    where: { hasMobileOrdering: true },
     order: { updatedAt: 'ASC' },
-    take: 250,
+    take: 500,
   });
+
+  const now = new Date();
+
+  const newPosArray: Pos[] = [];
 
   // eslint-disable-next-line no-restricted-syntax
   for await (const pos of posToCheck) {
-    logger.debugObject('Checking Pos: ', pos);
-    const posId = pos.nationalStoreNumber;
+    const newPos = pos;
+    logger.debug(`Checking Pos: ${pos.nationalStoreNumber}`);
+    const posId = newPos.nationalStoreNumber;
+
+    const countryInfo = CountryInfos[newPos.country];
+
+    const storeApi = countryInfo.getStores.api;
+    let bearerToken = '';
+    if (storeApi === APIType.EU) {
+      bearerToken = bearerTokenEU;
+    } else if (storeApi === APIType.EL) {
+      bearerToken = bearerTokenEL;
+    } else if (storeApi === APIType.US) {
+      bearerToken = bearerTokenUS;
+    }
+
+    let clientId = '';
+    if (storeApi === APIType.EL) {
+      clientId = clientIdEl;
+    } else if (storeApi === APIType.US) {
+      clientId = clientIdUs;
+    } else if (storeApi === APIType.EU) {
+      clientId = clientIdEu;
+    }
+
+    clientId = clientId.trim();
 
     const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
-      await checkForMaschine(bearerToken, posId);
+      await checkForMaschine[storeApi](
+        bearerToken,
+        `${posId}`,
+        newPos.country,
+        clientId,
+      );
 
-    if (hasMilchshake === false) {
-      if (pos.hasMilchshake === false) {
-        pos.timeSinceBrokenMilchshake = new Date();
+    if (hasMilchshake === Availability.NOT_AVAILABLE) {
+      if (newPos.hasMilchshake === Availability.NOT_AVAILABLE) {
+        newPos.timeSinceBrokenMilchshake = now;
       }
     } else {
-      pos.timeSinceBrokenMilchshake = null;
+      newPos.timeSinceBrokenMilchshake = null;
     }
-    pos.hasMilchshake = hasMilchshake;
+    newPos.hasMilchshake = hasMilchshake;
 
-    if (hasMcFlurry === false) {
-      if (pos.hasMcFlurry === false) {
-        pos.timeSinceBrokenMcFlurry = new Date();
+    if (hasMcFlurry === Availability.NOT_AVAILABLE) {
+      if (newPos.hasMcFlurry === Availability.NOT_AVAILABLE) {
+        newPos.timeSinceBrokenMcFlurry = now;
       }
     } else {
-      pos.timeSinceBrokenMcFlurry = null;
+      newPos.timeSinceBrokenMcFlurry = null;
     }
-    pos.hasMcFlurry = hasMcFlurry;
+    newPos.hasMcFlurry = hasMcFlurry;
 
-    if (hasMcSundae === false) {
-      if (pos.hasMcSundae === false) {
-        pos.timeSinceBrokenMcSundae = new Date();
+    if (hasMcSundae === Availability.NOT_AVAILABLE) {
+      if (newPos.hasMcSundae === Availability.NOT_AVAILABLE) {
+        newPos.timeSinceBrokenMcSundae = now;
       }
     } else {
-      pos.timeSinceBrokenMcSundae = null;
+      newPos.timeSinceBrokenMcSundae = null;
     }
-    pos.hasMcSundae = hasMcSundae;
+    newPos.hasMcSundae = hasMcSundae;
 
-    pos.restaurantStatus = status;
-    pos.lastCheck = new Date();
+    newPos.restaurantStatus = status;
+    newPos.lastCheck = now;
 
-    await pos.save();
+    newPosArray.push(newPos);
   }
 
-  if (connection.isConnected) {
-    logger.debug('Closing DB connection');
-    await connection.close();
-  }
+  await Pos.save(newPosArray);
 };

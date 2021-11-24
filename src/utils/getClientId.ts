@@ -1,6 +1,4 @@
-import { BASIC_TOKEN } from './constants';
-
-export const getClientId = () => {
+export const getClientId = (BASIC_TOKEN: string | undefined) => {
   if (BASIC_TOKEN == null) {
     throw new Error('You need to add a Basic Token');
   }
