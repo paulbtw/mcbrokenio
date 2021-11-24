@@ -304,9 +304,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       mobileString: 'MOBILEORDERS',
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: [],
+      [IceType.MILCHSHAKE]: ['1125', '1126', '1127', '16813'],
+      [IceType.MCFLURRY]: ['16804', '16763', '5229', '11678'],
+      [IceType.MCSUNDAE]: ['132', '133'],
     },
   },
   [Locations.LT]: {
