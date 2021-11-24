@@ -82,7 +82,7 @@ functions:
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       KEY: ${self:custom.mcdInfo.mcdElKey}
     events:
-      - schedule: cron(30 8 * * ? *)
+      - schedule: cron(0 */6 * * ? *)
   createJson:
     handler: src/functions/createJson/handler.main
     memorySize: 512

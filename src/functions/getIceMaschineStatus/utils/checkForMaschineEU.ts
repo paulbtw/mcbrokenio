@@ -27,6 +27,7 @@ export const checkForMaschineEU = async (
           authorization: `Bearer ${bearerToken}`,
           'mcd-clientId': clientId,
           'mcd-sourceapp': 'GMA',
+          'mcd-marketid': location,
           'mcd-uuid': '"',
           'accept-language': 'en-GB',
         },

@@ -5,3 +5,4 @@ export * from './getClientId';
 export * from './getNewBearerToken';
 export * from './getLoginBearerToken';
 export * from './CountryInfos';
+export * from './chunk';

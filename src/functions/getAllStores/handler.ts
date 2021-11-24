@@ -11,7 +11,7 @@ export const main: Handler = async (_, context) => {
   logger.debug('Ensure Database Connection');
   await createDatabaseConnection();
 
-  await getStoreListUS();
-  await getStoreListEL();
-  await getStoreListEU();
+  const storesArray = [getStoreListEL, getStoreListEU, getStoreListUS];
+
+  await storesArray[Math.floor(Math.random() * storesArray.length)]();
 };
