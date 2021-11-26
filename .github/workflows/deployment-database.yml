@@ -13,4 +13,4 @@ jobs:
         with:
           node-version: '14.18.1'
       - run: yarn install
-      - run: yarn typeorm -f src/ormconfig.ts migation:run
+      - run: yarn typeorm -f src/ormconfig.ts migration:run
