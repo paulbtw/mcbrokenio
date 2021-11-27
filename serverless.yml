@@ -1,5 +1,3 @@
-org: paulbtw
-app: mcbrokenio
 service: mcbrokenio
 variablesResolutionMode: 20210326
 useDotenv: true
