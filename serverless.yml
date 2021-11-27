@@ -1,5 +1,3 @@
-org: paulbtw
-app: mcbrokenio
 service: mcbrokenio
 variablesResolutionMode: 20210326
 useDotenv: true
@@ -45,15 +43,15 @@ provider:
 
 custom:
   mcdInfo:
-    basicTokenEU: ${ssm(eu-central-1):/mcdonalds/eu/basictoken}
-    mcdUsername: ${ssm(eu-central-1):/mcdonalds/eu/username}
-    mcdPassword: ${ssm(eu-central-1):/mcdonalds/eu/password}
-    mcdDeviceId: ${ssm(eu-central-1):/mcdonalds/eu/deviceId}
-    databaseUrl: ${ssm(eu-central-1):/mcdonalds/database}
-    exportBucket: ${ssm(eu-central-1):/mcdonalds/export/bucket}-${opt:stage, 'dev'}
-    mcdElKey: ${ssm(eu-central-1):/mcdonalds/el/key}
-    basicTokenEL: ${ssm(eu-central-1):/mcdonalds/el/basictoken}
-    basicTokenUS: ${ssm(eu-central-1):/mcdonalds/us/basictoken}
+    basicTokenEU: ${env:BASIC_TOKEN_EU, ssm(eu-central-1):/mcdonalds/eu/basictoken}
+    mcdUsername: ${env:MCD_USERNAME, ssm(eu-central-1):/mcdonalds/eu/username}
+    mcdPassword: ${env:MCD_PASSWORD, ssm(eu-central-1):/mcdonalds/eu/password}
+    mcdDeviceId: ${env:MCD_DEVICEID, ssm(eu-central-1):/mcdonalds/eu/deviceId}
+    databaseUrl: ${env:DATABASE_URL, ssm(eu-central-1):/mcdonalds/database}
+    exportBucket: ${env:EXPORT_BUCKET, ssm(eu-central-1):/mcdonalds/export/bucket}-${opt:stage, 'dev'}
+    mcdElKey: ${env:KEY, ssm(eu-central-1):/mcdonalds/el/key}
+    basicTokenEL: ${env:BASIC_TOKEN_EL, ssm(eu-central-1):/mcdonalds/el/basictoken}
+    basicTokenUS: ${env:BASIC_TOKEN_US, ssm(eu-central-1):/mcdonalds/us/basictoken}
 
 functions:
   getIceMaschineStatus:
