@@ -69,8 +69,7 @@ functions:
       MCD_PASSWORD: ${self:custom.mcdInfo.mcdPassword}
       MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
     events:
-      - schedule:
-          rate: rate(5 minutes)
+      - schedule: cron(*/5 * * ? *)
   getAllStores:
     handler: src/functions/getAllStores/handler.main
     memorySize: 512
@@ -92,5 +91,4 @@ functions:
       BUCKET: ${self:custom.mcdInfo.exportBucket}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
     events:
-      - schedule:
-          rate: rate(15 minutes)
+      - schedule: cron(*/15 * * ? *)

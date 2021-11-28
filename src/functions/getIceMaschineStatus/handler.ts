@@ -10,6 +10,7 @@ import {
   chunk,
   CountryInfos,
   createDatabaseConnection,
+  delay,
   getClientId,
   getNewBearerToken,
 } from '../../utils';
@@ -126,6 +127,7 @@ export const main: Handler = async (_, context) => {
     newPos.lastCheck = now;
 
     newPosArray.push(newPos);
+    await delay(100);
   });
 
   const batchedPromisesArray = chunk(promiseArrayIceMaschine, 1);
