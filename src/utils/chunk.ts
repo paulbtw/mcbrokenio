@@ -1,4 +1,4 @@
-export const chunk = (arr: any[], size: number) => {
+export function chunk<T>(arr: T[], size: number): T[][] {
   const chunkedArr = [];
   let index = 0;
   while (index < arr.length) {
@@ -6,4 +6,4 @@ export const chunk = (arr: any[], size: number) => {
     index += size;
   }
   return chunkedArr;
-};
+}
