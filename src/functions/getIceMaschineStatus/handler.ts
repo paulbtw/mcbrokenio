@@ -10,7 +10,6 @@ import {
   chunk,
   CountryInfos,
   createDatabaseConnection,
-  delay,
   getClientId,
   getNewBearerToken,
 } from '../../utils';
