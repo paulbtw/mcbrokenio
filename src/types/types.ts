@@ -1,6 +1,7 @@
 export enum Locations {
   AE = 'AE', // United Arab Emirates
   AT = 'AT', // Austria
+  AU = 'AU', // Australia
   BA = 'BA', // Bosnia and Herzegovina
   BE = 'BE', // Belgium
   BG = 'BG', // Bulgaria
@@ -288,6 +289,7 @@ export interface IRestaurantsEL {
 }
 
 export enum APIType {
+  AP = 'AP',
   EL = 'EL',
   EU = 'EU',
   UNKNOWN = 'UNKNOWN',
