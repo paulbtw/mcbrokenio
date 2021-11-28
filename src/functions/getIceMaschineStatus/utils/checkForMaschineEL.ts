@@ -58,7 +58,7 @@ export const checkForMaschineEL = async (
       hasMilchshake: Availability.UNKNOWN,
       hasMcFlurry: Availability.UNKNOWN,
       hasMcSundae: Availability.UNKNOWN,
-      status: 'UNKNOWN',
+      status: 'NOT CONNECTED',
     };
   }
 };

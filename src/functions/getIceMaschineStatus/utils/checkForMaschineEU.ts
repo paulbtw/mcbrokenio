@@ -61,7 +61,7 @@ export const checkForMaschineEU = async (
       hasMilchshake: Availability.UNKNOWN,
       hasMcSundae: Availability.UNKNOWN,
       hasMcFlurry: Availability.UNKNOWN,
-      status: 'UNKNOWN',
+      status: 'NOT CONNECTED',
     };
   }
 };

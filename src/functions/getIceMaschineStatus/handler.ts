@@ -91,8 +91,12 @@ export const main: Handler = async (_, context) => {
         clientId,
       );
 
+    if (status === 'NOT CONNECTED') {
+      return;
+    }
+
     if (hasMilchshake === Availability.NOT_AVAILABLE) {
-      if (newPos.hasMilchshake === Availability.NOT_AVAILABLE) {
+      if (newPos.hasMilchshake !== Availability.NOT_AVAILABLE) {
         newPos.timeSinceBrokenMilchshake = now;
       }
     } else {
@@ -101,7 +105,7 @@ export const main: Handler = async (_, context) => {
     newPos.hasMilchshake = hasMilchshake;
 
     if (hasMcFlurry === Availability.NOT_AVAILABLE) {
-      if (newPos.hasMcFlurry === Availability.NOT_AVAILABLE) {
+      if (newPos.hasMcFlurry !== Availability.NOT_AVAILABLE) {
         newPos.timeSinceBrokenMcFlurry = now;
       }
     } else {
@@ -110,7 +114,7 @@ export const main: Handler = async (_, context) => {
     newPos.hasMcFlurry = hasMcFlurry;
 
     if (hasMcSundae === Availability.NOT_AVAILABLE) {
-      if (newPos.hasMcSundae === Availability.NOT_AVAILABLE) {
+      if (newPos.hasMcSundae !== Availability.NOT_AVAILABLE) {
         newPos.timeSinceBrokenMcSundae = now;
       }
     } else {
