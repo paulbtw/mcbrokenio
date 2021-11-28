@@ -52,39 +52,43 @@ export const main: Handler = async (_, context) => {
 
   const newPosArray: Pos[] = [];
 
-  const promiseArrayIceMaschine = posToCheck.map(async (pos) => {
-    const newPos = pos;
-    logger.debug(`Checking Pos: ${pos.nationalStoreNumber}`);
-    const posId = newPos.nationalStoreNumber;
+  const batchedPos = chunk<Pos>(posToCheck, 10);
 
-    const countryInfo = CountryInfos[newPos.country];
+  // eslint-disable-next-line no-restricted-syntax
+  for await (const posArray of batchedPos) {
+    await Promise.all(posArray.map(async (pos) => {
+      const newPos = pos;
+      logger.debug(`Checking Pos: ${pos.nationalStoreNumber}`);
+      const posId = newPos.nationalStoreNumber;
 
-    const storeApi = countryInfo.getStores.api;
-    let bearerToken = '';
-    if (storeApi === APIType.EU) {
-      bearerToken = bearerTokenEU;
-    } else if (storeApi === APIType.EL) {
-      bearerToken = bearerTokenEL;
-    } else if (storeApi === APIType.US) {
-      bearerToken = bearerTokenUS;
-    } else if (storeApi === APIType.AP) {
-      bearerToken = bearerTokenAP;
-    }
+      const countryInfo = CountryInfos[newPos.country];
 
-    let clientId = '';
-    if (storeApi === APIType.EL) {
-      clientId = clientIdEl;
-    } else if (storeApi === APIType.US) {
-      clientId = clientIdUs;
-    } else if (storeApi === APIType.EU) {
-      clientId = clientIdEu;
-    } else if (storeApi === APIType.AP) {
-      clientId = clientIdAp;
-    }
+      const storeApi = countryInfo.getStores.api;
+      let bearerToken = '';
+      if (storeApi === APIType.EU) {
+        bearerToken = bearerTokenEU;
+      } else if (storeApi === APIType.EL) {
+        bearerToken = bearerTokenEL;
+      } else if (storeApi === APIType.US) {
+        bearerToken = bearerTokenUS;
+      } else if (storeApi === APIType.AP) {
+        bearerToken = bearerTokenAP;
+      }
 
-    clientId = clientId.trim();
+      let clientId = '';
+      if (storeApi === APIType.EL) {
+        clientId = clientIdEl;
+      } else if (storeApi === APIType.US) {
+        clientId = clientIdUs;
+      } else if (storeApi === APIType.EU) {
+        clientId = clientIdEu;
+      } else if (storeApi === APIType.AP) {
+        clientId = clientIdAp;
+      }
 
-    const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
+      clientId = clientId.trim();
+
+      const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
       await checkForMaschine[storeApi](
         bearerToken,
         `${posId}`,
@@ -92,49 +96,42 @@ export const main: Handler = async (_, context) => {
         clientId,
       );
 
-    if (status === 'NOT CONNECTED') {
-      return;
-    }
-
-    if (hasMilchshake === Availability.NOT_AVAILABLE) {
-      if (newPos.hasMilchshake !== Availability.NOT_AVAILABLE) {
-        newPos.timeSinceBrokenMilchshake = now;
+      if (status === 'NOT CONNECTED') {
+        return;
       }
-    } else {
-      newPos.timeSinceBrokenMilchshake = null;
-    }
-    newPos.hasMilchshake = hasMilchshake;
 
-    if (hasMcFlurry === Availability.NOT_AVAILABLE) {
-      if (newPos.hasMcFlurry !== Availability.NOT_AVAILABLE) {
-        newPos.timeSinceBrokenMcFlurry = now;
+      if (hasMilchshake === Availability.NOT_AVAILABLE) {
+        if (newPos.hasMilchshake !== Availability.NOT_AVAILABLE) {
+          newPos.timeSinceBrokenMilchshake = now;
+        }
+      } else {
+        newPos.timeSinceBrokenMilchshake = null;
       }
-    } else {
-      newPos.timeSinceBrokenMcFlurry = null;
-    }
-    newPos.hasMcFlurry = hasMcFlurry;
+      newPos.hasMilchshake = hasMilchshake;
 
-    if (hasMcSundae === Availability.NOT_AVAILABLE) {
-      if (newPos.hasMcSundae !== Availability.NOT_AVAILABLE) {
-        newPos.timeSinceBrokenMcSundae = now;
+      if (hasMcFlurry === Availability.NOT_AVAILABLE) {
+        if (newPos.hasMcFlurry !== Availability.NOT_AVAILABLE) {
+          newPos.timeSinceBrokenMcFlurry = now;
+        }
+      } else {
+        newPos.timeSinceBrokenMcFlurry = null;
       }
-    } else {
-      newPos.timeSinceBrokenMcSundae = null;
-    }
-    newPos.hasMcSundae = hasMcSundae;
+      newPos.hasMcFlurry = hasMcFlurry;
 
-    newPos.restaurantStatus = status;
-    newPos.lastCheck = now;
+      if (hasMcSundae === Availability.NOT_AVAILABLE) {
+        if (newPos.hasMcSundae !== Availability.NOT_AVAILABLE) {
+          newPos.timeSinceBrokenMcSundae = now;
+        }
+      } else {
+        newPos.timeSinceBrokenMcSundae = null;
+      }
+      newPos.hasMcSundae = hasMcSundae;
 
-    newPosArray.push(newPos);
-    await delay(100);
-  });
+      newPos.restaurantStatus = status;
+      newPos.lastCheck = now;
 
-  const batchedPromisesArray = chunk(promiseArrayIceMaschine, 1);
-
-  // eslint-disable-next-line no-restricted-syntax
-  for await (const batchedPromises of batchedPromisesArray) {
-    await Promise.all(batchedPromises);
+      newPosArray.push(newPos);
+    }));
   }
 
   await Pos.save(newPosArray);
