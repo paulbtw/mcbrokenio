@@ -5,6 +5,7 @@ import { Pos } from '../../../entities';
 import { APIType, IRestaurantLocationResponse } from '../../../types';
 import {
   BASIC_TOKEN_AP,
+  chunk,
   CountryInfos,
   getClientId,
   getNewBearerToken,
@@ -14,7 +15,7 @@ const logger = new Logger('getStoreListAP');
 
 export const getStoreListAP = async () => {
   const bearerToken = await getNewBearerToken(APIType.AP);
-  logger.debug('Nnew Bearer Token: ', bearerToken);
+  logger.debug('New Bearer Token: ', bearerToken);
 
   const clientId = getClientId(BASIC_TOKEN_AP);
   logger.debug(`clientId: ${clientId}`);
@@ -35,8 +36,7 @@ export const getStoreListAP = async () => {
       throw new Error(`No locations found for ${countryFormatted}`);
     }
 
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const location of locations) {
+    const promiseArrayAp = locations.map(async (location) => {
       logger.debugObject('location: ', location);
 
       if (!location) {
@@ -74,6 +74,13 @@ export const getStoreListAP = async () => {
 
         posArray.push(newPos);
       }
+    });
+
+    const batchedPromisesArray = chunk(promiseArrayAp, 5);
+
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const batchedPromises of batchedPromisesArray) {
+      await Promise.all(batchedPromises);
     }
   }
 
