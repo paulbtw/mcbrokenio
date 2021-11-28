@@ -29,12 +29,19 @@ export const main: Handler = async (_, context) => {
       },
       properties: {
         hasMilchshake: pos.hasMilchshake,
+        timeSinceBrokenMilchshake: pos.timeSinceBrokenMilchshake ?
+          new Date(pos.timeSinceBrokenMilchshake).getTime() : pos.timeSinceBrokenMilchshake,
         hasMcSundae: pos.hasMcSundae,
+        timeSinceBrokenMcSundae: pos.timeSinceBrokenMcSundae ?
+          new Date(pos.timeSinceBrokenMcSundae).getTime() : null,
         hasMcFlurry: pos.hasMcFlurry,
+        timeSinceBrokenMcFlurry: pos.timeSinceBrokenMcFlurry ?
+          new Date(pos.timeSinceBrokenMcFlurry).getTime() : pos.timeSinceBrokenMcFlurry,
         lastChecked: new Date(pos.lastCheck).getTime(),
         name: pos.name,
         dot,
         open: pos.restaurantStatus,
+        hasMobileOrdering: pos.hasMobileOrdering,
       },
       type: 'Feature',
     };
