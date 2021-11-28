@@ -124,7 +124,7 @@ export const main: Handler = async (_, context) => {
     newPosArray.push(newPos);
   });
 
-  const batchedPromisesArray = chunk(promiseArrayIceMaschine, 5);
+  const batchedPromisesArray = chunk(promiseArrayIceMaschine, 1);
 
   // eslint-disable-next-line no-restricted-syntax
   for await (const batchedPromises of batchedPromisesArray) {
