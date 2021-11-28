@@ -48,7 +48,7 @@ export const getStoreListEU = async () => {
         {
           headers: {
             authorization: `Bearer ${bearerToken}`,
-            'mcd-clientId': clientId,
+            'mcd-clientid': clientId,
             'mcd-marketid': countryFormatted,
             'mcd-uuid': '"', // needs to be a truthy value
             'accept-language': countryFormatted === 'UK' ? 'en-GB' : 'de-DE',
