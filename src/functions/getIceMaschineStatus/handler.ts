@@ -44,7 +44,7 @@ export const main: Handler = async (_, context) => {
   const posToCheck = await Pos.find({
     where: { hasMobileOrdering: true },
     order: { updatedAt: 'ASC' },
-    take: 2000,
+    take: 1000,
   });
 
   const now = new Date();
