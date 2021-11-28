@@ -5,6 +5,7 @@ import { Pos } from '../../../entities';
 import { APIType, IRestaurantLocationResponse } from '../../../types';
 import {
   BASIC_TOKEN_EU,
+  chunk,
   CountryInfos,
   getClientId,
   getNewBearerToken,
@@ -35,8 +36,7 @@ export const getStoreListEU = async () => {
       throw new Error(`No locations found for ${countryFormatted}`);
     }
 
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const location of locations) {
+    const promiseArrayEu = locations.map(async (location) => {
       logger.debugObject('location: ', location);
 
       if (!location) {
@@ -74,8 +74,16 @@ export const getStoreListEU = async () => {
 
         posArray.push(newPos);
       }
+    });
+
+    const batchedPromisesArray = chunk(promiseArrayEu, 5);
+
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const batchedPromises of batchedPromisesArray) {
+      await Promise.all(batchedPromises);
     }
   }
+
   const uniquePosArrayEU = posArray.filter(
     (obj, index, self) =>
       index ===
