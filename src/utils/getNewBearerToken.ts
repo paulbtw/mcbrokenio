@@ -1,7 +1,12 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
 import { APIType } from '../types';
-import { BASIC_TOKEN_EU, BASIC_TOKEN_EL, BASIC_TOKEN_US } from '.';
+import {
+  BASIC_TOKEN_EU,
+  BASIC_TOKEN_EL,
+  BASIC_TOKEN_US,
+  BASIC_TOKEN_AP,
+} from '.';
 
 const logger = new Logger('getNewBearerToken');
 
@@ -71,6 +76,33 @@ export const getNewBearerToken = async (api: APIType) => {
         {
           headers: {
             authorization: `Basic ${BASIC_TOKEN_US}`,
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          },
+        },
+      );
+
+      const requestData = refreshResponse.data;
+      logger.debugObject('refresh response: ', requestData);
+
+      return requestData.response.token;
+    } catch (error) {
+      logger.error('error getting new bearer token', error);
+      throw error;
+    }
+  }
+
+  if (api === APIType.AP) {
+    if (!BASIC_TOKEN_AP) {
+      throw new Error('You need to add a Basic Token');
+    }
+
+    try {
+      const refreshResponse = await axios.post(
+        'https://ap-prod.api.mcd.com/v1/security/auth/token',
+        null,
+        {
+          headers: {
+            authorization: `Basic ${BASIC_TOKEN_AP}`,
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
           },
         },

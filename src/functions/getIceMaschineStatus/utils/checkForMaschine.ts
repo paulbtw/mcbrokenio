@@ -2,9 +2,10 @@ import {
   checkForMaschineEU,
   checkForMaschineEL,
   checkForMaschineUNKNOWN,
+  checkForMaschineAP,
+  checkForMaschineUS,
 } from '.';
 import { APIType, Availability, Locations } from '../../../types';
-import { checkForMaschineUS } from './checkForMaschineUS';
 
 export const checkForMaschine: Record<
   APIType,
@@ -28,4 +29,6 @@ export const checkForMaschine: Record<
     checkForMaschineUNKNOWN(bearerToken, posId, location),
   [APIType.US]: (bearerToken, posId, location, clientId) =>
     checkForMaschineUS(bearerToken, posId, location, clientId),
+  [APIType.AP]: (bearerToken, posId, location, clientId) =>
+    checkForMaschineAP(bearerToken, posId, location, clientId),
 };

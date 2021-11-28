@@ -1,3 +1,4 @@
+export const { BASIC_TOKEN_AP } = process.env;
 export const { BASIC_TOKEN_EU } = process.env;
 export const { BASIC_TOKEN_EL } = process.env;
 export const { BASIC_TOKEN_US } = process.env;

@@ -669,6 +669,19 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: [],
     },
   },
+  [Locations.AU]: {
+    country: Locations.AU,
+    getStores: {
+      api: APIType.AP,
+      url: 'https://ap-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
+      mobileString: 'MOBILEORDERS',
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: ['1502', '1512', '1522'],
+      [IceType.MCFLURRY]: ['5739', '5738'],
+      [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004'],
+    },
+  },
   [Locations.UNKNOWN]: {
     country: Locations.UNKNOWN,
     getStores: {

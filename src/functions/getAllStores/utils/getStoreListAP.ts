@@ -4,29 +4,29 @@ import { getAllLocation } from '.';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantLocationResponse } from '../../../types';
 import {
-  BASIC_TOKEN_EU,
+  BASIC_TOKEN_AP,
   CountryInfos,
   getClientId,
   getNewBearerToken,
 } from '../../../utils';
 
-const logger = new Logger('getStoreListEU');
+const logger = new Logger('getStoreListAP');
 
-export const getStoreListEU = async () => {
-  const bearerToken = await getNewBearerToken(APIType.EU);
-  logger.debug('new Bearer Token: ', bearerToken);
+export const getStoreListAP = async () => {
+  const bearerToken = await getNewBearerToken(APIType.AP);
+  logger.debug('Nnew Bearer Token: ', bearerToken);
 
-  const clientId = getClientId(BASIC_TOKEN_EU);
+  const clientId = getClientId(BASIC_TOKEN_AP);
   logger.debug(`clientId: ${clientId}`);
 
-  const countriesEu = Object.values(CountryInfos).filter(
-    (country) => country.getStores.api === APIType.EU,
+  const countriesAp = Object.values(CountryInfos).filter(
+    (country) => country.getStores.api === APIType.AP,
   );
 
   const posArray: Pos[] = [];
 
   // eslint-disable-next-line no-restricted-syntax
-  for await (const country of countriesEu) {
+  for await (const country of countriesAp) {
     const countryFormatted = country.country;
 
     const locations = getAllLocation[countryFormatted];
@@ -51,7 +51,7 @@ export const getStoreListEU = async () => {
             'mcd-clientid': clientId,
             'mcd-marketid': countryFormatted,
             'mcd-uuid': '"', // needs to be a truthy value
-            'accept-language': countryFormatted === 'UK' ? 'en-GB' : 'de-DE',
+            'accept-language': 'en-AU',
           },
         },
       );
@@ -76,6 +76,7 @@ export const getStoreListEU = async () => {
       }
     }
   }
+
   const uniquePosArrayEU = posArray.filter(
     (obj, index, self) =>
       index ===
