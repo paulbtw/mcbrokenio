@@ -3,6 +3,7 @@ import { Handler } from 'aws-lambda';
 import { Pos } from '../../entities';
 import { APIType, Availability } from '../../types';
 import {
+  BASIC_TOKEN_AP,
   BASIC_TOKEN_EL,
   BASIC_TOKEN_EU,
   BASIC_TOKEN_US,
@@ -28,9 +29,13 @@ export const main: Handler = async (_, context) => {
   const bearerTokenUS = await getNewBearerToken(APIType.US);
   logger.debug('new Token US: ', bearerTokenUS);
 
+  const bearerTokenAP = await getNewBearerToken(APIType.AP);
+  logger.debug('new Token AP: ', bearerTokenAP);
+
   const clientIdEl = getClientId(BASIC_TOKEN_EL);
   const clientIdUs = getClientId(BASIC_TOKEN_US);
   const clientIdEu = getClientId(BASIC_TOKEN_EU);
+  const clientIdAp = getClientId(BASIC_TOKEN_AP);
 
   logger.debug('Ensure Database Connection');
   await createDatabaseConnection();
@@ -61,6 +66,8 @@ export const main: Handler = async (_, context) => {
       bearerToken = bearerTokenEL;
     } else if (storeApi === APIType.US) {
       bearerToken = bearerTokenUS;
+    } else if (storeApi === APIType.AP) {
+      bearerToken = bearerTokenAP;
     }
 
     let clientId = '';
@@ -70,6 +77,8 @@ export const main: Handler = async (_, context) => {
       clientId = clientIdUs;
     } else if (storeApi === APIType.EU) {
       clientId = clientIdEu;
+    } else if (storeApi === APIType.AP) {
+      clientId = clientIdAp;
     }
 
     clientId = clientId.trim();
