@@ -52,6 +52,7 @@ custom:
     mcdElKey: ${env:KEY, ssm(eu-central-1):/mcdonalds/el/key}
     basicTokenEL: ${env:BASIC_TOKEN_EL, ssm(eu-central-1):/mcdonalds/el/basictoken}
     basicTokenUS: ${env:BASIC_TOKEN_US, ssm(eu-central-1):/mcdonalds/us/basictoken}
+    basicTokenAP: ${env:BASIC_TOKEN_AP, ssm(eu-central-1):/mcdonalds/ap/basictoken}
 
 functions:
   getIceMaschineStatus:
@@ -62,6 +63,7 @@ functions:
       BASIC_TOKEN_EU: ${self:custom.mcdInfo.basicTokenEU}
       BASIC_TOKEN_EL: ${self:custom.mcdInfo.basicTokenEL}
       BASIC_TOKEN_US: ${self:custom.mcdInfo.basicTokenUS}
+      BASIC_TOKEN_AP: ${self:custom.mcdInfo.basicTokenAP}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       MCD_USERNAME: ${self:custom.mcdInfo.mcdUsername}
       MCD_PASSWORD: ${self:custom.mcdInfo.mcdPassword}
@@ -77,6 +79,7 @@ functions:
       BASIC_TOKEN_EU: ${self:custom.mcdInfo.basicTokenEU}
       BASIC_TOKEN_EL: ${self:custom.mcdInfo.basicTokenEL}
       BASIC_TOKEN_US: ${self:custom.mcdInfo.basicTokenUS}
+      BASIC_TOKEN_AP: ${self:custom.mcdInfo.basicTokenAP}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       KEY: ${self:custom.mcdInfo.mcdElKey}
     events:
