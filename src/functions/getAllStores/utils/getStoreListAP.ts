@@ -36,51 +36,49 @@ export const getStoreListAP = async () => {
       throw new Error(`No locations found for ${countryFormatted}`);
     }
 
-    const promiseArrayAp = locations.map(async (location) => {
-      logger.debugObject('location: ', location);
-
-      if (!location) {
-        return;
-      }
-
-      const response = await axios.get(
-        `${country.getStores.url}latitude=${location.latitude}&longitude=${location.longitude}`,
-        {
-          headers: {
-            authorization: `Bearer ${bearerToken}`,
-            'mcd-clientid': clientId,
-            'mcd-marketid': countryFormatted,
-            'mcd-uuid': '"', // needs to be a truthy value
-            'accept-language': 'en-AU',
-          },
-        },
-      );
-
-      const data = response.data as IRestaurantLocationResponse;
-
-      // eslint-disable-next-line no-restricted-syntax
-      for (const restaurant of data.response.restaurants) {
-        const newPos = Pos.create({
-          nationalStoreNumber: restaurant.nationalStoreNumber,
-          name: restaurant.address.addressLine1,
-          restaurantStatus: restaurant.restaurantStatus,
-          latitude: `${restaurant.location.latitude}`,
-          longitude: `${restaurant.location.longitude}`,
-          country: countryFormatted,
-          hasMobileOrdering: country.getStores.mobileString
-            ? restaurant.facilities.includes(country.getStores.mobileString)
-            : false,
-        });
-
-        posArray.push(newPos);
-      }
-    });
-
-    const batchedPromisesArray = chunk(promiseArrayAp, 5);
+    const batchedLocations = chunk(locations, 10);
 
     // eslint-disable-next-line no-restricted-syntax
-    for await (const batchedPromises of batchedPromisesArray) {
-      await Promise.all(batchedPromises);
+    for await (const locationArray of batchedLocations) {
+      await Promise.all(locationArray.map(async (location) => {
+        logger.debugObject('location: ', location);
+
+        if (!location) {
+          return;
+        }
+
+        const response = await axios.get(
+          `${country.getStores.url}latitude=${location.latitude}&longitude=${location.longitude}`,
+          {
+            headers: {
+              authorization: `Bearer ${bearerToken}`,
+              'mcd-clientid': clientId,
+              'mcd-marketid': countryFormatted,
+              'mcd-uuid': '"', // needs to be a truthy value
+              'accept-language': 'en-AU',
+            },
+          },
+        );
+
+        const data = response.data as IRestaurantLocationResponse;
+
+        // eslint-disable-next-line no-restricted-syntax
+        for (const restaurant of data.response.restaurants) {
+          const newPos = Pos.create({
+            nationalStoreNumber: restaurant.nationalStoreNumber,
+            name: restaurant.address.addressLine1,
+            restaurantStatus: restaurant.restaurantStatus,
+            latitude: `${restaurant.location.latitude}`,
+            longitude: `${restaurant.location.longitude}`,
+            country: countryFormatted,
+            hasMobileOrdering: country.getStores.mobileString
+              ? restaurant.facilities.includes(country.getStores.mobileString)
+              : false,
+          });
+
+          posArray.push(newPos);
+        }
+      }));
     }
   }
 
