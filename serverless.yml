@@ -70,7 +70,7 @@ functions:
       MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
     events:
       - schedule:
-          rate: rate(3 minutes)
+          rate: rate(5 minutes)
   getAllStores:
     handler: src/functions/getAllStores/handler.main
     memorySize: 512
