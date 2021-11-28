@@ -7,6 +7,7 @@ import {
   BASIC_TOKEN_EL,
   BASIC_TOKEN_EU,
   BASIC_TOKEN_US,
+  chunk,
   CountryInfos,
   createDatabaseConnection,
   getClientId,
@@ -50,8 +51,7 @@ export const main: Handler = async (_, context) => {
 
   const newPosArray: Pos[] = [];
 
-  // eslint-disable-next-line no-restricted-syntax
-  for await (const pos of posToCheck) {
+  const promiseArrayIceMaschine = posToCheck.map(async (pos) => {
     const newPos = pos;
     logger.debug(`Checking Pos: ${pos.nationalStoreNumber}`);
     const posId = newPos.nationalStoreNumber;
@@ -122,6 +122,13 @@ export const main: Handler = async (_, context) => {
     newPos.lastCheck = now;
 
     newPosArray.push(newPos);
+  });
+
+  const batchedPromisesArray = chunk(promiseArrayIceMaschine, 5);
+
+  // eslint-disable-next-line no-restricted-syntax
+  for await (const batchedPromises of batchedPromisesArray) {
+    await Promise.all(batchedPromises);
   }
 
   await Pos.save(newPosArray);
