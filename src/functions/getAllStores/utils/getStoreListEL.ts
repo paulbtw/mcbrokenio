@@ -20,27 +20,32 @@ export const getStoreListEL = async () => {
 
   // eslint-disable-next-line no-restricted-syntax
   for await (const store of countriesEl) {
-    const response = await axios.get(
-      `${store.getStores.url}?acceptOffers=all&lab=false&key=${KEY}`,
-    );
-    const data = response.data as IRestaurantsEL;
-
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const restaurant of data.restaurants) {
-      const newPos = Pos.create({
-        nationalStoreNumber: parseInt(restaurant.rid, 10),
-        name: restaurant.addressLine1,
-        restaurantStatus: 'UNKNOWN',
-        latitude: `${restaurant.latitude}`,
-        longitude: `${restaurant.longitude}`,
-        country: store.country,
-        hasMobileOrdering: store.getStores.mobileString
-          ? restaurant.facilities.includes(store.getStores.mobileString)
-          : false,
-      });
-
-      posArray.push(newPos);
+    try {
+      const response = await axios.get(
+        `${store.getStores.url}?acceptOffers=all&lab=false&key=${KEY}`,
+      );
+      const data = response.data as IRestaurantsEL;
+  
+      // eslint-disable-next-line no-restricted-syntax
+      for await (const restaurant of data.restaurants) {
+        const newPos = Pos.create({
+          nationalStoreNumber: parseInt(restaurant.rid, 10),
+          name: restaurant.addressLine1,
+          restaurantStatus: 'UNKNOWN',
+          latitude: `${restaurant.latitude}`,
+          longitude: `${restaurant.longitude}`,
+          country: store.country,
+          hasMobileOrdering: store.getStores.mobileString
+            ? restaurant.facilities.includes(store.getStores.mobileString)
+            : false,
+        });
+  
+        posArray.push(newPos);
+      }
+    } catch (error) {
+      logger.error(error);
     }
+    
   }
   await Pos.save(posArray);
 };

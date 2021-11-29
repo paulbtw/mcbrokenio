@@ -41,42 +41,46 @@ export const getStoreListEU = async () => {
     // eslint-disable-next-line no-restricted-syntax
     for await (const locationsArray of batchedLocations) {
       await Promise.all(locationsArray.map(async (location) => {
-        logger.debugObject('location: ', location);
+        try {
+          logger.debugObject('location: ', location);
 
-        if (!location) {
-          return;
-        }
-
-        const response = await axios.get(
-          `${country.getStores.url}latitude=${location.latitude}&longitude=${location.longitude}`,
-          {
-            headers: {
-              authorization: `Bearer ${bearerToken}`,
-              'mcd-clientid': clientId,
-              'mcd-marketid': countryFormatted,
-              'mcd-uuid': '"', // needs to be a truthy value
-              'accept-language': countryFormatted === 'UK' ? 'en-GB' : 'de-DE',
+          if (!location) {
+            return;
+          }
+  
+          const response = await axios.get(
+            `${country.getStores.url}latitude=${location.latitude}&longitude=${location.longitude}`,
+            {
+              headers: {
+                authorization: `Bearer ${bearerToken}`,
+                'mcd-clientid': clientId,
+                'mcd-marketid': countryFormatted,
+                'mcd-uuid': '"', // needs to be a truthy value
+                'accept-language': countryFormatted === 'UK' ? 'en-GB' : 'de-DE',
+              },
             },
-          },
-        );
-
-        const data = response.data as IRestaurantLocationResponse;
-
-        // eslint-disable-next-line no-restricted-syntax
-        for (const restaurant of data.response.restaurants) {
-          const newPos = Pos.create({
-            nationalStoreNumber: restaurant.nationalStoreNumber,
-            name: restaurant.address.addressLine1,
-            restaurantStatus: restaurant.restaurantStatus,
-            latitude: `${restaurant.location.latitude}`,
-            longitude: `${restaurant.location.longitude}`,
-            country: countryFormatted,
-            hasMobileOrdering: country.getStores.mobileString
-              ? restaurant.facilities.includes(country.getStores.mobileString)
-              : false,
-          });
-
-          posArray.push(newPos);
+          );
+  
+          const data = response.data as IRestaurantLocationResponse;
+  
+          // eslint-disable-next-line no-restricted-syntax
+          for (const restaurant of data.response.restaurants) {
+            const newPos = Pos.create({
+              nationalStoreNumber: restaurant.nationalStoreNumber,
+              name: restaurant.address.addressLine1,
+              restaurantStatus: restaurant.restaurantStatus,
+              latitude: `${restaurant.location.latitude}`,
+              longitude: `${restaurant.location.longitude}`,
+              country: countryFormatted,
+              hasMobileOrdering: country.getStores.mobileString
+                ? restaurant.facilities.includes(country.getStores.mobileString)
+                : false,
+            });
+  
+            posArray.push(newPos);
+          }
+        } catch (error) {
+          logger.error(error);
         }
       }));
     }
