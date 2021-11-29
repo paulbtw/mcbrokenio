@@ -20,31 +20,36 @@ export const getStoreListHK = async () => {
 
   // eslint-disable-next-line no-restricted-syntax
   for await (const country of countriesAp) {
-    const response = await axios.get(
-      `${country.getStores.url}`,
-    );
-
-    const data = response.data as IRestaurantLocationsResponseHK[];
-
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const restaurant of data) {
-      const nationalStoreNumber = restaurant.identifiers.storeIdentifier.filter((id) => id.identifierType === 'LocalRefNum');
-      const hasMobileOrdering = restaurant.storeAttributes.attribute.filter(
-        (attribute) => attribute.type === country.getStores.mobileString,
+    try {
+      const response = await axios.get(
+        `${country.getStores.url}`,
       );
-
-      const newPos = Pos.create({
-        nationalStoreNumber: parseInt(nationalStoreNumber[0].identifierValue, 10),
-        name: restaurant.address.addressLine1,
-        restaurantStatus: 'UNKNOWN',
-        latitude: `${restaurant.address.location.lat}`,
-        longitude: `${restaurant.address.location.lon}`,
-        country: country.country,
-        hasMobileOrdering: hasMobileOrdering.length > 0,
-      });
-
-      posArray.push(newPos);
+  
+      const data = response.data as IRestaurantLocationsResponseHK[];
+  
+      // eslint-disable-next-line no-restricted-syntax
+      for await (const restaurant of data) {
+        const nationalStoreNumber = restaurant.identifiers.storeIdentifier.filter((id) => id.identifierType === 'LocalRefNum');
+        const hasMobileOrdering = restaurant.storeAttributes.attribute.filter(
+          (attribute) => attribute.type === country.getStores.mobileString,
+        );
+  
+        const newPos = Pos.create({
+          nationalStoreNumber: parseInt(nationalStoreNumber[0].identifierValue, 10),
+          name: restaurant.address.addressLine1,
+          restaurantStatus: 'UNKNOWN',
+          latitude: `${restaurant.address.location.lat}`,
+          longitude: `${restaurant.address.location.lon}`,
+          country: country.country,
+          hasMobileOrdering: hasMobileOrdering.length > 0,
+        });
+  
+        posArray.push(newPos);
+      }
+    } catch (error) {
+      logger.error(error);
     }
+    
   }
 
   await Pos.save(posArray);
