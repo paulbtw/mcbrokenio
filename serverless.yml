@@ -69,6 +69,7 @@ functions:
       MCD_USERNAME: ${self:custom.mcdInfo.mcdUsername}
       MCD_PASSWORD: ${self:custom.mcdInfo.mcdPassword}
       MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
+      API_KEY_AP: ${self:custom.mcdInfo.apiKeyAP}
     events:
       - schedule: cron(*/5 * * * ? *)
   getAllStores:
@@ -82,6 +83,7 @@ functions:
       BASIC_TOKEN_AP: ${self:custom.mcdInfo.basicTokenAP}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
       KEY: ${self:custom.mcdInfo.mcdElKey}
+      API_KEY_AP: ${self:custom.mcdInfo.apiKeyAP}
     events:
       - schedule: cron(0 */6 * * ? *)
   createJson:
