@@ -7,3 +7,4 @@ export const { MCD_USERNAME } = process.env;
 export const { MCD_PASSWORD } = process.env;
 export const { MCD_DEVICEID } = process.env;
 export const { KEY } = process.env;
+export const { API_KEY_AP } = process.env;

@@ -5,6 +5,7 @@ import {
   getStoreListAP,
   getStoreListEL,
   getStoreListEU,
+  getStoreListHK,
   getStoreListUS,
 } from './utils';
 
@@ -16,12 +17,11 @@ export const main: Handler = async (_, context) => {
   logger.debug('Ensure Database Connection');
   await createDatabaseConnection();
 
-  const storesArray = [
+  await Promise.all([
     getStoreListAP,
     getStoreListEL,
     getStoreListEU,
+    getStoreListHK,
     getStoreListUS,
-  ];
-
-  await storesArray[Math.floor(Math.random() * storesArray.length)]();
+  ]);
 };
