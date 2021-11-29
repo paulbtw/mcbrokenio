@@ -682,6 +682,19 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004'],
     },
   },
+  [Locations.HK]: {
+    country: Locations.HK,
+    getStores: {
+      api: APIType.HK,
+      url: 'https://ap.api.mcd.com/v3/restaurant/location?filter=search&query=%7B%22market%22%3A%22HK%22,%22storeAttributes%22%3A%5B%5D,%22pageSize%22%3A500,%22local%22%3A%22en-HK%22,%22locationCriteria%22%3A%7B%22distance%22%3A%225000%22,%22longitude%22%3A%22114.108436%22,%22latitude%22%3A%2222.352316%22%7D%7D',
+      mobileString: 'MOBILEORDERS',
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: ['4325', '4326', '4320'],
+      [IceType.MCFLURRY]: ['22794', '1528'],
+      [IceType.MCSUNDAE]: ['4448', '4449'],
+    },
+  },
   [Locations.UNKNOWN]: {
     country: Locations.UNKNOWN,
     getStores: {
