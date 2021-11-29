@@ -36,7 +36,7 @@ export const getStoreListUS = async () => {
       throw new Error(`No locations found for ${countryFormatted}`);
     }
 
-    const batchedLocations = chunk(locations, 5);
+    const batchedLocations = chunk(locations, 8);
 
     // eslint-disable-next-line no-restricted-syntax
     for await (const locationsArray of batchedLocations) {
