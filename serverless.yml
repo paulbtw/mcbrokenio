@@ -53,6 +53,7 @@ custom:
     basicTokenEL: ${env:BASIC_TOKEN_EL, ssm(eu-central-1):/mcdonalds/el/basictoken}
     basicTokenUS: ${env:BASIC_TOKEN_US, ssm(eu-central-1):/mcdonalds/us/basictoken}
     basicTokenAP: ${env:BASIC_TOKEN_AP, ssm(eu-central-1):/mcdonalds/ap/basictoken}
+    apiKeyAP: ${env:API_KEY_AP, ssm(eu-central-1):/mcdonalds/ap/apikey}
 
 functions:
   getIceMaschineStatus:
