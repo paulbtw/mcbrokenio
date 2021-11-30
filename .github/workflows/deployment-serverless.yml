@@ -22,6 +22,10 @@ jobs:
       - name: Install Serverless Framework
         run: npm install -g serverless
       - run: yarn install
+      - name: migrations
+        run: yarn typeorm -f src/ormconfig.ts migration:run
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Serverless AWS authentication
         run: sls config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Serverless AWS deployment
