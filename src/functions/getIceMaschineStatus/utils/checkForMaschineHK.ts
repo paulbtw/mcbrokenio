@@ -10,12 +10,8 @@ export const checkForMaschineHK = async (
   _bearerToken: string,
   nationalStoreNumber: string,
   location: Locations,
-  clientId: string | undefined,
+  _clientId: string | undefined,
 ) => {
-  if (!clientId) {
-    logger.error('Client ID is missing');
-    throw Error('Client ID is missing');
-  }
   if (!API_KEY_AP) {
     logger.error('API Key is missing');
     throw Error('API key is missing');
