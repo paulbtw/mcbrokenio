@@ -1,5 +1,7 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
+import { getConnection } from 'typeorm';
+import { upsertPos } from '.';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantLocationsResponseHK } from '../../../types';
 import { API_KEY_AP, CountryInfos } from '../../../utils';
@@ -42,6 +44,7 @@ export const getStoreListHK = async () => {
           longitude: `${restaurant.address.location.lon}`,
           country: country.country,
           hasMobileOrdering: hasMobileOrdering.length > 0,
+          updatedAt: new Date(),
         });
   
         posArray.push(newPos);
@@ -52,5 +55,7 @@ export const getStoreListHK = async () => {
     
   }
 
-  await Pos.save(posArray);
+  const connection = getConnection()
+
+  await upsertPos(posArray, connection);
 };

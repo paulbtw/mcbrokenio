@@ -1,6 +1,7 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
-import { getAllLocation } from '.';
+import { getConnection } from 'typeorm';
+import { getAllLocation, upsertPos } from '.';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantLocationResponse } from '../../../types';
 import {
@@ -9,6 +10,7 @@ import {
   BASIC_TOKEN_US,
   CountryInfos,
   chunk,
+  delay,
 } from '../../../utils';
 
 const logger = new Logger('getStoreListUS');
@@ -36,7 +38,7 @@ export const getStoreListUS = async () => {
       throw new Error(`No locations found for ${countryFormatted}`);
     }
 
-    const batchedLocations = chunk(locations, 5);
+    const batchedLocations = chunk(locations, 10);
 
     // eslint-disable-next-line no-restricted-syntax
     for await (const locationsArray of batchedLocations) {
@@ -78,6 +80,7 @@ export const getStoreListUS = async () => {
                       country.getStores.mobileString,
                     )
                   : false,
+                updatedAt: new Date(),
               });
 
               posArray.push(newPos);
@@ -85,16 +88,13 @@ export const getStoreListUS = async () => {
           } catch (error) {
             logger.error(error);
           }
+          await delay(300)
         }),
       );
     }
   }
 
-  const uniquePosArrayUS = posArray.filter(
-    (obj, index, self) =>
-      index ===
-      self.findIndex((t) => t.nationalStoreNumber === obj.nationalStoreNumber),
-  );
+  const connection = getConnection()
 
-  await Pos.save(uniquePosArrayUS);
+  await upsertPos(posArray, connection);
 };
