@@ -163,6 +163,7 @@ const locationsUS: ILocation[] = [
   { latitude: 41.485903, longitude: -81.564369 },
   { latitude: 45.369573, longitude: -89.447306 },
   { latitude: 66.047167, longitude: -158.818198 },
+  { latitude: 42.482015, longitude: -87.512839 },
 ];
 
 const locationsAU: ILocation[] = [

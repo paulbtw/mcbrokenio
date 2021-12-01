@@ -1,6 +1,7 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
-import { getAllLocation } from '.';
+import { getConnection } from 'typeorm';
+import { getAllLocation, upsertPos } from '.';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantLocationResponse } from '../../../types';
 import {
@@ -75,6 +76,7 @@ export const getStoreListEU = async () => {
               hasMobileOrdering: country.getStores.mobileString
                 ? restaurant.facilities.includes(country.getStores.mobileString)
                 : false,
+                updatedAt: new Date(),
             });
   
             posArray.push(newPos);
@@ -86,11 +88,7 @@ export const getStoreListEU = async () => {
     }
   }
 
-  const uniquePosArrayEU = posArray.filter(
-    (obj, index, self) =>
-      index ===
-      self.findIndex((t) => t.nationalStoreNumber === obj.nationalStoreNumber),
-  );
+  const connection = getConnection()
 
-  await Pos.save(uniquePosArrayEU);
+  await upsertPos(posArray, connection);
 };

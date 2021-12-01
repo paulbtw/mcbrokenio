@@ -3,6 +3,8 @@ import { Logger } from '@sailplane/logger';
 import { CountryInfos, KEY } from '../../../utils';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantsEL } from '../../../types';
+import { getConnection } from 'typeorm';
+import { upsertPos } from '.';
 
 const logger = new Logger('getStoreListEL');
 
@@ -38,6 +40,7 @@ export const getStoreListEL = async () => {
           hasMobileOrdering: store.getStores.mobileString
             ? restaurant.facilities.includes(store.getStores.mobileString)
             : false,
+            updatedAt: new Date(),
         });
   
         posArray.push(newPos);
@@ -47,5 +50,8 @@ export const getStoreListEL = async () => {
     }
     
   }
-  await Pos.save(posArray);
+  
+  const connection = getConnection()
+
+  await upsertPos(posArray, connection);
 };
