@@ -1,19 +1,38 @@
 {
   "env": {
-    "browser": true,
-    "es2021": true
+    "node": true,
+    "es2020": true
   },
-  "extends": ["airbnb-base", "plugin:typescript-sort-keys/recommended", "prettier"],
+  "extends": [
+    "airbnb-base",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:import/typescript",
+    "plugin:prettier/recommended",
+    "prettier"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint", "typescript-sort-keys"],
+  "plugins": [
+    "@typescript-eslint",
+    "import"
+  ],
   "rules": {
+    "@typescript-eslint/no-shadow": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error"
+    ],
+    "class-methods-use-this": "off",
     "import/extensions": [
       "error",
-      "never",
+      "ignorePackages",
       {
         "js": "never",
         "jsx": "never",
@@ -21,12 +40,34 @@
         "tsx": "never"
       }
     ],
-    "import/no-unresolved": 0,
+    "import/no-unresolved": "error",
+    "import/no-unused-modules": "off",
+    "import/prefer-default-export": "off",
+    "import/no-cycle": "off",
+    "no-cycle": "off",
+    "no-plusplus": "off",
     "no-shadow": "off",
     "no-unused-vars": "off",
-    "import/prefer-default-export": "off",
-    "operator-linebreak": "off",
-    "object-curly-newline": "off",
-    "implicit-arrow-linebreak": "off"
+    "no-use-before-define": "off"
+  },
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [
+        ".ts"
+      ]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      },
+      "node": {
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
+      }
+    }
   }
 }
