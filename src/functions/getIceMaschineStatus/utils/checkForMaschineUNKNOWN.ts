@@ -1,10 +1,6 @@
-import { Availability, Locations } from '../../../types';
+import { Availability } from '../../../types';
 
-export const checkForMaschineUNKNOWN = async (
-  _bearerToken: string,
-  _nationalStoreNumber: string,
-  _location: Locations,
-) => ({
+export const checkForMaschineUNKNOWN = async () => ({
   hasMilchshake: Availability.UNKNOWN,
   hasMcSundae: Availability.UNKNOWN,
   hasMcFlurry: Availability.UNKNOWN,

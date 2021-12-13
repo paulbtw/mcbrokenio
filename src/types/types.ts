@@ -295,7 +295,7 @@ export enum APIType {
   EU = 'EU',
   HK = 'HK',
   UNKNOWN = 'UNKNOWN',
-  US = 'US'
+  US = 'US',
 }
 
 export interface ICountryInfos {
@@ -443,181 +443,181 @@ export interface IRestaurantInfoResponseEL {
 }
 
 export interface IRestaurantInfoResponseHK {
-      Data: {
-        AcceptsOffers: boolean;
-        CatalogVersions: {
-          Type: number;
-          Version: Date;
+  Data: {
+    AcceptsOffers: boolean;
+    CatalogVersions: {
+      Type: number;
+      Version: Date;
+    }[];
+    CytIngredientGroups?: any;
+    DayPart: number;
+    DeliveryLaterProductCode?: any;
+    Distance: number;
+    EstimatedDeliveryTimeInStoreLocalTime: Date;
+    ExpectedDeliveryTime: Date;
+    ExternalStoreNumber: string;
+    Facilities: any[];
+    IsValid: boolean;
+    LargeOrderAllowed: boolean;
+    Latitude: string;
+    Locations: {
+      LocationID: number;
+      PaymentMethods: number[];
+      SaleTypeEatIn: boolean;
+      SaleTypeOther: boolean;
+      SaleTypeTakeOut: boolean;
+      StoreAreaOpeningHours: {
+        DayOfWeekID: number;
+        FromTime: string;
+        ToTime: string;
       }[];
-        CytIngredientGroups?: any;
-        DayPart: number;
-        DeliveryLaterProductCode?: any;
-        Distance: number;
-        EstimatedDeliveryTimeInStoreLocalTime: Date;
-        ExpectedDeliveryTime: Date;
-        ExternalStoreNumber: string;
-        Facilities: any[];
-        IsValid: boolean;
-        LargeOrderAllowed: boolean;
-        Latitude: string;
-        Locations: {
-          LocationID: number;
-          PaymentMethods: number[];
-          SaleTypeEatIn: boolean;
-          SaleTypeOther: boolean;
-          SaleTypeTakeOut: boolean;
-          StoreAreaOpeningHours: {
-            DayOfWeekID: number;
-            FromTime: string;
-            ToTime: string;
-        }[];
-      }[];
-        Longitude: string;
-        MenuTypeTransitionThreshold: number;
-        MinimumOrderValue: number;
-        NPVersion: string;
-        NowInStoreLocalTime: Date;
-        OpeningHours: {
-          BreakfastFrom: string;
-          BreakfastTo: string;
-          DayOfTheWeek: number;
-          FromTime: string;
-          ToTime: string;
-      }[];
-        OrderMaxTimeMIN: number;
-        OrderMinTimeMIN: number;
-        OutageProductCodes: string[];
-        PointsOfDistribution: any[];
-        PromoWhenFree: boolean;
-        RestrictionRuleEndTime: Date;
-        RestrictionRuleEndTimeInStoreLocalTime: Date;
-        StatusID: number;
-        StoreAddress: string;
-        StoreAddressCity: string;
-        StoreAddressCountry: string;
-        StoreAddressState: string;
-        StoreAddressZIP: string;
-        StoreCutoffTime: Date;
-        StoreCutoffTimeInStoreLocalTime: Date;
-        StoreMenuTypeCalendar: any[];
-        StoreName: string;
-        StoreNumber: string;
-        StoreStatus: number;
-        SuppressChoiceDiscount: boolean;
-        TODCutoffTime: Date;
-        TODCutoffTimeInStoreLocalTime: Date;
-        TableService?: any;
-        TimeZone: number;
-    };
-      ResultCode: number;
-  }
+    }[];
+    Longitude: string;
+    MenuTypeTransitionThreshold: number;
+    MinimumOrderValue: number;
+    NPVersion: string;
+    NowInStoreLocalTime: Date;
+    OpeningHours: {
+      BreakfastFrom: string;
+      BreakfastTo: string;
+      DayOfTheWeek: number;
+      FromTime: string;
+      ToTime: string;
+    }[];
+    OrderMaxTimeMIN: number;
+    OrderMinTimeMIN: number;
+    OutageProductCodes: string[];
+    PointsOfDistribution: any[];
+    PromoWhenFree: boolean;
+    RestrictionRuleEndTime: Date;
+    RestrictionRuleEndTimeInStoreLocalTime: Date;
+    StatusID: number;
+    StoreAddress: string;
+    StoreAddressCity: string;
+    StoreAddressCountry: string;
+    StoreAddressState: string;
+    StoreAddressZIP: string;
+    StoreCutoffTime: Date;
+    StoreCutoffTimeInStoreLocalTime: Date;
+    StoreMenuTypeCalendar: any[];
+    StoreName: string;
+    StoreNumber: string;
+    StoreStatus: number;
+    SuppressChoiceDiscount: boolean;
+    TODCutoffTime: Date;
+    TODCutoffTimeInStoreLocalTime: Date;
+    TableService?: any;
+    TimeZone: number;
+  };
+  ResultCode: number;
+}
 
 export interface IRestaurantLocationsResponseHK {
-        address: {
-          addressLine1: string;
-          addressLine2: string;
-          addressLine3: string;
-          area: string;
-          branch: string;
-          cityTown: string;
-          country: string;
-          county: string;
-          crossStreets: string;
-          district: string;
-          location: {
-            lat: number;
-            lon: number;
-        };
-          postalZip: string;
-          region: string;
-          stateProvince: string;
-          subdivision: string;
-      };
-        availableToPublic: boolean;
-        countryCode: string;
-        currentStatus: {
-          description: string;
-          status: string;
-      };
-        customerTouchpoint: {
-          contact: {
-            name: string;
-            title: string;
-        }[];
-      };
-        generalStatus: {
-          description: string;
-          status: string;
-      };
-        id: string;
-        identifiers: {
-          gblnumber: string;
-          storeIdentifier: {
-            identifierType: string;
-            identifierValue: string;
-        }[];
-      };
-        isMcOpco: boolean;
-        localization: string;
-        longDescription: string;
-        marketCode: string;
-        marketLanguages: {
-          marketlanguage: {
-            marketLanguageCode: string;
-        }[];
-      };
-        mcDeliveries: {
-          mcDelivery: any[];
-      };
-        mcDeliveryURL: string;
-        noticeStartDate?: number;
-        publicName: string;
-        restaurantLanguages: {
-          restaurantLanguage: {
-            language: string;
-        }[];
-      };
-        shortDescription: string;
-        storeAreas: {
-          storearea: any[];
-      };
-        storeAttributes: {
-          attribute: {
-            attributeClass: string;
-            dayOfWeek: any[];
-            endDate?: number;
-            endTime?: number;
-            startDate?: number;
-            startTime?: number;
-            type: string;
-        }[];
-      };
-        storeEmail: string;
-        storeMilestones: {
-          storeProject: any[];
-      };
-        storeNotice: string;
-        storeNumbers: {
-          phonenumber: {
-            number: string;
-            type: string;
-        }[];
-      };
-        storeServices: {
-          dayofweekservice: {
-            dayOfWeek: string;
-            endTime: number;
-            isOpen: boolean;
-            service: string;
-            startTime: number;
-        }[];
-          specialdayservice: any[];
-      };
-        storeType: {
-          partyname: string;
-      };
-        timeZone: string;
-        urls: {
-          url: any[];
-      };
-    }
+  address: {
+    addressLine1: string;
+    addressLine2: string;
+    addressLine3: string;
+    area: string;
+    branch: string;
+    cityTown: string;
+    country: string;
+    county: string;
+    crossStreets: string;
+    district: string;
+    location: {
+      lat: number;
+      lon: number;
+    };
+    postalZip: string;
+    region: string;
+    stateProvince: string;
+    subdivision: string;
+  };
+  availableToPublic: boolean;
+  countryCode: string;
+  currentStatus: {
+    description: string;
+    status: string;
+  };
+  customerTouchpoint: {
+    contact: {
+      name: string;
+      title: string;
+    }[];
+  };
+  generalStatus: {
+    description: string;
+    status: string;
+  };
+  id: string;
+  identifiers: {
+    gblnumber: string;
+    storeIdentifier: {
+      identifierType: string;
+      identifierValue: string;
+    }[];
+  };
+  isMcOpco: boolean;
+  localization: string;
+  longDescription: string;
+  marketCode: string;
+  marketLanguages: {
+    marketlanguage: {
+      marketLanguageCode: string;
+    }[];
+  };
+  mcDeliveries: {
+    mcDelivery: any[];
+  };
+  mcDeliveryURL: string;
+  noticeStartDate?: number;
+  publicName: string;
+  restaurantLanguages: {
+    restaurantLanguage: {
+      language: string;
+    }[];
+  };
+  shortDescription: string;
+  storeAreas: {
+    storearea: any[];
+  };
+  storeAttributes: {
+    attribute: {
+      attributeClass: string;
+      dayOfWeek: any[];
+      endDate?: number;
+      endTime?: number;
+      startDate?: number;
+      startTime?: number;
+      type: string;
+    }[];
+  };
+  storeEmail: string;
+  storeMilestones: {
+    storeProject: any[];
+  };
+  storeNotice: string;
+  storeNumbers: {
+    phonenumber: {
+      number: string;
+      type: string;
+    }[];
+  };
+  storeServices: {
+    dayofweekservice: {
+      dayOfWeek: string;
+      endTime: number;
+      isOpen: boolean;
+      service: string;
+      startTime: number;
+    }[];
+    specialdayservice: any[];
+  };
+  storeType: {
+    partyname: string;
+  };
+  timeZone: string;
+  urls: {
+    url: any[];
+  };
+}

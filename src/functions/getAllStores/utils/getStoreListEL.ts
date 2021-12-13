@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { Logger } from '@sailplane/logger';
+import { getConnection } from 'typeorm';
 import { CountryInfos, KEY } from '../../../utils';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantsEL } from '../../../types';
-import { getConnection } from 'typeorm';
 import { upsertPos } from '.';
 
 const logger = new Logger('getStoreListEL');
@@ -27,7 +27,7 @@ export const getStoreListEL = async () => {
         `${store.getStores.url}?acceptOffers=all&lab=false&key=${KEY}`,
       );
       const data = response.data as IRestaurantsEL;
-  
+
       // eslint-disable-next-line no-restricted-syntax
       for await (const restaurant of data.restaurants) {
         const newPos = Pos.create({
@@ -40,18 +40,17 @@ export const getStoreListEL = async () => {
           hasMobileOrdering: store.getStores.mobileString
             ? restaurant.facilities.includes(store.getStores.mobileString)
             : false,
-            updatedAt: new Date(),
+          updatedAt: new Date(),
         });
-  
+
         posArray.push(newPos);
       }
     } catch (error) {
       logger.error(error);
     }
-    
   }
-  
-  const connection = getConnection()
+
+  const connection = getConnection();
 
   await upsertPos(posArray, connection);
 };
