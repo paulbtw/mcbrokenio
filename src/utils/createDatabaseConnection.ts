@@ -15,7 +15,7 @@ export const createDatabaseConnection = async (
     logger.info('Creating database connection...');
     // @ts-ignore
     const ConnectionOptionsGenerate: ConnectionOptions = {
-      ...config as ConnectionOptions,
+      ...(config as ConnectionOptions),
       ...configOverride,
     };
 

@@ -5,19 +5,19 @@ import { Base } from './Base';
 @Entity()
 export class Pos extends Base {
   @PrimaryColumn('integer')
-    nationalStoreNumber: number;
+  nationalStoreNumber: number;
 
   @Column()
-    name: string;
+  name: string;
 
   @Column()
-    restaurantStatus: string;
+  restaurantStatus: string;
 
   @Column()
-    latitude: string;
+  latitude: string;
 
   @Column()
-    longitude: string;
+  longitude: string;
 
   @Column({
     nullable: false,
@@ -25,7 +25,7 @@ export class Pos extends Base {
     enum: Availability,
     default: Availability.UNKNOWN,
   })
-    hasMilchshake: Availability;
+  hasMilchshake: Availability;
 
   @Column({
     nullable: false,
@@ -33,7 +33,7 @@ export class Pos extends Base {
     enum: Availability,
     default: Availability.UNKNOWN,
   })
-    hasMcFlurry: Availability;
+  hasMcFlurry: Availability;
 
   @Column({
     nullable: false,
@@ -41,23 +41,28 @@ export class Pos extends Base {
     enum: Availability,
     default: Availability.UNKNOWN,
   })
-    hasMcSundae: Availability;
+  hasMcSundae: Availability;
 
   @Column({ nullable: true })
-    lastCheck: Date;
+  lastCheck: Date;
 
   @Column({ nullable: true, type: 'timestamp' })
-    timeSinceBrokenMilchshake: Date | null;
+  timeSinceBrokenMilchshake: Date | null;
 
   @Column({ nullable: true, type: 'timestamp' })
-    timeSinceBrokenMcFlurry: Date | null;
+  timeSinceBrokenMcFlurry: Date | null;
 
   @Column({ nullable: true, type: 'timestamp' })
-    timeSinceBrokenMcSundae: Date | null;
+  timeSinceBrokenMcSundae: Date | null;
 
-  @Column({ nullable: false, type: 'enum', enum: Locations, default: Locations.UNKNOWN })
-    country: Locations;
+  @Column({
+    nullable: false,
+    type: 'enum',
+    enum: Locations,
+    default: Locations.UNKNOWN,
+  })
+  country: Locations;
 
   @Column({ default: false })
-    hasMobileOrdering: boolean;
+  hasMobileOrdering: boolean;
 }

@@ -17,5 +17,11 @@ export const main: Handler = async (_, context) => {
   logger.debug('Ensure Database Connection');
   await createDatabaseConnection();
 
-  await Promise.all([getStoreListAP(), getStoreListEL(), getStoreListEU(), getStoreListHK(), getStoreListUS()]);
+  await Promise.all([
+    getStoreListAP(),
+    getStoreListEL(),
+    getStoreListEU(),
+    getStoreListHK(),
+    getStoreListUS(),
+  ]);
 };

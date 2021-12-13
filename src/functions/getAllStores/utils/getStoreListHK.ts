@@ -23,21 +23,25 @@ export const getStoreListHK = async () => {
   // eslint-disable-next-line no-restricted-syntax
   for await (const country of countriesAp) {
     try {
-      const response = await axios.get(
-        `${country.getStores.url}`,
-      );
-  
+      const response = await axios.get(`${country.getStores.url}`);
+
       const data = response.data as IRestaurantLocationsResponseHK[];
-  
+
       // eslint-disable-next-line no-restricted-syntax
       for await (const restaurant of data) {
-        const nationalStoreNumber = restaurant.identifiers.storeIdentifier.filter((id) => id.identifierType === 'LocalRefNum');
+        const nationalStoreNumber =
+          restaurant.identifiers.storeIdentifier.filter(
+            (id) => id.identifierType === 'LocalRefNum',
+          );
         const hasMobileOrdering = restaurant.storeAttributes.attribute.filter(
           (attribute) => attribute.type === country.getStores.mobileString,
         );
-  
+
         const newPos = Pos.create({
-          nationalStoreNumber: parseInt(nationalStoreNumber[0].identifierValue, 10),
+          nationalStoreNumber: parseInt(
+            nationalStoreNumber[0].identifierValue,
+            10,
+          ),
           name: restaurant.address.addressLine1,
           restaurantStatus: 'UNKNOWN',
           latitude: `${restaurant.address.location.lat}`,
@@ -46,16 +50,15 @@ export const getStoreListHK = async () => {
           hasMobileOrdering: hasMobileOrdering.length > 0,
           updatedAt: new Date(),
         });
-  
+
         posArray.push(newPos);
       }
     } catch (error) {
       logger.error(error);
     }
-    
   }
 
-  const connection = getConnection()
+  const connection = getConnection();
 
   await upsertPos(posArray, connection);
 };
