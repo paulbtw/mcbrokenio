@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@sailplane/logger": "^3.0.0",
+    "@types/aws-lambda": "^8.10.87",
     "aws-sdk": "^2.1028.0",
     "axios": "^0.24.0",
     "pg": "^8.7.1",
@@ -18,7 +19,6 @@
   },
   "devDependencies": {
     "@serverless/typescript": "^2.65.0",
-    "@types/aws-lambda": "^8.10.85",
     "@types/aws-sdk": "^2.7.0",
     "@types/node": "^16.11.10",
     "@typescript-eslint/eslint-plugin": "^5.3.1",
@@ -26,8 +26,9 @@
     "eslint": "^8.2.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.25.3",
-    "eslint-plugin-typescript-sort-keys": "^2.0.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "husky": "^7.0.4",
     "lint-staged": "^11.2.6",
     "prettier": "^2.5.0",

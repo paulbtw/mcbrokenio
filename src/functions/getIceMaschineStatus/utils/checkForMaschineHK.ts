@@ -1,7 +1,12 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
 import { hasProduct } from '.';
-import { Availability, IceType, IRestaurantInfoResponseHK, Locations } from '../../../types';
+import {
+  Availability,
+  IceType,
+  IRestaurantInfoResponseHK,
+  Locations,
+} from '../../../types';
 import { API_KEY_AP } from '../../../utils';
 
 const logger = new Logger('checkForMaschineHK');
@@ -10,7 +15,6 @@ export const checkForMaschineHK = async (
   _bearerToken: string,
   nationalStoreNumber: string,
   location: Locations,
-  _clientId: string | undefined,
 ) => {
   if (!API_KEY_AP) {
     logger.error('API Key is missing');

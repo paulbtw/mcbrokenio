@@ -88,13 +88,13 @@ export const getStoreListUS = async () => {
           } catch (error) {
             logger.error(error);
           }
-          await delay(300)
+          await delay(300);
         }),
       );
     }
   }
 
-  const connection = getConnection()
+  const connection = getConnection();
 
   await upsertPos(posArray, connection);
 };
