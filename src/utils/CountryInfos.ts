@@ -296,7 +296,6 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     },
   },
   [Locations.CA]: {
-    // TODO
     country: Locations.CA,
     getStores: {
       api: APIType.US,
@@ -328,7 +327,7 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/my/en-gb',
-      mobileString: null,
+      mobileString: 'Mobile order and pay',
     },
     productCodes: {
       // ADD MORE HERE
@@ -356,7 +355,7 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ee/en-gb',
-      mobileString: null,
+      mobileString: 'Mobile order and pay',
     },
     productCodes: {
       [IceType.MILCHSHAKE]: ['4704', '4706', '4705'],
@@ -369,7 +368,7 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ae/en-gb',
-      mobileString: null,
+      mobileString: 'Mobile order and pay',
     },
     productCodes: {
       [IceType.MILCHSHAKE]: ['UNAVAILABLE'],
