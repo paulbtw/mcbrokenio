@@ -1,54 +1,76 @@
 ## MCD API:
 
+Information about the different McDonalds APIs.
+
 ### eu-prod:
 
-- Germany: DE
-- Swiss: CH
-  - ❌ Mobile menu
-  - ❌ Stores by location
-- Netherlands: NL
-  - ❌ Mobile menu
-- Danmark: DK
-  - ❌ Mobile menu
-- Sweden: SE
-  - ❌ Mobile menu
-- Finnland: FI
-  - ❌ Mobile menu
-- Irland: IE
-  - ❌ Mobile menu
-- Great Britain: GB
-  - ❌ Mobile menu
-  - ❌ Stores by location
-- Norway: NO
-  - ❌ Mobile menu
+| Country        | Code | Mobile Ordering | Mobile Ordering String |
+|----------------|------|-----------------|------------------------|
+| Germany        | DE   | true            | MOBILEORDERS           |
+| Netherlands    | NL   | false           |                        |
+| United Kingdom | UK   | true            | MOBILEORDERS           |
 
 ### el-prod:
 
-- Swiss: CH
-  - Mobilestring: Mobil bestellen und bezahlen
-- Italy: IT
-  - Mobilestring: Ordina e paga dal cellulare
-- Netherlands: NL
-  - No mobile ordering
-- Danmark: DK
-  - Mobilestring: Mobilbestilling
-- Sweden: SE
-  - Mobilestring: Mobil beställning och betalning
-- Finnland: FI
-  - Mobilestring: Mobiilitilaus ja maksu
-- Norway: NO
-  - Mobilestring: Mobil bestilling og betaling
-- Austria: AT
-  - No mobile ordering
+| Country              | Code | Mobile Ordering | Mobile Ordering String          |
+|----------------------|------|-----------------|---------------------------------|
+| Swiss                | CH   | true            | Mobil bestellen und bezahlen    |
+| Austria              | AT   | false           |                                 |
+| Italy                | IT   | true            | Ordina e paga dal cellulare     |
+| Spain                | ES   | false           |                                 |
+| Vietnam              | VN   | false           |                                 |
+| Croatia              | HR   | false           |                                 |
+| Greece               | GR   | false           |                                 |
+| Portugal             | PT   | true            | Pedidos Mobile                  |
+| Norway               | NO   | true            | Mobil bestilling og betaling    |
+| Denmark              | DK   | true            | Mobil bestilling og betaling    |
+| Finland              | FI   | true            | Mobiilitilaus ja maksu          |
+| Sweden               | SE   | true            | Mobil beställning och betalning |
+| Belarus              | BY   | false           |                                 |
+| Belgium              | BE   | false           |                                 |
+| Bosnia               | BA   | false           |                                 |
+| Bulgaria             | BG   | false           |                                 |
+| Lithuania            | LT   | false           |                                 |
+| Malaysia             | MY   | true            | ?                               |
+| Malta                | MT   | false           |                                 |
+| Estonia              | EE   | true            | Mobile order and pay            |
+| United Arab Emirates | AE   | true            | Mobile order and pay            |
+| Ukraine              | UA   | false           |                                 |
+| Thailand             | TH   | false           |                                 |
+| Slovenia             | SI   | false           |                                 |
+| Serbia               | RS   | false           |                                 |
+|                      | SAR  | false           |                                 |
+| Romania              | RO   | false           |                                 |
+| Reunion              | RE   | false           |                                 |
+| Poland               | PL   | true            | Zamów i odbierz                 |
+| Paraguay             | PY   | false           |                                 |
+| Pakistan             | PK   | false           |                                 |
+| Nicaragua            | NI   | false           |                                 |
+| Morocco              | MA   | false           |                                 |
+| Mauritius            | MU   | false           |                                 |
+| Ireland              | IE   | false           |                                 |
+| Indonesia            | ID   | false           |                                 |
+| Honduras             | HN   | false           |                                 |
+| Guatemala            | GT   | false           |                                 |
+| Georgia              | GE   | false           |                                 |
+| El Salvador          | SV   | false           |                                 |
 
 ### us-prod:
+#### only works with US IP
 
-## only works with US IP
+| Country       | Code | Mobile Ordering | Mobile Ordering String |
+|---------------|------|-----------------|------------------------|
+| United States | US   | true            | MOBILEORDERS           |
+| Canada        | CA   | true            | MOBILEORDERS           |
 
-TODO
+### ap-prod:
 
-### Get Product Info
+| Country   | Code | Mobile Ordering | Mobile Ordering String |
+|-----------|------|-----------------|------------------------|
+| Australia | AU   | true            | MOBILEORDERS           |
 
-```
-https://eu-prod.api.mcd.com/exp/v1/nutrition/itemByExternalId/4237/detail?categoryType=1&country=DE&filter=summary&highlightedNutrients=Sodium,Carbohydrates,Calories,Protein,Total%20Fat&relationTypes=
-```
+### ap
+
+| Country   | Code | Mobile Ordering | Mobile Ordering String |
+|-----------|------|-----------------|------------------------|
+| Hong Kong | HK   | true            | MOBILEORDERS           |
