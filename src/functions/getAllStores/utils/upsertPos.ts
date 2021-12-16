@@ -30,7 +30,7 @@ export const upsertPos = async (arr: Pos[], connection: Connection) => {
   // TODO need to escape values
   logger.debug(`Pos to save: ${uniquePosArray.length}`);
   await connection.query(
-    `INSERT INTO pos ("nationalStoreNumber", name, "restaurantStatus", latitude, longitude, country, "hasMobileOrdering", "updatedAt") VALUES ${valuesString} ON CONFLICT ("nationalStoreNumber") DO UPDATE SET "updatedAt" = current_timestamp`,
+    `INSERT INTO pos ("nationalStoreNumber", name, "restaurantStatus", latitude, longitude, country, "hasMobileOrdering", "updatedAt") VALUES ${valuesString} ON CONFLICT ("nationalStoreNumber") DO UPDATE SET "updatedAt" = current_timestamp, "hasMobileOrdering" = EXCLUDED."hasMobileOrdering"`,
   );
   logger.debug('finished saving');
 };

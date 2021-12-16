@@ -48,3 +48,4 @@ test.json
 .DS_Store
 
 postgres-data
+.idea
