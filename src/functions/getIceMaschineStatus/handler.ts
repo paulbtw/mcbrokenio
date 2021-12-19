@@ -17,11 +17,8 @@ import { checkForMaschine } from './utils';
 
 const logger = new Logger('getIceMaschineStatus');
 
-export const main: Handler = async (_, context) => {
-  logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
-
+export const main: Handler = async () => {
   try {
-    logger.debug('Get new Bearer token');
     const bearerTokenEU = await getNewBearerToken(APIType.EU);
     logger.debug('new Token EU: ', bearerTokenEU);
 
@@ -39,7 +36,6 @@ export const main: Handler = async (_, context) => {
     const clientIdEu = getClientId(BASIC_TOKEN_EU);
     const clientIdAp = getClientId(BASIC_TOKEN_AP);
 
-    logger.debug('Ensure Database Connection');
     await createDatabaseConnection();
 
     const posToCheck = await Pos.find({
