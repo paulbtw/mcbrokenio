@@ -29,7 +29,6 @@ export const getNewBearerToken = async (api: APIType) => {
       );
 
       const requestData = refreshResponse.data;
-      logger.debugObject('refresh response: ', requestData);
 
       return requestData.response.token;
     } catch (error) {
@@ -55,7 +54,6 @@ export const getNewBearerToken = async (api: APIType) => {
       );
 
       const requestData = refreshResponse.data;
-      logger.debugObject('refresh response: ', requestData);
 
       return requestData.response.token;
     } catch (error) {
@@ -82,7 +80,6 @@ export const getNewBearerToken = async (api: APIType) => {
       );
 
       const requestData = refreshResponse.data;
-      logger.debugObject('refresh response: ', requestData);
 
       return requestData.response.token;
     } catch (error) {
@@ -109,7 +106,6 @@ export const getNewBearerToken = async (api: APIType) => {
       );
 
       const requestData = refreshResponse.data;
-      logger.debugObject('refresh response: ', requestData);
 
       return requestData.response.token;
     } catch (error) {
