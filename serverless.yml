@@ -71,7 +71,7 @@ functions:
       MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
       API_KEY_AP: ${self:custom.mcdInfo.apiKeyAP}
     events:
-      - schedule: cron(0/5 * * * ? *)
+      - schedule: cron(0/10 * * * ? *)
   getAllStores:
     handler: src/functions/getAllStores/handler.main
     memorySize: 512
