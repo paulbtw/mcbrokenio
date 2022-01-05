@@ -26,12 +26,11 @@ export const checkForMaschine: Record<
     checkForMaschineEU(bearerToken, posId, location, clientId),
   [APIType.EL]: (bearerToken, posId, location, clientId) =>
     checkForMaschineEL(bearerToken, posId, location, clientId),
-  [APIType.UNKNOWN]: (bearerToken, posId, location) =>
-    checkForMaschineUNKNOWN(bearerToken, posId, location),
+  [APIType.UNKNOWN]: () => checkForMaschineUNKNOWN(),
   [APIType.US]: (bearerToken, posId, location, clientId) =>
     checkForMaschineUS(bearerToken, posId, location, clientId),
   [APIType.AP]: (bearerToken, posId, location, clientId) =>
     checkForMaschineAP(bearerToken, posId, location, clientId),
-  [APIType.HK]: (bearerToken, posId, location, clientId) =>
-    checkForMaschineHK(bearerToken, posId, location, clientId),
+  [APIType.HK]: (bearerToken, posId, location) =>
+    checkForMaschineHK(bearerToken, posId, location),
 };
