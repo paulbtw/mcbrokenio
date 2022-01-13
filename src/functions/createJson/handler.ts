@@ -2,9 +2,8 @@ import { Logger } from '@sailplane/logger';
 import { Handler } from 'aws-lambda';
 import { S3 } from 'aws-sdk';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
-import { Pos } from '../../entities';
 import { createDatabaseConnection } from '../../utils';
-import { getColorDot } from './utils';
+import { createGeoJSON, getStatistics } from './utils';
 
 const logger = new Logger('createJson');
 
@@ -14,61 +13,32 @@ export const main: Handler = async (_, context) => {
   logger.debug('Ensure Database Connection');
   await createDatabaseConnection();
 
-  const allObject = await Pos.find();
-
-  const json = allObject.map((pos) => {
-    const dot = getColorDot(
-      pos.hasMilchshake,
-      pos.hasMcSundae,
-      pos.hasMcFlurry,
-    );
-    return {
-      geometry: {
-        coordinates: [Number(pos.longitude), Number(pos.latitude), 0],
-        type: 'Point',
-      },
-      properties: {
-        hasMilchshake: pos.hasMilchshake,
-        timeSinceBrokenMilchshake: pos.timeSinceBrokenMilchshake
-          ? new Date(pos.timeSinceBrokenMilchshake).getTime()
-          : pos.timeSinceBrokenMilchshake,
-        hasMcSundae: pos.hasMcSundae,
-        timeSinceBrokenMcSundae: pos.timeSinceBrokenMcSundae
-          ? new Date(pos.timeSinceBrokenMcSundae).getTime()
-          : null,
-        hasMcFlurry: pos.hasMcFlurry,
-        timeSinceBrokenMcFlurry: pos.timeSinceBrokenMcFlurry
-          ? new Date(pos.timeSinceBrokenMcFlurry).getTime()
-          : pos.timeSinceBrokenMcFlurry,
-        lastChecked: new Date(pos.lastCheck).getTime(),
-        name: pos.name,
-        dot,
-        open: pos.restaurantStatus,
-        hasMobileOrdering: pos.hasMobileOrdering,
-      },
-      type: 'Feature',
-    };
-  });
-  logger.debugObject('JSON: ', json[0]);
-
-  const finalJson = {
-    type: 'FeatureCollection',
-    features: json,
-    crs: {
-      type: 'name',
-      properties: {},
-    },
-  };
+  const geoJSON = await createGeoJSON();
+  const stats = await getStatistics();
 
   const s3 = new S3({ region: 'us-east-2', apiVersion: '2012-10-17' });
-  const params: PutObjectRequest = {
+  const paramsGeoJSON: PutObjectRequest = {
     Bucket: process.env.BUCKET as string,
     Key: 'marker.json',
-    Body: JSON.stringify(finalJson),
+    Body: JSON.stringify(geoJSON),
     ContentType: 'application/json',
   };
   await s3
-    .putObject(params, (err, data) => {
+    .putObject(paramsGeoJSON, (err, data) => {
+      logger.debug('CALLBACK');
+      if (err) logger.errorObject('Error: ', err);
+      else logger.debugObject('Put to s3 should have worked: ', data);
+    })
+    .promise();
+
+  const paramsStats: PutObjectRequest = {
+    Bucket: process.env.BUCKET as string,
+    Key: 'stats.json',
+    Body: JSON.stringify(stats),
+    ContentType: 'application/json',
+  };
+  await s3
+    .putObject(paramsStats, (err, data) => {
       logger.debug('CALLBACK');
       if (err) logger.errorObject('Error: ', err);
       else logger.debugObject('Put to s3 should have worked: ', data);
