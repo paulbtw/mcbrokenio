@@ -31,10 +31,10 @@ export const getStatistics = async () => {
 
   return queryResult.map<IStatsSQLQueryFormatted>((result) => ({
     total: parseInt(result.total, 10) || 0,
-    availablemcflurry: parseInt(result.availablemcflurry, 10) || 0,
-    totalmcflurry: parseInt(result.totalmcflurry, 10) || 0,
-    availablemcsundae: parseInt(result.availablemcsundae, 10) || 0,
-    totalmcsundae: parseInt(result.totalmcsundae, 10) || 0,
+    availablemcflurrys: parseInt(result.availablemcflurrys, 10) || 0,
+    totalmcflurrys: parseInt(result.totalmcflurrys, 10) || 0,
+    availablemcsundaes: parseInt(result.availablemcsundaes, 10) || 0,
+    totalmcsundaes: parseInt(result.totalmcsundaes, 10) || 0,
     availablemilchshakes: parseInt(result.availablemilchshakes, 10) || 0,
     totalmilchshakes: parseInt(result.totalmilchshakes, 10) || 0,
     longestbrokenmcflurry: result.longestbrokenmcflurry,

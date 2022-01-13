@@ -627,11 +627,11 @@ export interface IStatsSQLQueryResult {
   availablemilchshakes: string;
   totalmilchshakes: string;
   longestbrokenmilchshake: null | Date;
-  availablemcflurry: string;
-  totalmcflurry: string;
+  availablemcflurrys: string;
+  totalmcflurrys: string;
   longestbrokenmcflurry: null | Date;
-  availablemcsundae: string;
-  totalmcsundae: string;
+  availablemcsundaes: string;
+  totalmcsundaes: string;
   longestbrokenmcsundae: null | Date;
   country: string;
 }
@@ -641,11 +641,11 @@ export interface IStatsSQLQueryFormatted {
   availablemilchshakes: number;
   totalmilchshakes: number;
   longestbrokenmilchshake: null | Date;
-  availablemcflurry: number;
-  totalmcflurry: number;
+  availablemcflurrys: number;
+  totalmcflurrys: number;
   longestbrokenmcflurry: null | Date;
-  availablemcsundae: number;
-  totalmcsundae: number;
+  availablemcsundaes: number;
+  totalmcsundaes: number;
   longestbrokenmcsundae: null | Date;
   country: string;
 }
