@@ -621,3 +621,31 @@ export interface IRestaurantLocationsResponseHK {
     url: any[];
   };
 }
+
+export interface IStatsSQLQueryResult {
+  total: string;
+  availablemilchshakes: string;
+  totalmilchshakes: string;
+  longestbrokenmilchshake: null | Date;
+  availablemcflurry: string;
+  totalmcflurry: string;
+  longestbrokenmcflurry: null | Date;
+  availablemcsundae: string;
+  totalmcsundae: string;
+  longestbrokenmcsundae: null | Date;
+  country: string;
+}
+
+export interface IStatsSQLQueryFormatted {
+  total: number;
+  availablemilchshakes: number;
+  totalmilchshakes: number;
+  longestbrokenmilchshake: null | Date;
+  availablemcflurry: number;
+  totalmcflurry: number;
+  longestbrokenmcflurry: null | Date;
+  availablemcsundae: number;
+  totalmcsundae: number;
+  longestbrokenmcsundae: null | Date;
+  country: string;
+}
