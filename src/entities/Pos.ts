@@ -4,8 +4,8 @@ import { Base } from './Base';
 
 @Entity()
 export class Pos extends Base {
-  @PrimaryColumn('integer')
-  nationalStoreNumber: number;
+  @PrimaryColumn()
+  nationalStoreNumber: string;
 
   @Column()
   name: string;

@@ -88,7 +88,7 @@ export const main: Handler = async () => {
           const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
             await checkForMaschine[storeApi](
               bearerToken,
-              `${posId}`,
+              `${posId.split('-')[1]}`,
               newPos.country,
               clientId,
             );
@@ -132,7 +132,7 @@ export const main: Handler = async () => {
       );
     }
 
-    await Pos.save(newPosArray);
+    await Pos.save(newPosArray, { chunk: 1000 });
   } catch (error) {
     logger.error(error);
   }
