@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { Logger } from '@sailplane/logger';
+import { getConnection } from 'typeorm';
 import { CountryInfos, KEY } from '../../../utils';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantsEL } from '../../../types';
+import { upsertPos } from '.';
 
 const logger = new Logger('getStoreListEL');
 
@@ -48,5 +50,7 @@ export const getStoreListEL = async () => {
     }
   }
 
-  await Pos.save(posArray, { chunk: 5000 });
+  const connection = getConnection();
+
+  await upsertPos(posArray, connection);
 };
