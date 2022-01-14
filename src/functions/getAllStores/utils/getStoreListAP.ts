@@ -1,7 +1,6 @@
 import { Logger } from '@sailplane/logger';
 import axios from 'axios';
-import { getConnection } from 'typeorm';
-import { getAllLocation, upsertPos } from '.';
+import { getAllLocation } from '.';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantLocationResponse } from '../../../types';
 import {
@@ -68,7 +67,7 @@ export const getStoreListAP = async () => {
             // eslint-disable-next-line no-restricted-syntax
             for (const restaurant of data.response.restaurants) {
               const newPos = Pos.create({
-                nationalStoreNumber: restaurant.nationalStoreNumber,
+                nationalStoreNumber: `${countryFormatted}-${restaurant.nationalStoreNumber}`,
                 name: restaurant.address.addressLine1,
                 restaurantStatus: restaurant.restaurantStatus,
                 latitude: `${restaurant.location.latitude}`,
@@ -92,7 +91,5 @@ export const getStoreListAP = async () => {
     }
   }
 
-  const connection = getConnection();
-
-  await upsertPos(posArray, connection);
+  await Pos.save(posArray, { chunk: 5000 });
 };
