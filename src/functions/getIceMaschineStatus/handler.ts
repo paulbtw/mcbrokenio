@@ -55,8 +55,8 @@ export const main: Handler = async () => {
       await Promise.all(
         posArray.map(async (pos) => {
           const newPos = pos;
-          logger.debug(`Checking Pos: ${pos.nationalStoreNumber}`);
-          const posId = newPos.nationalStoreNumber;
+          const posId = newPos.nationalStoreNumber.split('-')[1];
+          logger.debug(`Checking Pos: ${posId}`);
 
           const countryInfo = CountryInfos[newPos.country];
 
@@ -88,7 +88,7 @@ export const main: Handler = async () => {
           const { hasMilchshake, hasMcFlurry, hasMcSundae, status } =
             await checkForMaschine[storeApi](
               bearerToken,
-              `${posId.split('-')[1]}`,
+              posId,
               newPos.country,
               clientId,
             );
