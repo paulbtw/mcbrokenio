@@ -59,7 +59,7 @@ functions:
   getIceMaschineStatus:
     handler: src/functions/getIceMaschineStatus/handler.main
     memorySize: 512
-    timeout: 300
+    timeout: 600
     environment:
       BASIC_TOKEN_EU: ${self:custom.mcdInfo.basicTokenEU}
       BASIC_TOKEN_EL: ${self:custom.mcdInfo.basicTokenEL}
