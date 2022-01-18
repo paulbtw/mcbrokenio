@@ -34,6 +34,7 @@ export const getStatistics = async () => {
 
   return queryResult.map<IStatsSQLQueryFormatted>((result) => ({
     total: parseInt(result.total, 10) || 0,
+    trackable: parseInt(result.trackable, 10) || 0,
     availablemcflurrys: parseInt(result.availablemcflurrys, 10) || 0,
     totalmcflurrys: parseInt(result.totalmcflurrys, 10) || 0,
     availablemcsundaes: parseInt(result.availablemcsundaes, 10) || 0,
