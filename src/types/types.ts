@@ -624,6 +624,7 @@ export interface IRestaurantLocationsResponseHK {
 
 export interface IStatsSQLQueryResult {
   total: string;
+  trackable: string;
   availablemilchshakes: string;
   totalmilchshakes: string;
   longestbrokenmilchshake: null | Date;
@@ -638,6 +639,7 @@ export interface IStatsSQLQueryResult {
 
 export interface IStatsSQLQueryFormatted {
   total: number;
+  trackable: number;
   availablemilchshakes: number;
   totalmilchshakes: number;
   longestbrokenmilchshake: null | Date;
