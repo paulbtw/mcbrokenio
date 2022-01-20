@@ -6,7 +6,7 @@ const startDir = process.env.NODE_ENV === 'production' ? 'dist' : 'src';
 export default {
   name: 'default',
   entities: [Pos, PosMemory],
-  subscriber: [PosMemorySubscriber],
+  subscribers: [PosMemorySubscriber],
   type: 'postgres',
   url: process.env.DATABASE_URL,
   synchronize: false,
