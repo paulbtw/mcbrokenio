@@ -3,8 +3,7 @@ import {
   EventSubscriber,
   InsertEvent,
 } from 'typeorm';
-
-import { PosMemory } from '../entities';
+import { Pos, PosMemory } from '../entities';
 
 @EventSubscriber()
 export class PosMemorySubscriber implements EntitySubscriberInterface {
@@ -13,7 +12,40 @@ export class PosMemorySubscriber implements EntitySubscriberInterface {
   }
 
   async afterInsert(event: InsertEvent<PosMemory>): Promise<void> {
-    const pos = event.entity;
-    console.log(`Pos updated: ${pos}`);
+    const {
+      nationalStoreNumber,
+      name,
+      restaurantStatus,
+      latitude,
+      longitude,
+      hasMilchshake,
+      hasMcFlurry,
+      hasMcSundae,
+      lastCheck,
+      timeSinceBrokenMilchshake,
+      timeSinceBrokenMcFlurry,
+      timeSinceBrokenMcSundae,
+      country,
+      hasMobileOrdering,
+    } = event.entity;
+
+    const pos = Pos.create({
+      nationalStoreNumber,
+      name,
+      restaurantStatus,
+      latitude,
+      longitude,
+      hasMilchshake,
+      hasMcFlurry,
+      hasMcSundae,
+      lastCheck,
+      timeSinceBrokenMilchshake,
+      timeSinceBrokenMcFlurry,
+      timeSinceBrokenMcSundae,
+      country,
+      hasMobileOrdering,
+    });
+
+    await Pos.save(pos);
   }
 }
