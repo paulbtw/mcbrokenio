@@ -1,6 +1,6 @@
 import { Logger } from '@sailplane/logger';
 import { Handler } from 'aws-lambda';
-import { Pos } from '../../entities';
+import { Pos, PosMemory } from '../../entities';
 import { APIType, Availability } from '../../types';
 import {
   BASIC_TOKEN_AP,
@@ -19,22 +19,20 @@ const logger = new Logger('getIceMaschineStatus');
 
 export const main: Handler = async () => {
   try {
-    const bearerTokenEU = await getNewBearerToken(APIType.EU);
-    logger.debug('new Token EU: ', bearerTokenEU);
+    const [bearerTokenEU, bearerTokenEL, bearerTokenUS, bearerTokenAP] =
+      await Promise.all([
+        getNewBearerToken(APIType.EU),
+        getNewBearerToken(APIType.EL),
+        getNewBearerToken(APIType.US),
+        getNewBearerToken(APIType.AP),
+      ]);
 
-    const bearerTokenEL = await getNewBearerToken(APIType.EL);
-    logger.debug('new Token EL: ', bearerTokenEL);
-
-    const bearerTokenUS = await getNewBearerToken(APIType.US);
-    logger.debug('new Token US: ', bearerTokenUS);
-
-    const bearerTokenAP = await getNewBearerToken(APIType.AP);
-    logger.debug('new Token AP: ', bearerTokenAP);
-
-    const clientIdEl = getClientId(BASIC_TOKEN_EL);
-    const clientIdUs = getClientId(BASIC_TOKEN_US);
-    const clientIdEu = getClientId(BASIC_TOKEN_EU);
-    const clientIdAp = getClientId(BASIC_TOKEN_AP);
+    const [clientIdEL, clientIdUS, clientIdEU, clientIdAP] = await Promise.all([
+      getClientId(BASIC_TOKEN_EL),
+      getClientId(BASIC_TOKEN_US),
+      getClientId(BASIC_TOKEN_EU),
+      getClientId(BASIC_TOKEN_AP),
+    ]);
 
     await createDatabaseConnection();
 
@@ -62,25 +60,19 @@ export const main: Handler = async () => {
 
           const storeApi = countryInfo.getStores.api;
           let bearerToken = '';
+          let clientId = '';
           if (storeApi === APIType.EU) {
             bearerToken = bearerTokenEU;
+            clientId = clientIdEU;
           } else if (storeApi === APIType.EL) {
             bearerToken = bearerTokenEL;
+            clientId = clientIdEL;
           } else if (storeApi === APIType.US) {
             bearerToken = bearerTokenUS;
+            clientId = clientIdUS;
           } else if (storeApi === APIType.AP) {
             bearerToken = bearerTokenAP;
-          }
-
-          let clientId = '';
-          if (storeApi === APIType.EL) {
-            clientId = clientIdEl;
-          } else if (storeApi === APIType.US) {
-            clientId = clientIdUs;
-          } else if (storeApi === APIType.EU) {
-            clientId = clientIdEu;
-          } else if (storeApi === APIType.AP) {
-            clientId = clientIdAp;
+            clientId = clientIdAP;
           }
 
           clientId = clientId.trim();
@@ -132,7 +124,7 @@ export const main: Handler = async () => {
       );
     }
 
-    await Pos.save(newPosArray, { chunk: 1000 });
+    await PosMemory.save(newPosArray, { chunk: 1000 });
   } catch (error) {
     logger.error(error);
   }

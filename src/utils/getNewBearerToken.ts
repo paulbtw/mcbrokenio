@@ -10,6 +10,11 @@ import {
 
 const logger = new Logger('getNewBearerToken');
 
+/**
+ *
+ * @param api The API to get the token for
+ * @returns An access token for the given API
+ */
 export const getNewBearerToken = async (api: APIType) => {
   if (api === APIType.EU) {
     if (!BASIC_TOKEN_EU) {
