@@ -1,10 +1,12 @@
-import { Pos } from './entities';
+import { Pos, PosMemory } from './entities';
+import { PosMemorySubscriber } from './subscriber';
 
 const startDir = process.env.NODE_ENV === 'production' ? 'dist' : 'src';
 
 export default {
   name: 'default',
-  entities: [Pos],
+  entities: [Pos, PosMemory],
+  subscriber: [PosMemorySubscriber],
   type: 'postgres',
   url: process.env.DATABASE_URL,
   synchronize: false,
