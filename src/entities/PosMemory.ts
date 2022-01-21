@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { Availability, Locations } from '../types';
 import { Base } from './Base';
 
@@ -8,6 +8,7 @@ export class PosMemory extends Base {
   id: string;
 
   @Column()
+  @Index()
   nationalStoreNumber: string;
 
   @Column()
@@ -64,6 +65,7 @@ export class PosMemory extends Base {
     enum: Locations,
     default: Locations.UNKNOWN,
   })
+  @Index()
   country: Locations;
 
   @Column({ default: false })
