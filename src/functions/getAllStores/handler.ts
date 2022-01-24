@@ -15,7 +15,7 @@ export const main: Handler = async (_, context) => {
   logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
 
   logger.debug('Ensure Database Connection');
-  await createDatabaseConnection();
+  const connection = await createDatabaseConnection();
 
   await Promise.all([
     getStoreListAP(),
@@ -24,4 +24,8 @@ export const main: Handler = async (_, context) => {
     getStoreListHK(),
     getStoreListUS(),
   ]);
+
+  if (connection.isConnected) {
+    await connection.close();
+  }
 };
