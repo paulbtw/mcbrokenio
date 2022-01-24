@@ -11,7 +11,7 @@ export const main: Handler = async (_, context) => {
   logger.debug(`Starting the Lambda. ID: ${context.awsRequestId}`);
 
   logger.debug('Ensure Database Connection');
-  await createDatabaseConnection();
+  const connection = await createDatabaseConnection();
 
   const geoJSON = await createGeoJSON();
   const stats = await getStatistics();
@@ -25,7 +25,6 @@ export const main: Handler = async (_, context) => {
   };
   await s3
     .putObject(paramsGeoJSON, (err, data) => {
-      logger.debug('CALLBACK');
       if (err) logger.errorObject('Error: ', err);
       else logger.debugObject('Put to s3 should have worked: ', data);
     })
@@ -39,9 +38,12 @@ export const main: Handler = async (_, context) => {
   };
   await s3
     .putObject(paramsStats, (err, data) => {
-      logger.debug('CALLBACK');
       if (err) logger.errorObject('Error: ', err);
       else logger.debugObject('Put to s3 should have worked: ', data);
     })
     .promise();
+
+  if (connection.isConnected) {
+    await connection.close();
+  }
 };

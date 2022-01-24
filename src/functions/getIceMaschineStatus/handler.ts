@@ -34,7 +34,7 @@ export const main: Handler = async () => {
       getClientId(BASIC_TOKEN_AP),
     ]);
 
-    await createDatabaseConnection();
+    const connection = await createDatabaseConnection();
 
     const posToCheck = await Pos.find({
       where: { hasMobileOrdering: true },
@@ -125,6 +125,10 @@ export const main: Handler = async () => {
     }
 
     await PosMemory.save(newPosArray, { chunk: 1000 });
+
+    if (connection.isConnected) {
+      await connection.close();
+    }
   } catch (error) {
     logger.error(error);
   }
