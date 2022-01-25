@@ -7,7 +7,8 @@
     "prepare": "husky install",
     "clean": "rimraf .serverless",
     "lint": "eslint . --ext .ts",
-    "test": "jest --setupFiles dotenv/config "
+    "test": "jest --setupFiles dotenv/config",
+    "test:ci": "jest --setupFiles dotenv/config --ci --reporters='default' --reporters='./github-actions-reporter'"
   },
   "dependencies": {
     "@sailplane/logger": "^3.0.0",
