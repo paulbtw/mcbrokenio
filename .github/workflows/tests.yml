@@ -15,8 +15,13 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: yarn install
-      - run: yarn test:ci
-
+      - name: Run tests
+        run: yarn test:ci    
+        env:
+          BASIC_TOKEN_EU: ${{ secrets.BASIC_TOKEN_EU }}
+          BASIC_TOKEN_EL: ${{ secrets.BASIC_TOKEN_EL }}
+          BASIC_TOKEN_US: ${{ secrets.BASIC_TOKEN_US }}
+          BASIC_TOKEN_AP: ${{ secrets.BASIC_TOKEN_AP }}
       - name: Tests ✅
         if: ${{ success() }}
         run: |
