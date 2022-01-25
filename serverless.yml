@@ -44,8 +44,6 @@ provider:
 custom:
   mcdInfo:
     basicTokenEU: ${env:BASIC_TOKEN_EU, ssm(eu-central-1):/mcdonalds/eu/basictoken}
-    mcdUsername: ${env:MCD_USERNAME, ssm(eu-central-1):/mcdonalds/eu/username}
-    mcdPassword: ${env:MCD_PASSWORD, ssm(eu-central-1):/mcdonalds/eu/password}
     mcdDeviceId: ${env:MCD_DEVICEID, ssm(eu-central-1):/mcdonalds/eu/deviceId}
     databaseUrl: ${env:DATABASE_URL, ssm(eu-central-1):/mcdonalds/database}
     exportBucket: ${env:EXPORT_BUCKET, ssm(eu-central-1):/mcdonalds/export/bucket}-${opt:stage, 'dev'}
@@ -66,8 +64,6 @@ functions:
       BASIC_TOKEN_US: ${self:custom.mcdInfo.basicTokenUS}
       BASIC_TOKEN_AP: ${self:custom.mcdInfo.basicTokenAP}
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
-      MCD_USERNAME: ${self:custom.mcdInfo.mcdUsername}
-      MCD_PASSWORD: ${self:custom.mcdInfo.mcdPassword}
       MCD_DEVICEID: ${self:custom.mcdInfo.mcdDeviceId}
       API_KEY_AP: ${self:custom.mcdInfo.apiKeyAP}
     events:
