@@ -15,7 +15,7 @@ const logger = new Logger('getNewBearerToken');
  * @param api The API to get the token for
  * @returns An access token for the given API
  */
-export const getNewBearerToken = async (api: APIType) => {
+export const getNewBearerToken = async (api: APIType): Promise<string> => {
   if (api === APIType.EU) {
     if (!BASIC_TOKEN_EU) {
       throw new Error('You need to add a Basic Token');
@@ -38,7 +38,6 @@ export const getNewBearerToken = async (api: APIType) => {
       return requestData.response.token;
     } catch (error) {
       logger.error('error getting new bearer token', error);
-      throw error;
     }
   }
   if (api === APIType.EL) {
@@ -63,7 +62,6 @@ export const getNewBearerToken = async (api: APIType) => {
       return requestData.response.token;
     } catch (error) {
       logger.error('error getting new bearer token', error);
-      throw error;
     }
   }
 
@@ -89,7 +87,6 @@ export const getNewBearerToken = async (api: APIType) => {
       return requestData.response.token;
     } catch (error) {
       logger.error('error getting new bearer token', error);
-      throw error;
     }
   }
 
@@ -115,7 +112,6 @@ export const getNewBearerToken = async (api: APIType) => {
       return requestData.response.token;
     } catch (error) {
       logger.error('error getting new bearer token', error);
-      throw error;
     }
   }
 
