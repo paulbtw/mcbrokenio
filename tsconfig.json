@@ -21,6 +21,6 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": ["src/**/*.ts", "src/ormconfig.ts"],
+	"include": ["src/**/*.ts", "src/ormconfig.ts", "tests/**/*.ts"],
 	"exclude": ["node_modules/**/*", ".serverless/**/*", ".vscode/**/*"],
 }
