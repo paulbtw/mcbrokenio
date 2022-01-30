@@ -3,6 +3,7 @@ import { Locations } from '../types';
 import { Base } from './Base';
 
 @Entity()
+@Index(['country', 'targetDate'])
 export class StatsMemory extends Base {
   @PrimaryGeneratedColumn('uuid')
   id: string;
