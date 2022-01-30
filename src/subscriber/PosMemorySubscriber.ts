@@ -12,38 +12,8 @@ export class PosMemorySubscriber implements EntitySubscriberInterface {
   }
 
   async afterInsert(event: InsertEvent<PosMemory>): Promise<void> {
-    const {
-      nationalStoreNumber,
-      name,
-      restaurantStatus,
-      latitude,
-      longitude,
-      hasMilchshake,
-      hasMcFlurry,
-      hasMcSundae,
-      lastCheck,
-      timeSinceBrokenMilchshake,
-      timeSinceBrokenMcFlurry,
-      timeSinceBrokenMcSundae,
-      country,
-      hasMobileOrdering,
-    } = event.entity;
-
     const pos = Pos.create({
-      nationalStoreNumber,
-      name,
-      restaurantStatus,
-      latitude,
-      longitude,
-      hasMilchshake,
-      hasMcFlurry,
-      hasMcSundae,
-      lastCheck,
-      timeSinceBrokenMilchshake,
-      timeSinceBrokenMcFlurry,
-      timeSinceBrokenMcSundae,
-      country,
-      hasMobileOrdering,
+      ...event.entity,
     });
 
     await Pos.save(pos);
