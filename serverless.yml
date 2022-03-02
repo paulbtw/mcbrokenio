@@ -91,3 +91,11 @@ functions:
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
     events:
       - schedule: cron(0/15 * * * ? *)
+  getLocation:
+    handler: src/functions/getLocation/handler.main
+    memorySize: 128
+    timeout: 5
+    events:
+      - httpApi:
+          method: GET
+          path: /
