@@ -99,3 +99,4 @@ functions:
       - httpApi:
           method: GET
           path: /
+          cors: true
