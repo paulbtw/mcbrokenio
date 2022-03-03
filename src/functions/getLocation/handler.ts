@@ -23,6 +23,7 @@ export interface IIPService {
 }
 
 export const main: Handler<APIGatewayEvent> = async (event) => {
+  logger.debugObject('event', event);
   let ip = event.headers['x-forwarded-for'];
   if (!ip) {
     return {
@@ -35,11 +36,7 @@ export const main: Handler<APIGatewayEvent> = async (event) => {
   logger.debugObject('event ', ip);
 
   const splittedIp = ip.split(',');
-  if (splittedIp.length > 1) {
-    ip = splittedIp[1].trim();
-  } else {
-    ip = splittedIp[0].trim();
-  }
+  ip = splittedIp[0];
 
   const location = await axios.get<IIPService>(`http://ip-api.com/json/${ip}`);
 
