@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import { Logger } from '@sailplane/logger';
 import { APIGatewayEvent, Handler } from 'aws-lambda';
 import axios from 'axios';
@@ -22,8 +23,23 @@ export interface IIPService {
 }
 
 export const main: Handler<APIGatewayEvent> = async (event) => {
-  const ip = event.headers['x-forwarded-for'];
-  logger.debugObject('event', ip);
+  let ip = event.headers['x-forwarded-for'];
+  if (!ip) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'No IP address found',
+      }),
+    };
+  }
+  logger.debugObject('event ', ip);
+
+  const splittedIp = ip.split(',');
+  if (splittedIp.length > 1) {
+    ip = splittedIp[1].trim();
+  } else {
+    ip = splittedIp[0].trim();
+  }
 
   const location = await axios.get<IIPService>(`http://ip-api.com/json/${ip}`);
 
