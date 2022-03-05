@@ -23,7 +23,6 @@ export interface IIPService {
 }
 
 export const main: Handler<APIGatewayEvent> = async (event) => {
-  logger.debugObject('event', event);
   let ip = event.headers['x-forwarded-for'];
   if (!ip) {
     return {
