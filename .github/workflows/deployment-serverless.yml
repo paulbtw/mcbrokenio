@@ -30,3 +30,12 @@ jobs:
         run: sls config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Serverless AWS deployment
         run: sls deploy
+        env:
+          BASIC_TOKEN_AP: ${{ secrets.BASIC_TOKEN_AP }}
+          BASIC_TOKEN_EU: ${{ secrets.BASIC_TOKEN_EU }}
+          BASIC_TOKEN_EL: ${{ secrets.BASIC_TOKEN_EL }}
+          BASIC_TOKEN_US: ${{ secrets.BASIC_TOKEN_US }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MCD_DEVICEID: ${{ secrets.MCD_DEVICEID }}
+          KEY: ${{ secrets.KEY }}
+          API_KEY_AP: ${{ secrets.API_KEY_AP }}
