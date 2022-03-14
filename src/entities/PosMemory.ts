@@ -29,6 +29,7 @@ export class PosMemory extends Base {
     enum: Availability,
     default: Availability.UNKNOWN,
   })
+  @Index({ where: '"hasMilchshake" = \'AVAILABLE\'' })
   hasMilchshake: Availability;
 
   @Column({
@@ -37,6 +38,7 @@ export class PosMemory extends Base {
     enum: Availability,
     default: Availability.UNKNOWN,
   })
+  @Index({ where: '"hasMcFlurry" = \'AVAILABLE\'' })
   hasMcFlurry: Availability;
 
   @Column({
@@ -45,6 +47,7 @@ export class PosMemory extends Base {
     enum: Availability,
     default: Availability.UNKNOWN,
   })
+  @Index({ where: '"hasMcSundae" = \'AVAILABLE\'' })
   hasMcSundae: Availability;
 
   @Column({ nullable: true })
