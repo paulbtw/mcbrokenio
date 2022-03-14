@@ -39,3 +39,4 @@ jobs:
           MCD_DEVICEID: ${{ secrets.MCD_DEVICEID }}
           KEY: ${{ secrets.KEY }}
           API_KEY_AP: ${{ secrets.API_KEY_AP }}
+          EXPORT_BUCKET: ${{ secrets.EXPORT_BUCKET }}
