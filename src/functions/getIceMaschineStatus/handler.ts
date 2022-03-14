@@ -44,7 +44,7 @@ export const main: Handler = async () => {
 
     const now = new Date();
 
-    const newPosArray: Pos[] = [];
+    const newPosArray: PosMemory[] = [];
 
     const batchedPos = chunk<Pos>(posToCheck, 10);
 
@@ -52,7 +52,23 @@ export const main: Handler = async () => {
     for await (const posArray of batchedPos) {
       await Promise.all(
         posArray.map(async (pos) => {
-          const newPos = pos;
+          const newPos = PosMemory.create({
+            nationalStoreNumber: pos.nationalStoreNumber,
+            name: pos.name,
+            restaurantStatus: pos.restaurantStatus,
+            latitude: pos.latitude,
+            longitude: pos.longitude,
+            hasMilchshake: pos.hasMilchshake,
+            hasMcFlurry: pos.hasMcFlurry,
+            hasMcSundae: pos.hasMcSundae,
+            lastCheck: now,
+            timeSinceBrokenMilchshake: pos.timeSinceBrokenMilchshake,
+            timeSinceBrokenMcFlurry: pos.timeSinceBrokenMcFlurry,
+            timeSinceBrokenMcSundae: pos.timeSinceBrokenMcSundae,
+            country: pos.country,
+            hasMobileOrdering: pos.hasMobileOrdering,
+          });
+          // const newPos = pos;
           const posId = newPos.nationalStoreNumber.split('-')[1];
           logger.debug(`Checking Pos: ${posId}`);
 
@@ -91,7 +107,10 @@ export const main: Handler = async () => {
 
           if (hasMilchshake === Availability.NOT_AVAILABLE) {
             if (newPos.hasMilchshake !== Availability.NOT_AVAILABLE) {
-              newPos.timeSinceBrokenMilchshake = now;
+              newPos.timeSinceBrokenMilchshake =
+                newPos.timeSinceBrokenMilchshake
+                  ? newPos.timeSinceBrokenMilchshake
+                  : now;
             }
           } else {
             newPos.timeSinceBrokenMilchshake = null;
@@ -100,7 +119,9 @@ export const main: Handler = async () => {
 
           if (hasMcFlurry === Availability.NOT_AVAILABLE) {
             if (newPos.hasMcFlurry !== Availability.NOT_AVAILABLE) {
-              newPos.timeSinceBrokenMcFlurry = now;
+              newPos.timeSinceBrokenMcFlurry = newPos.timeSinceBrokenMcFlurry
+                ? newPos.timeSinceBrokenMcFlurry
+                : now;
             }
           } else {
             newPos.timeSinceBrokenMcFlurry = null;
@@ -109,7 +130,9 @@ export const main: Handler = async () => {
 
           if (hasMcSundae === Availability.NOT_AVAILABLE) {
             if (newPos.hasMcSundae !== Availability.NOT_AVAILABLE) {
-              newPos.timeSinceBrokenMcSundae = now;
+              newPos.timeSinceBrokenMcSundae = newPos.timeSinceBrokenMcSundae
+                ? newPos.timeSinceBrokenMcSundae
+                : now;
             }
           } else {
             newPos.timeSinceBrokenMcSundae = null;
