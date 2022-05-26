@@ -100,3 +100,14 @@ functions:
           method: GET
           path: /
           cors: true
+  cleanupDatabase:
+    handler: src/functions/cleanupDatabase/handler.main
+    enviroment:
+      DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
+    memorySize: 128
+    timeout: 300
+    environment:
+      BUCKET: ${self:custom.mcdInfo.exportBucket}
+      DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
+    events:
+      - schedule: cron(0 0 * * ? *)
