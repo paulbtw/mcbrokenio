@@ -86,7 +86,7 @@ export const getStoreListUS = async () => {
           } catch (error) {
             logger.error(error);
           }
-          await delay(300);
+          await delay(500);
         }),
       );
     }
