@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install Serverless Framework
         run: npm install -g serverless@2.67.0
-      - run: npm install
+      - run: npm run install
       - name: migrations
         run: npm typeorm -f src/ormconfig.ts migration:run
         env:
