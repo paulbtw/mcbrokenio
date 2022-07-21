@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Logger } from '@sailplane/logger';
 import { getConnection } from 'typeorm';
-import { CountryInfos, KEY } from '../../../utils';
+import { CountryInfos, delay, KEY } from '../../../utils';
 import { Pos } from '../../../entities';
 import { APIType, IRestaurantsEL } from '../../../types';
 import { upsertPos } from '.';
@@ -48,6 +48,7 @@ export const getStoreListEL = async () => {
     } catch (error) {
       logger.error(error);
     }
+    await delay(500);
   }
 
   const connection = getConnection();

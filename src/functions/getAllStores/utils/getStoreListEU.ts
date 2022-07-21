@@ -89,7 +89,7 @@ export const getStoreListEU = async () => {
           }
         }),
       );
-      await delay(300);
+      await delay(1000);
     }
   }
 

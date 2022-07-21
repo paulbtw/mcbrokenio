@@ -8,6 +8,7 @@ import {
   BASIC_TOKEN_AP,
   chunk,
   CountryInfos,
+  delay,
   getClientId,
   getNewBearerToken,
 } from '../../../utils';
@@ -87,6 +88,7 @@ export const getStoreListAP = async () => {
           }
         }),
       );
+      await delay(500);
     }
   }
 
