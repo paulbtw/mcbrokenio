@@ -23,7 +23,7 @@ jobs:
         run: npm install -g serverless@2.67.0
       - run: npm install
       - name: migrations
-        run: npm run typeorm -f src/ormconfig.ts migration:run
+        run: npm run typeorm migration:run -d src/ormconfig.ts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Serverless AWS authentication
