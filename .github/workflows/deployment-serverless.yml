@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install Serverless Framework
-        run: npm install -g serverless@2.67.0
+        run: npm install -g serverless
       - run: npm install
       - name: migrations
         run: npm run typeorm migration:run -- -f src/ormconfig.ts
