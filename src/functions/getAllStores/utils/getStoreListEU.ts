@@ -8,6 +8,7 @@ import {
   BASIC_TOKEN_EU,
   chunk,
   CountryInfos,
+  delay,
   getClientId,
   getNewBearerToken,
 } from '../../../utils';
@@ -44,8 +45,6 @@ export const getStoreListEU = async () => {
       await Promise.all(
         locationsArray.map(async (location) => {
           try {
-            logger.debugObject('location: ', location);
-
             if (!location) {
               return;
             }
@@ -90,6 +89,7 @@ export const getStoreListEU = async () => {
           }
         }),
       );
+      await delay(300);
     }
   }
 

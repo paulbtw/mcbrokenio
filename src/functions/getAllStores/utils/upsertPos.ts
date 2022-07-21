@@ -27,6 +27,7 @@ export const upsertPos = async (arr: Pos[], connection: Connection) => {
 
   const valuesString = generateValueString(uniquePosArray);
 
+  if (!valuesString || !valuesString.length) return;
   // TODO need to escape values
   logger.debug(`Pos to save: ${uniquePosArray.length}`);
   await connection.query(

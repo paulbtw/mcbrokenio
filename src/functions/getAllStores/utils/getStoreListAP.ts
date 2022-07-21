@@ -44,8 +44,6 @@ export const getStoreListAP = async () => {
       await Promise.all(
         locationArray.map(async (location) => {
           try {
-            logger.debugObject('location: ', location);
-
             if (!location) {
               return;
             }
