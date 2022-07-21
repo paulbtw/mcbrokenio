@@ -42,6 +42,7 @@
     "husky": "^7.0.4",
     "lint-staged": "^11.2.6",
     "prettier": "^2.5.0",
+    "serverless": "^3.21.0",
     "serverless-plugin-log-subscription": "^2.0.1",
     "serverless-plugin-typescript": "^2.1.0",
     "ts-jest": "^27.1.3",

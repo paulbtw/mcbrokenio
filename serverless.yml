@@ -2,7 +2,7 @@ service: mcbrokenio
 variablesResolutionMode: 20210326
 useDotenv: true
 
-frameworkVersion: '2'
+frameworkVersion: '3'
 
 package:
   excludeDevDependencies: true
