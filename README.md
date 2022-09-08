@@ -1,3 +1,17 @@
+# McBroken Backend
+
+Built with:
+- [Serverless](https://www.serverless.com/)
+- [TypeORM](https://typeorm.io/)
+
+## Setup
+
+1. You need to have basic tokens from the McDonald's app to use their API.
+2. Fill out the .env.dist file and rename it to .env
+3. `npm install` and `npm install -g serverless`
+4. `docker-compose up` to start your local db
+5. To run a function locally use `serverless invoke local --function functionName`
+
 ## MCD API:
 
 Information about the different McDonalds APIs.
