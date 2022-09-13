@@ -1,4 +1,3 @@
-import { Logger } from '@sailplane/logger';
 import { Handler } from 'aws-lambda';
 import { Pos, PosMemory } from '../../entities';
 import { APIType, Availability } from '../../types';
@@ -14,8 +13,6 @@ import {
   getNewBearerToken,
 } from '../../utils';
 import { checkForMaschine } from './utils';
-
-const logger = new Logger('getIceMaschineStatus');
 
 export const main: Handler = async () => {
   try {
@@ -70,7 +67,6 @@ export const main: Handler = async () => {
           });
           // const newPos = pos;
           const posId = newPos.nationalStoreNumber.split('-')[1];
-          logger.debug(`Checking Pos: ${posId}`);
 
           const countryInfo = CountryInfos[newPos.country];
 
@@ -153,6 +149,7 @@ export const main: Handler = async () => {
       await connection.close();
     }
   } catch (error) {
-    logger.error(error);
+    return null;
   }
+  return null;
 };

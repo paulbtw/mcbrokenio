@@ -24,9 +24,9 @@ export const main: Handler = async (_, context) => {
     ContentType: 'application/json',
   };
   await s3
-    .putObject(paramsGeoJSON, (err, data) => {
+    .putObject(paramsGeoJSON, (err) => {
       if (err) logger.errorObject('Error: ', err);
-      else logger.debugObject('Put to s3 should have worked: ', data);
+      else logger.debug('Put to s3 should have worked');
     })
     .promise();
 
@@ -37,9 +37,9 @@ export const main: Handler = async (_, context) => {
     ContentType: 'application/json',
   };
   await s3
-    .putObject(paramsStats, (err, data) => {
+    .putObject(paramsStats, (err) => {
       if (err) logger.errorObject('Error: ', err);
-      else logger.debugObject('Put to s3 should have worked: ', data);
+      else logger.debug('Put to s3 should have worked');
     })
     .promise();
 

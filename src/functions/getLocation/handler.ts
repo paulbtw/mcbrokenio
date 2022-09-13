@@ -1,9 +1,5 @@
-/* eslint-disable prefer-destructuring */
-import { Logger } from '@sailplane/logger';
 import { APIGatewayEvent, Handler } from 'aws-lambda';
 import axios from 'axios';
-
-const logger = new Logger('getLocation');
 
 export interface IIPService {
   query: string;
@@ -32,10 +28,9 @@ export const main: Handler<APIGatewayEvent> = async (event) => {
       }),
     };
   }
-  logger.debugObject('event ', ip);
 
   const splittedIp = ip.split(',');
-  ip = splittedIp[0];
+  [ip] = splittedIp;
 
   const location = await axios.get<IIPService>(`http://ip-api.com/json/${ip}`);
 
