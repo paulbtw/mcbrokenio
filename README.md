@@ -1,6 +1,6 @@
 # McBroken Backend
 
-The project idea is from [McBroken.com](https://mcbroken.com/) by [rashiq](https://rashiq.me/).
+The project idea is inspired by [McBroken.com](https://mcbroken.com/) made by [rashiq](https://rashiq.me/).
 
 Built with:
 - [Serverless](https://www.serverless.com/)
