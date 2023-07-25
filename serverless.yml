@@ -15,7 +15,7 @@ provider:
   name: aws
   runtime: nodejs14.x
   lambdaHashingVersion: 20201221
-  region: ${opt:region, 'us-east-2'}
+  region: us-east-2
   stage: ${opt:stage, 'dev'}
   deploymentBucket:
     name: mcbrokenio-paulbtw-dev
@@ -40,6 +40,8 @@ provider:
         - s3:GetObjectVersion
       Resource:
         - arn:aws:s3:::*
+  httpApi:
+      cors: true
 
 custom:
   mcdInfo:
@@ -99,15 +101,11 @@ functions:
       - httpApi:
           method: GET
           path: /
-          cors: true
   cleanupDatabase:
     handler: src/functions/cleanupDatabase/handler.main
-    enviroment:
+    environment:
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
     memorySize: 128
     timeout: 300
-    environment:
-      BUCKET: ${self:custom.mcdInfo.exportBucket}
-      DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
     events:
       - schedule: cron(0 0 * * ? *)

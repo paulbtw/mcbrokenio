@@ -18,11 +18,11 @@ export const main: Handler = async (_, context) => {
   const connection = await createDatabaseConnection();
 
   await Promise.all([
-    getStoreListAP(),
-    getStoreListEL(),
+    // getStoreListAP(),
+    // getStoreListEL(),
     getStoreListEU(),
-    getStoreListHK(),
-    getStoreListUS(),
+    // getStoreListHK(),
+    // getStoreListUS(),
   ]);
 
   if (connection.isConnected) {

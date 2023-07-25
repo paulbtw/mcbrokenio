@@ -1,5 +1,5 @@
 import { APIType } from '../../src/types';
-import { getNewBearerToken } from '../../src/utils/getNewBearerToken';
+import { getNewBearerToken } from '../../src/utils';
 
 describe('Getting a new bearer Token', () => {
   test('Try getting a new Token for AP', async () => {

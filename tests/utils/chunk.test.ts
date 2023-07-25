@@ -1,4 +1,4 @@
-import { chunk } from '../../src/utils/chunk';
+import { chunk } from '../../src/utils';
 
 describe('testing the chunk function', () => {
   test('when the array is empty', () => {

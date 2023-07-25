@@ -1,4 +1,4 @@
-import { delay } from '../../src/utils/delay';
+import { delay } from '../../src/utils';
 
 describe('Test the delay function', () => {
   test('when the delay is successful', async () => {
