@@ -14,9 +14,9 @@ export const main: Handler = async (_, context) => {
     .where('"createdAt" < NOW() - INTERVAL \'90 days\'')
     .execute();
 
-  logger.debugObject('Deleted: ', deleted.affected);
+  logger.debug('Deleted: ', deleted.affected);
 
-  if (connection.isConnected) {
-    await connection.close();
+  if (connection.isInitialized) {
+    await connection.destroy();
   }
 };

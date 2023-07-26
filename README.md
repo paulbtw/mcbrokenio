@@ -96,6 +96,8 @@ Information about the different McDonalds APIs.
 
 ### ap-prod:
 
+#### only works with AU (& NZ, probally some more) IP
+
 | Country   | Code | Mobile Ordering | Mobile Ordering String |
 |-----------|------|-----------------|------------------------|
 | Australia | AU   | true            | MOBILEORDERS           |

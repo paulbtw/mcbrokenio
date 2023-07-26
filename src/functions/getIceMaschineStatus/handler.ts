@@ -1,5 +1,5 @@
 import { Handler } from 'aws-lambda';
-import { Pos, PosMemory } from '../../entities';
+import { Pos } from '../../entities';
 import { APIType, Availability } from '../../types';
 import {
   BASIC_TOKEN_AP,
@@ -41,7 +41,7 @@ export const main: Handler = async () => {
 
     const now = new Date();
 
-    const newPosArray: PosMemory[] = [];
+    const newPosArray: Pos[] = [];
 
     const batchedPos = chunk<Pos>(posToCheck, 10);
 
@@ -49,7 +49,7 @@ export const main: Handler = async () => {
     for await (const posArray of batchedPos) {
       await Promise.all(
         posArray.map(async (pos) => {
-          const newPos = PosMemory.create({
+          const newPos = Pos.create({
             nationalStoreNumber: pos.nationalStoreNumber,
             name: pos.name,
             restaurantStatus: pos.restaurantStatus,
@@ -143,10 +143,10 @@ export const main: Handler = async () => {
       );
     }
 
-    await PosMemory.save(newPosArray, { chunk: 1000 });
+    await Pos.save(newPosArray, { chunk: 1000 });
 
-    if (connection.isConnected) {
-      await connection.close();
+    if (connection.isInitialized) {
+      await connection.destroy();
     }
   } catch (error) {
     return null;

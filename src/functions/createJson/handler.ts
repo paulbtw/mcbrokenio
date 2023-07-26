@@ -25,7 +25,7 @@ export const main: Handler = async (_, context) => {
   };
   await s3
     .putObject(paramsGeoJSON, (err) => {
-      if (err) logger.errorObject('Error: ', err);
+      if (err) logger.error('Error: ', err);
       else logger.debug('Put to s3 should have worked');
     })
     .promise();
@@ -38,12 +38,12 @@ export const main: Handler = async (_, context) => {
   };
   await s3
     .putObject(paramsStats, (err) => {
-      if (err) logger.errorObject('Error: ', err);
+      if (err) logger.error('Error: ', err);
       else logger.debug('Put to s3 should have worked');
     })
     .promise();
 
-  if (connection.isConnected) {
-    await connection.close();
+  if (connection.isInitialized) {
+    await connection.destroy();
   }
 };

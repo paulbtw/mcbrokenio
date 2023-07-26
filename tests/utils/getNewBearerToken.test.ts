@@ -2,11 +2,12 @@ import { APIType } from '../../src/types';
 import { getNewBearerToken } from '../../src/utils';
 
 describe('Getting a new bearer Token', () => {
-  test('Try getting a new Token for AP', async () => {
-    const token = await getNewBearerToken(APIType.AP);
-    expect(token).toBeDefined();
-    expect(token).toBeTruthy();
-  });
+  // Only works with AU IP
+  // test('Try getting a new Token for AP', async () => {
+  //   const token = await getNewBearerToken(APIType.AP);
+  //   expect(token).toBeDefined();
+  //   expect(token).toBeTruthy();
+  // });
 
   test('Try getting a new Token for EL', async () => {
     const token = await getNewBearerToken(APIType.EL);
