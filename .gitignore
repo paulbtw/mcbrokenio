@@ -56,3 +56,5 @@ migrations.json
 !.yarn/versions
 
 postgres_data
+
+.env
