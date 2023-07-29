@@ -1,0 +1,61 @@
+{
+  "name": "mcall",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "packages/mcall/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/mcall",
+        "color": true,
+        "command": "sls package"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/mcall",
+        "color": true,
+        "command": "sls offline start"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/mcall",
+        "color": true,
+        "command": "sls deploy"
+      }
+    },
+    "remove": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/mcall",
+        "color": true,
+        "command": "sls remove"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["packages/mcall/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/mcall/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    }
+  },
+  "tags": ["stack"]
+}

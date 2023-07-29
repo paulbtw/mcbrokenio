@@ -7,20 +7,19 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "importHelpers": true,
-    "target": "es2015",
-    "module": "esnext",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "importHelpers": false,
+    "target": "es2022",
+    "module": "commonjs",
+    "lib": ["esnext"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@mcbroken/core": ["libs/core/src/index.ts"],
+      "@nx-serverless-template/workspace-plugin": [
+        "tools/workspace-plugin/src/index.ts"
+      ]
+    }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

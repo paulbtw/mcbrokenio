@@ -1,8 +1,8 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
-dist
-tmp
+/dist
+/tmp
 /out-tsc
 
 # dependencies
@@ -18,7 +18,7 @@ node_modules
 *.sublime-workspace
 
 # IDE - VSCode
-.vscode/*
+
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -38,5 +38,21 @@ testem.log
 .DS_Store
 Thumbs.db
 
-.build
-postgres-data
+.serverless
+.vscode
+.dynamodb
+.webpack
+
+# Nx
+migrations.json
+
+# Yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+postgres_data

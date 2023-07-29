@@ -2,14 +2,84 @@
   "name": "@mcbroken/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
   "private": true,
-  "dependencies": {},
+  "scripts": {
+    "nx": "nx",
+    "build": "nx build",
+    "test": "nx test",
+    "lint": "nx workspace-lint && nx lint",
+    "e2e": "nx e2e",
+    "affected:stacks": "nx affected:apps",
+    "affected:libs": "nx affected:libs",
+    "affected:build": "nx affected:build",
+    "affected:e2e": "nx affected:e2e",
+    "affected:test": "nx affected:test",
+    "affected:lint": "nx affected:lint",
+    "affected:dep-graph": "nx affected:dep-graph",
+    "affected": "nx affected",
+    "format": "nx format:write",
+    "format:write": "nx format:write",
+    "format:check": "nx format:check",
+    "update": "nx migrate latest",
+    "workspace-generator": "nx workspace-generator",
+    "dep-graph": "nx dep-graph",
+    "help": "nx help",
+    "prepare": "husky install"
+  },
   "devDependencies": {
+    "@aws-sdk/types": "3.378.0",
+    "@jest/transform": "29.6.2",
+    "@nrwl/tao": "16.5.5",
+    "@nx/devkit": "16.5.5",
+    "@nx/eslint-plugin": "16.5.5",
+    "@nx/jest": "16.5.5",
     "@nx/js": "16.5.5",
+    "@nx/linter": "16.5.5",
+    "@nx/node": "16.5.5",
+    "@nx/plugin": "16.5.5",
     "@nx/workspace": "16.5.5",
-    "nx": "16.5.5",
-    "prettier": "^2.6.2",
-    "typescript": "~5.1.3"
+    "@swc-node/register": "~1.4.2",
+    "@swc/cli": "0.1.62",
+    "@swc/core": "1.3.51",
+    "@types/aws-lambda": "8.10.119",
+    "@types/jest": "29.5.3",
+    "@types/node": "18.17.1",
+    "@types/serverless": "3.12.13",
+    "@typescript-eslint/eslint-plugin": "5.62.0",
+    "@typescript-eslint/parser": "5.62.0",
+    "esbuild": "0.18.17",
+    "eslint": "8.46.0",
+    "eslint-config-prettier": "8.9.0",
+    "husky": "8.0.3",
+    "jest": "29.6.2",
+    "jest-environment-node": "29.6.2",
+    "lint-staged": "13.2.3",
+    "nx-cloud": "16.1.1",
+    "prettier": "2.8.8",
+    "serverless": "3.33.0",
+    "serverless-esbuild": "1.46.0",
+    "serverless-jest-plugin": "0.4.0",
+    "serverless-offline": "12.0.4",
+    "ts-jest": "29.1.1",
+    "ts-loader": "9.4.4",
+    "ts-node": "10.9.1",
+    "typescript": "5.1.6"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{md,json,yml,yaml,html}": [
+      "prettier --write"
+    ]
+  },
+  "packageManager": "yarn@3.6.1",
+  "dependencies": {
+    "@swc/helpers": "0.5.0",
+    "tslib": "2.6.1"
   }
 }
