@@ -3,6 +3,7 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "rvest.vs-code-prettier-eslint",
-        "threadheap.serverless-ide-vscode"
+        "threadheap.serverless-ide-vscode",
+        "nrwl.angular-console",
     ]
 }

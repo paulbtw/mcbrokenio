@@ -1,19 +1,15 @@
 {
-  "name": "mcbrokenio",
-  "version": "1.0.0",
+  "name": "@mcbroken/source",
+  "version": "0.0.0",
   "license": "MIT",
+  "scripts": {},
   "private": true,
-  "workspaces": ["packages/*"],
-  "scripts": {
-    "typeorm": "ts-node ./node_modules/typeorm/cli.js",
-    "prepare": "husky install",
-    "clean": "rimraf .serverless",
-    "lint": "eslint . --ext .ts",
-    "test": "jest --setupFiles dotenv/config",
-    "test:ci": "jest --setupFiles dotenv/config --ci"
-  },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@nx/js": "16.5.5",
+    "@nx/workspace": "16.5.5",
+    "nx": "16.5.5",
+    "prettier": "^2.6.2",
+    "typescript": "~5.1.3"
   }
 }
