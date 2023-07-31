@@ -56,6 +56,7 @@
     "lint-staged": "13.2.3",
     "nx-cloud": "16.1.1",
     "prettier": "2.8.8",
+    "prisma": "^5.0.0",
     "serverless": "3.33.0",
     "serverless-esbuild": "1.46.0",
     "serverless-jest-plugin": "0.4.0",
@@ -79,7 +80,10 @@
   },
   "packageManager": "yarn@3.6.1",
   "dependencies": {
+    "@prisma/client": "5.0.0",
+    "@sailplane/logger": "^4.2.0",
     "@swc/helpers": "0.5.0",
+    "axios": "^1.4.0",
     "tslib": "2.6.1"
   }
 }

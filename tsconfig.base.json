@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@mcbroken/core": ["libs/core/src/index.ts"],
+      "@mcbroken/db": ["libs/db/src/index.ts"],
       "@nx-serverless-template/workspace-plugin": [
         "tools/workspace-plugin/src/index.ts"
       ]

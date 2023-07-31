@@ -4,6 +4,12 @@ export const baseServerlessConfiguration: Partial<Serverless> = {
   frameworkVersion: '3',
   package: {
     excludeDevDependencies: true,
+    patterns: [
+      '!node_modules/.prisma/client/libquery_engine-*',
+      'node_modules/.prisma/client/libquery_engine-linux-arm64-*',
+      '!node_modules/prisma/libquery_engine-*',
+      '!node_modules/@prisma/engines/**',
+    ],
   },
   plugins: ['serverless-esbuild', 'serverless-offline'],
 
@@ -18,6 +24,6 @@ export const baseServerlessConfiguration: Partial<Serverless> = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
     },
-    architecture: 'arm64'
+    architecture: 'x86_64',
   },
 };
