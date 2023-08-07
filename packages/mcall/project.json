@@ -36,6 +36,14 @@
         "command": "sls remove"
       }
     },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/mcall",
+        "color": true,
+        "command": "sls invoke local"
+      }
+    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {

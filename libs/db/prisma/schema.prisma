@@ -16,6 +16,27 @@ model Pos {
   name String
   latitude String
   longitude String
+  mcFlurryAvailable Int @default(0)
+  mcFlurryError Int @default(0)
+  mcSundaeAvailable Int @default(0)
+  mcSundaeError Int @default(0)
+  milkshakeAvailable Int  @default(0)
+  milkshakeError Int @default(0)
+  hasMobileOrdering Boolean @default(false)
+  lastChecked DateTime?
+  country String
 
+  @@index([country], type: Hash)
+}
 
+model Stats {
+  id String @id @db.Uuid @default(uuid())
+  country String
+  totalMcd Int
+  availableMilkshakes Int
+  trackableMilkshakes Int
+  availableMcFlurry Int
+  trackableMcFlurry Int
+  availableMcSundae Int
+  trackableMcSundae Int
 }

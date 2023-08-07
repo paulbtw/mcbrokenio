@@ -4,24 +4,22 @@
   "sourceRoot": "libs/db/src",
   "projectType": "library",
   "targets": {
-    "targets": {
-      "prisma": {
-        "command": "prisma",
-        "options": {
-          "cwd": "libs/db"
-        }
-      },
-      "migrate": {
-        "command": "prisma migrate dev",
-        "options": {
-          "cwd": "libs/db"
-        }
-      },
-      "generate": {
-        "command": "prisma generate",
-        "options": {
-          "cwd": "libs/db"
-        }
+    "prisma": {
+      "command": "prisma",
+      "options": {
+        "cwd": "libs/db"
+      }
+    },
+    "migrate": {
+      "command": "prisma migrate dev",
+      "options": {
+        "cwd": "libs/db"
+      }
+    },
+    "generate": {
+      "command": "prisma generate",
+      "options": {
+        "cwd": "libs/db"
       }
     }
   },

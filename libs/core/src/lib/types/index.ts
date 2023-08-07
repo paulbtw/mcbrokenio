@@ -82,5 +82,3 @@ export enum IceType {
   MCSUNDAE = 'MCSUNDAE',
   MILCHSHAKE = 'MILCHSHAKE',
 }
-
-export {} from '/responses';
