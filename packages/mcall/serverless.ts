@@ -5,17 +5,23 @@ const serverlessConfiguration = <Serverless>{
   ...baseServerlessConfiguration,
   provider: {
     ...baseServerlessConfiguration.provider,
-    region: 'eu-central-1'
+    region: 'eu-central-1',
   },
+
   service: 'mcall',
   functions: {
-    hello: {
-      handler: 'src/handler.hello',
+    getAllStores: {
+      memorySize: 512,
+      timeout: 900,
+      handler: 'src/handler.getAllStores',
       events: [
         {
-          schedule: 'rate(1 minute)'
+          schedule: 'rate(1 minute)',
         },
       ],
+      environment: {
+        BASIC_TOKEN_EU: '${env:BASIC_TOKEN_EU}',
+      },
     },
   },
 };

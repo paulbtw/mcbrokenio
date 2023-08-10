@@ -1,6 +1,7 @@
 import { getStorelistEu } from '@mcbroken/core';
 
-export const hello = async () => {
-  console.log('TESADSASDA');
+export const getAllStores = async () => {
   await getStorelistEu();
+
+  return null;
 };

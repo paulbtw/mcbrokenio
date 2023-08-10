@@ -84,6 +84,7 @@
     "@sailplane/logger": "^4.2.0",
     "@swc/helpers": "0.5.0",
     "axios": "^1.4.0",
+    "p-queue": "^7.3.4",
     "tslib": "2.6.1"
   }
 }

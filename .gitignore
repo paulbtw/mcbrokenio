@@ -60,4 +60,5 @@ postgres-data/*
 
 .env
 .esbuild/*
+.esbuild
 .build

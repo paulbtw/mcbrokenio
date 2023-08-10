@@ -82,3 +82,13 @@ export enum IceType {
   MCSUNDAE = 'MCSUNDAE',
   MILCHSHAKE = 'MILCHSHAKE',
 }
+
+export interface ICountryInfos {
+  country: Locations;
+  getStores: {
+    api: APIType;
+    mobileString?: string;
+    url: string;
+  };
+  productCodes: Record<IceType, string[]>;
+}
