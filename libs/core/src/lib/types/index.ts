@@ -1,7 +1,10 @@
+import { Prisma } from '@prisma/client';
+
 export enum Locations {
   AE = 'AE', // United Arab Emirates
   AT = 'AT', // Austria
   AU = 'AU', // Australia
+  AU2 = 'AU2', // Australia
   BA = 'BA', // Bosnia and Herzegovina
   BE = 'BE', // Belgium
   BG = 'BG', // Bulgaria
@@ -60,6 +63,7 @@ export enum Locations {
   UK = 'UK', // United Kingdom
   UNKNOWN = 'UNKNOWN',
   US = 'US', // United States
+  US2 = 'US2', // United States
   VN = 'VN', // Vietnam
 }
 
@@ -67,6 +71,13 @@ export interface ILocation {
   latitude: number | string;
   longitude: number | string;
 }
+
+export type LocationLimits = {
+  minLatitude: number;
+  maxLatitude: number;
+  minLongitude: number;
+  maxLongitude: number;
+};
 
 export enum APIType {
   AP = 'AP',
@@ -91,4 +102,7 @@ export interface ICountryInfos {
     url: string;
   };
   productCodes: Record<IceType, string[]>;
+  locationLimits?: LocationLimits;
 }
+
+export type CreatePos = Prisma.PosCreateInput;

@@ -10,6 +10,12 @@
         "cwd": "libs/db"
       }
     },
+    "reset": {
+      "command": "prisma migrate reset --force --skip-generate --skip-seed",
+      "options": {
+        "cwd": "libs/db"
+      }
+    },
     "migrate": {
       "command": "prisma migrate dev",
       "options": {

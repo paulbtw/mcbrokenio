@@ -6,6 +6,7 @@ const serverlessConfiguration = <Serverless>{
   provider: {
     ...baseServerlessConfiguration.provider,
     region: 'eu-central-1',
+    deploymentBucket: { name: "mcbrokenio-mcall-bucket-${opt:stage, 'dev'}" },
   },
 
   service: 'mcall',
@@ -13,14 +14,16 @@ const serverlessConfiguration = <Serverless>{
     getAllStores: {
       memorySize: 512,
       timeout: 900,
-      handler: 'src/handler.getAllStores',
+      handler: 'src/getAllStores.getAllStores',
       events: [
         {
-          schedule: 'rate(1 minute)',
+          schedule: 'cron(* * ? * * *)',
         },
       ],
       environment: {
         BASIC_TOKEN_EU: '${env:BASIC_TOKEN_EU}',
+        DATABASE_URL: '${env:DATABASE_URL}',
+        KEY: '${env:KEY}',
       },
     },
   },

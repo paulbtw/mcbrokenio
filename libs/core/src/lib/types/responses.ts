@@ -38,3 +38,31 @@ export interface IRestaurantLocationResponse {
     type: string;
   };
 }
+
+export interface IRestaurantsUrlResponse {
+  facilities: string[];
+  restaurants: {
+    acceptsOffers: boolean;
+    addressLine1: string;
+    city: string;
+    email: string;
+    facilities: string[];
+    lab: boolean;
+    latitude: number;
+    longitude: number;
+    mopEnabled: boolean;
+    name: string;
+    openingHours: {
+      categoryName: string;
+      hours: {
+        end: string;
+        start: string;
+        status: string;
+        weekday: string;
+      }[];
+    }[];
+    phone: string;
+    rid: string;
+    zipCode: string;
+  }[];
+}

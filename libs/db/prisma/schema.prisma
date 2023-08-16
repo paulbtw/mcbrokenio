@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-arm64-openssl-1.0.x"]
 }
 
@@ -12,31 +12,35 @@ datasource db {
 }
 
 model Pos {
-  nationalStoreNumber String @id
-  name String
-  latitude String
-  longitude String
-  mcFlurryAvailable Int @default(0)
-  mcFlurryError Int @default(0)
-  mcSundaeAvailable Int @default(0)
-  mcSundaeError Int @default(0)
-  milkshakeAvailable Int  @default(0)
-  milkshakeError Int @default(0)
-  hasMobileOrdering Boolean @default(false)
-  lastChecked DateTime?
-  country String
+  nationalStoreNumber String    @id
+  name                String
+  latitude            String
+  longitude           String
+  mcFlurryAvailable   Int       @default(0)
+  mcFlurryError       Int       @default(0)
+  mcSundaeAvailable   Int       @default(0)
+  mcSundaeError       Int       @default(0)
+  milkshakeAvailable  Int       @default(0)
+  milkshakeError      Int       @default(0)
+  hasMobileOrdering   Boolean   @default(false)
+  lastChecked         DateTime?
+  country             String
+  updatedAt           DateTime  @updatedAt
+  createdAt           DateTime  @default(now())
 
   @@index([country], type: Hash)
 }
 
 model Stats {
-  id String @id @db.Uuid @default(uuid())
-  country String
-  totalMcd Int
+  id                  String   @id @default(uuid()) @db.Uuid
+  country             String
+  totalMcd            Int
   availableMilkshakes Int
   trackableMilkshakes Int
-  availableMcFlurry Int
-  trackableMcFlurry Int
-  availableMcSundae Int
-  trackableMcSundae Int
+  availableMcFlurry   Int
+  trackableMcFlurry   Int
+  availableMcSundae   Int
+  trackableMcSundae   Int
+  updatedAt           DateTime @updatedAt
+  createdAt           DateTime @default(now())
 }

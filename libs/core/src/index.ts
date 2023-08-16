@@ -1,2 +1,3 @@
 export * from './lib';
-export { getStorelistEu } from './lib/service/getAllStores/getStorelistEu';
+export { getStorelistWithUrl } from './lib/service/getAllStores/getStorelistUrl';
+export { getStorelistWithLocation } from './lib/service/getAllStores/getStoreListLocation';

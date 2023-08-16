@@ -62,3 +62,6 @@ postgres-data/*
 .esbuild/*
 .esbuild
 .build
+
+# Next.js
+.next

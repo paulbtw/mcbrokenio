@@ -7,4 +7,4 @@ export const { MCD_DEVICEID } = process.env;
 export const { KEY } = process.env;
 export const { API_KEY_AP } = process.env;
 
-export { getAllLocation } from './locations';
+export { CountryInfos } from './CountryInfos';

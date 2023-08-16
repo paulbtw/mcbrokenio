@@ -14,6 +14,12 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCFLURRY]: ['4237', '4252', '4255', '4256', '4258'],
       [IceType.MCSUNDAE]: ['4603', '4604', '4651'],
     },
+    locationLimits: {
+      minLatitude: 47.270111,
+      maxLatitude: 55.05814,
+      minLongitude: 5.866315,
+      maxLongitude: 15.041896,
+    },
   },
   [Locations.NL]: {
     // Has no mobile ordering
@@ -28,6 +34,12 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCFLURRY]: [],
       [IceType.MCSUNDAE]: [],
     },
+    locationLimits: {
+      minLatitude: 51.278,
+      maxLatitude: 53.554,
+      minLongitude: 3.021,
+      maxLongitude: 7.227,
+    },
   },
   [Locations.UK]: {
     country: Locations.UK,
@@ -41,8 +53,13 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCFLURRY]: ['4467', '4694', '4397', '6554'],
       [IceType.MCSUNDAE]: ['UNAVAILABLE'],
     },
+    locationLimits: {
+      minLatitude: 49.674,
+      maxLatitude: 59.454,
+      minLongitude: -8.649,
+      maxLongitude: 1.763,
+    },
   },
-
   // EL-PROD API
   [Locations.AT]: {
     country: Locations.AT,
@@ -245,7 +262,7 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     },
   },
   [Locations.FR]: {
-    // TODO not working?!?!?
+    // TODO not working
     country: Locations.FR,
     getStores: {
       api: APIType.UNKNOWN,
@@ -864,6 +881,12 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCFLURRY]: ['16804', '16763', '5229', '11678'],
       [IceType.MCSUNDAE]: ['132', '133'],
     },
+    locationLimits: {
+      minLatitude: 41.676,
+      maxLatitude: 69.529,
+      minLongitude: -141.001,
+      maxLongitude: -52.617,
+    },
   },
   [Locations.US]: {
     country: Locations.US,
@@ -876,6 +899,31 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MILCHSHAKE]: ['1598', '1509', '1513'],
       [IceType.MCFLURRY]: ['557', '3830', '3832'],
       [IceType.MCSUNDAE]: ['345', '337', '478'],
+    },
+    locationLimits: {
+      minLatitude: 24.9493,
+      maxLatitude: 37.9493,
+      minLongitude: -124.733,
+      maxLongitude: -66.9499,
+    },
+  },
+  [Locations.US2]: {
+    country: Locations.US,
+    getStores: {
+      api: APIType.US,
+      url: 'https://us-prod.api.mcd.com/exp/v1/restaurant/location?distance=100000&filter=summary&pageSize=250&',
+      mobileString: 'MOBILEORDERS',
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: ['1598', '1509', '1513'],
+      [IceType.MCFLURRY]: ['557', '3830', '3832'],
+      [IceType.MCSUNDAE]: ['345', '337', '478'],
+    },
+    locationLimits: {
+      minLatitude: 37.9493,
+      maxLatitude: 49.5904,
+      minLongitude: -124.733,
+      maxLongitude: -66.9499,
     },
   },
 
@@ -891,6 +939,31 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MILCHSHAKE]: ['1502', '1512', '1522'],
       [IceType.MCFLURRY]: ['5739', '5738'],
       [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004'],
+    },
+    locationLimits: {
+      minLatitude: -43.003,
+      maxLatitude: -30.003,
+      minLongitude: 113.338,
+      maxLongitude: 153.569,
+    },
+  },
+  [Locations.AU2]: {
+    country: Locations.AU,
+    getStores: {
+      api: APIType.AP,
+      url: 'https://ap-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
+      mobileString: 'MOBILEORDERS',
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: ['1502', '1512', '1522'],
+      [IceType.MCFLURRY]: ['5739', '5738'],
+      [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004'],
+    },
+    locationLimits: {
+      minLatitude: -30.003,
+      maxLatitude: -10.668,
+      minLongitude: 113.338,
+      maxLongitude: 153.569,
     },
   },
 
