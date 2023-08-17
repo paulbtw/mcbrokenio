@@ -942,9 +942,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
     },
     locationLimits: {
       minLatitude: -43.003,
-      maxLatitude: -30.003,
-      minLongitude: 113.338,
-      maxLongitude: 153.569,
+      maxLatitude: -10.8752,
+      minLongitude: 112.911,
+      maxLongitude: 153.6388,
     },
   },
   [Locations.AU2]: {
@@ -960,10 +960,10 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004'],
     },
     locationLimits: {
-      minLatitude: -30.003,
-      maxLatitude: -10.668,
-      minLongitude: 113.338,
-      maxLongitude: 153.569,
+      minLatitude: -43.003,
+      maxLatitude: -10.8752,
+      minLongitude: 112.911,
+      maxLongitude: 153.6388,
     },
   },
 

@@ -17,7 +17,7 @@ const serverlessConfiguration = <Serverless>{
       events: [
         {
           schedule: {
-            rate: 'cron(30 * ? * * *)',
+            rate: 'cron(20 * ? * * *)',
             input: {
               key: 'AU2',
             },

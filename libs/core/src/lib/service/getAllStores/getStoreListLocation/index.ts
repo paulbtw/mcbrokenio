@@ -5,10 +5,11 @@ import { APIType, CreatePos, Locations } from '../../../types';
 import { savePos } from '../savePos';
 import { generateCoordinatesMesh } from '../../../utils/generateCoordinatesMesh';
 
-const queue = new PQueue({ concurrency: 3, interval: 300 });
+const queue = new PQueue({ concurrency: 5, interval: 300 });
 
 export async function getStorelistWithLocation(
   apiType: APIType,
+  intervalKilometer: number,
   countryList?: Locations[],
 ) {
   const { token, clientId, countryInfos } = await getMetaForApi(
@@ -32,7 +33,10 @@ export async function getStorelistWithLocation(
       throw new Error(`No locations found for ${countryInfo.country}`);
     }
 
-    const locations = generateCoordinatesMesh(locationLimits);
+    const locations = generateCoordinatesMesh(
+      locationLimits,
+      intervalKilometer,
+    );
 
     locations.forEach((location) => {
       asyncTasks.push(

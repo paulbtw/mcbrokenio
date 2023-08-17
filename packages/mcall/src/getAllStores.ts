@@ -5,7 +5,7 @@ import {
 } from '@mcbroken/core';
 
 export const getAllStores = async () => {
-  await getStorelistWithLocation(APIType.EU);
+  await getStorelistWithLocation(APIType.EU, 75);
   await getStorelistWithUrl(APIType.EL);
 
   return null;
