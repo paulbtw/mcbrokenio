@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { CreatePos, ICountryInfos, ILocation } from '../../../types';
 import { IRestaurantLocationResponse } from '../../../types/responses';
 import { Logger } from '@sailplane/logger';
+import { randomUserAgent } from '../../../utils/randomUserAgent';
 
 const logger = new Logger('getStoreListForLocation');
 
@@ -22,6 +23,7 @@ export async function getStorelistFromLocation(
       `${url}latitude=${latitude}&longitude=${longitude}`,
       {
         headers: {
+          'User-Agent': randomUserAgent(),
           authorization: `Bearer ${token}`,
           'mcd-clientid': clientId,
           'mcd-marketid': country,

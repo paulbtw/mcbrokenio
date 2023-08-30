@@ -11,8 +11,7 @@ import {
 import { savePos } from '../savePos';
 import { generateCoordinatesMesh } from '../../../utils/generateCoordinatesMesh';
 import { Logger } from '@sailplane/logger';
-
-const queue = new PQueue({ concurrency: 15 });
+import { defaultRequestLimiterAu } from '../../../constants/RateLimit';
 
 const logger = new Logger({
   logTimestamps: true,
@@ -22,8 +21,13 @@ const logger = new Logger({
 export async function getStorelistWithLocation(
   apiType: APIType,
   intervalKilometer: number,
+  requestLimiter = defaultRequestLimiterAu,
   countryList?: Locations[],
 ) {
+  const queue = new PQueue({
+    concurrency: requestLimiter.concurrentRequests,
+  });
+
   const { token, clientId, countryInfos } = await getMetaForApi(
     apiType,
     countryList,
@@ -34,8 +38,8 @@ export async function getStorelistWithLocation(
   const posArray: CreatePos[][] = [];
   const asyncTasks: Promise<void>[] = [];
 
-  const requestsPerLog = 100;
-  const maxRequestsPerSecond = 10; // Maximum requests per second
+  const requestsPerLog = requestLimiter.requestsPerLog;
+  const maxRequestsPerSecond = requestLimiter.maxRequestsPerSecond;
   let requestsThisSecond = 0;
   let totalRequestsProcessed = 0;
 
@@ -96,8 +100,6 @@ export async function getStorelistWithLocation(
 
   await Promise.all(asyncTasks);
 
-  const posArrayFlat = posArray.flat();
-  console.log(`Found ${posArrayFlat.length} stores in total.`);
   const uniquePosArray = Array.from(posMap.values());
 
   await savePos(uniquePosArray);

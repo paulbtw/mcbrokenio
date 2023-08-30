@@ -65,3 +65,4 @@ postgres-data/*
 
 # Next.js
 .next
+.yarn
