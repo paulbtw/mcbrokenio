@@ -35,7 +35,8 @@ export async function getStorelistFromLocation(
 
     const posArray: CreatePos[] = response.restaurants.map((restaurant) => {
       const pos: CreatePos = {
-        nationalStoreNumber: `${country}-${restaurant.nationalStoreNumber}`,
+        id: `${country}-${restaurant.nationalStoreNumber}`,
+        nationalStoreNumber: `${restaurant.nationalStoreNumber}`,
         name: restaurant.name,
         hasMobileOrdering: mobileString
           ? restaurant.facilities.includes(mobileString)
@@ -55,7 +56,7 @@ export async function getStorelistFromLocation(
       const axiosError = error as AxiosError;
 
       if (axiosError.response?.status === 401) {
-        logger.warn(`Bad requed error`);
+        logger.warn(`Bad request error`);
       } else {
         logger.error(
           `Error while getting stores for location ${latitude}, ${longitude} in ${country}: ${axiosError.response?.statusText}`,

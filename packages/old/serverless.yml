@@ -41,7 +41,7 @@ provider:
       Resource:
         - arn:aws:s3:::*
   httpApi:
-      cors: true
+    cors: true
   architecture: arm64
 
 custom:
@@ -103,14 +103,6 @@ functions:
           method: GET
           path: /
   cleanupDatabase:
-    handler: src/functions/cleanupDatabase/handler.main
-    environment:
-      DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}
-    memorySize: 128
-    timeout: 300
-    events:
-      - schedule: cron(0 0 * * ? *)
-  cleanupDatabase2:
     handler: src/functions/cleanupDatabase/handler.main
     environment:
       DATABASE_URL: ${self:custom.mcdInfo.databaseUrl}

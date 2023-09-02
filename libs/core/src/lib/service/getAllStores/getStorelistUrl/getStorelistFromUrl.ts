@@ -19,7 +19,8 @@ export async function getStorelistFromUrl({
 
     const posArray: CreatePos[] = restaurants.map((restaurant) => {
       const pos: CreatePos = {
-        nationalStoreNumber: `${country}-${restaurant.rid}`,
+        id: `${country}-${restaurant.rid}`,
+        nationalStoreNumber: `${restaurant.rid}`,
         name: restaurant.addressLine1,
         hasMobileOrdering: mobileString
           ? restaurant.facilities.includes(mobileString)

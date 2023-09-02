@@ -1,10 +1,10 @@
 import { createPrismaClient } from '@mcbroken/db';
-import { CreatePos } from '../../types';
+import { UpdatePos } from '../../types';
 import { Logger } from '@sailplane/logger';
 
-const logger = new Logger('savePos');
+const logger = new Logger('updatePos');
 
-export async function savePos(posArray: CreatePos[]) {
+export async function updatePos(posArray: UpdatePos[]) {
   const prisma = createPrismaClient();
 
   logger.info(`saving ${posArray.length} pos`);
@@ -12,19 +12,20 @@ export async function savePos(posArray: CreatePos[]) {
   try {
     await prisma.$transaction(
       posArray.map((pos) => {
-        return prisma.pos.upsert({
-          where: {
-            id: pos.id,
+        if (typeof pos.id !== 'string') {
+          throw Error('pos.id is missing');
+        }
+
+        return prisma.pos.update({
+          where: { id: pos.id },
+          data: {
+            ...pos,
+            lastChecked: new Date(),
           },
-          update: {
-            hasMobileOrdering: pos.hasMobileOrdering,
-          },
-          create: pos,
         });
       }),
     );
   } catch (error) {
-    logger.error(error);
     logger.error('error while saving pos');
   } finally {
     await prisma.$disconnect();

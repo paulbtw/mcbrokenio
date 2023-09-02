@@ -102,7 +102,9 @@ export interface ICountryInfos {
     url: string;
   };
   productCodes: Record<IceType, string[]>;
+  customItems?: Record<string, string[]>;
   locationLimits?: LocationLimits;
 }
 
 export type CreatePos = Prisma.PosCreateInput;
+export type UpdatePos = Prisma.PosUpdateInput;

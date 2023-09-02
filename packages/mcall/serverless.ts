@@ -17,7 +17,7 @@ const serverlessConfiguration = <Serverless>{
       handler: 'src/getAllStores.getAllStores',
       events: [
         {
-          schedule: 'cron(0 0 ? * * *)',
+          schedule: 'cron(06 * ? * * *)',
         },
       ],
       environment: {
@@ -27,12 +27,12 @@ const serverlessConfiguration = <Serverless>{
       },
     },
     getItemStatus: {
-      memorySize: 512,
-      timeout: 900,
+      memorySize: 368,
+      timeout: 600,
       handler: 'src/getItemStatus.handler',
       events: [
         {
-          schedule: 'cron(32 * ? * * *)',
+          schedule: 'cron(08 * ? * * *)',
         },
       ],
       environment: {
@@ -40,6 +40,20 @@ const serverlessConfiguration = <Serverless>{
         DATABASE_URL: '${env:DATABASE_URL}',
         KEY: '${env:KEY}',
       },
+    },
+    getLocation: {
+      handler: 'src/getLocation.handler',
+      memorySize: 128,
+      timeout: 5,
+      events: [
+        {
+          http: {
+            method: 'get',
+            path: '/',
+            cors: true,
+          },
+        },
+      ],
     },
   },
 };
