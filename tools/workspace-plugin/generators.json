@@ -1,9 +1,0 @@
-{
-  "generators": {
-    "serverless": {
-      "implementation": "./src/generators/serverless",
-      "schema": "./src/generators/serverless/schema.json",
-      "description": "Generator serverless"
-    }
-  }
-}

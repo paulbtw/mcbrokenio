@@ -1,29 +1,45 @@
-import type { Serverless } from 'serverless/aws';
+import type { AWS } from '@serverless/typescript'
 
-export const baseServerlessConfiguration: Partial<Serverless> = {
+export const baseServerlessConfiguration: Partial<AWS> = {
   frameworkVersion: '3',
+  plugins: ['serverless-esbuild', 'serverless-dotenv-plugin'],
+  useDotenv: true,
+
   package: {
-    excludeDevDependencies: true,
+    individually: true,
     patterns: [
-      '!node_modules/.prisma/client/libquery_engine-*',
-      'node_modules/.prisma/client/libquery_engine-linux-arm64-*',
-      '!node_modules/prisma/libquery_engine-*',
-      '!node_modules/@prisma/engines/**',
-    ],
+      'node_modules/.prisma/client/schema.prisma',
+      'node_modules/.prisma/client/libquery_engine-*',
+      'node_modules/.prisma/client/libquery_engine-rhel-*',
+      'node_modules/prisma/libquery_engine-*',
+      'node_modules/@prisma/engines/**'
+    ]
   },
-  plugins: ['serverless-esbuild', 'serverless-offline'],
 
   provider: {
     name: 'aws',
     runtime: 'nodejs18.x',
     memorySize: 128,
     apiGateway: {
-      minimumCompressionSize: 1024,
+      minimumCompressionSize: 1024
     },
     stage: "${opt:stage, 'dev'}",
     environment: {
-      AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
     },
-    architecture: 'x86_64',
+    architecture: 'x86_64'
   },
-};
+
+  custom: {
+    esbuild: {
+      bundle: true,
+      minify: false,
+      sourcemap: true,
+      exclude: ['aws-sdk'],
+      target: 'node18',
+      define: { 'require.resolve': undefined },
+      platform: 'node',
+      concurrency: 10
+    }
+  }
+}

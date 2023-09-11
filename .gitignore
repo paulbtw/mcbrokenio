@@ -55,9 +55,6 @@ migrations.json
 !.yarn/sdks
 !.yarn/versions
 
-postgres-data
-postgres-data/*
-
 .env
 .esbuild/*
 .esbuild
