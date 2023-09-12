@@ -2,8 +2,12 @@
   "name": "mcserverless",
   "version": "1.0.0",
   "scripts": {
-    "sls:mcall:local": "sls invoke local -c serverless.mcall.ts",
-    "sls:mcall:deploy": "sls deploy -c serverless.mcall.ts",
+    "mcall:local": "sls invoke local -c serverless.mcall.ts",
+    "mcall:deploy": "sls deploy -c serverless.mcall.ts",
+    "mcall:offline": "sls offline -c serverless.mcall.ts",
+    "mcau:local": "sls invoke local -c serverless.mcau.ts",
+    "mcau:deploy": "sls deploy -c serverless.mcau.ts",
+    "mcau:offline": "sls offline -c serverless.mcau.ts",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -11,7 +15,8 @@
     "@prisma/client": "5.2.0",
     "@sailplane/logger": "^4.2.0",
     "p-queue": "^7.4.1",
-    "prisma": "^5.2.0"
+    "prisma": "^5.2.0",
+    "serverless-offline": "^12.0.4"
   },
   "devDependencies": {
     "@serverless/typescript": "^3.30.1",

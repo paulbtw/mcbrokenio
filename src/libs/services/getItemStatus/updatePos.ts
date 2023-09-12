@@ -33,6 +33,7 @@ export async function updatePos(posArray: UpdatePos[]) {
             milkshakeCount: pos.milkshakeCount,
             milkshakeError: pos.milkshakeError,
             milkshakeStatus: pos.milkshakeStatus,
+            customItems: pos.customItems,
             lastChecked: now,
             updatedAt: now
           }

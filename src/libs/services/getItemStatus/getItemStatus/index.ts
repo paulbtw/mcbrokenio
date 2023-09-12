@@ -1,3 +1,4 @@
+import { getItemStatusAu } from '@libs/services/getItemStatus/getItemStatus/getItemStatusAu'
 import { type GetItemStatus, getItemStatusEu } from '@libs/services/getItemStatus/getItemStatus/getItemStatusEu'
 import { APIType, type ICountryInfos } from '@libs/types'
 import { type Pos } from '@prisma/client'
@@ -11,9 +12,7 @@ APIType,
   clientId: string,
 ) => Promise<GetItemStatus | null>
 > = {
-  [APIType.AP]: () => {
-    throw new Error('Not implemented')
-  },
+  [APIType.AP]: getItemStatusAu,
   [APIType.EL]: () => {
     throw new Error('Not implemented')
   },

@@ -5,9 +5,9 @@ export interface RequestLimiter {
 }
 
 export const defaultRequestLimiterAu = {
-  maxRequestsPerSecond: 11,
+  maxRequestsPerSecond: 6,
   requestsPerLog: 500,
-  concurrentRequests: 15
+  concurrentRequests: 8
 }
 
 export const defaultRequestLimiterEu = {

@@ -2,7 +2,7 @@ import type { AWS } from '@serverless/typescript'
 
 export const baseServerlessConfiguration: Partial<AWS> = {
   frameworkVersion: '3',
-  plugins: ['serverless-esbuild', 'serverless-dotenv-plugin'],
+  plugins: ['serverless-esbuild', 'serverless-dotenv-plugin', 'serverless-offline'],
   useDotenv: true,
 
   package: {

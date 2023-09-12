@@ -900,11 +900,19 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCFLURRY]: ['5739', '5738'],
       [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004']
     },
+    customItems: {
+      fantaRaspberry: ['2337', '2338', '2339'],
+      fantaMango: ['3319', '3336', '3534'],
+      fantaGrape: ['3474', '3475', '3480'],
+      fantaBlueberry: ['3409', '3410', '3414'],
+      frozenCoke: ['265', '266', '6081'],
+      frozenCokeZero: ['15029', '15030', '15031']
+    },
     locationLimits: {
-      minLatitude: -43.003,
-      maxLatitude: -10.8752,
-      minLongitude: 112.911,
-      maxLongitude: 153.6388
+      minLatitude: -23.648618,
+      maxLatitude: -9.219482,
+      minLongitude: 112.9211,
+      maxLongitude: 153.6382
     }
   },
   [Locations.AU2]: {
@@ -919,11 +927,19 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCFLURRY]: ['5739', '5738'],
       [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004']
     },
+    customItems: {
+      fantaRaspberry: ['2337', '2338', '2339'],
+      fantaMango: ['3319', '3336', '3534'],
+      fantaGrape: ['3474', '3475', '3480'],
+      fantaBlueberry: ['3409', '3410', '3414'],
+      frozenCoke: ['265', '266', '6081'],
+      frozenCokeZero: ['15029', '15030', '15031']
+    },
     locationLimits: {
-      minLatitude: -35.0,
-      maxLatitude: -10.8752,
-      minLongitude: 112.911,
-      maxLongitude: 129.7749
+      minLatitude: -43.648618,
+      maxLatitude: -23.648618,
+      minLongitude: 112.9211,
+      maxLongitude: 153.6382
     }
   },
 

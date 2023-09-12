@@ -12,6 +12,7 @@ import { Logger } from '@sailplane/logger'
 import { defaultRequestLimiterAu } from '@libs/constants/RateLimit'
 import { savePos } from '@libs/services/getAllStores/savePos'
 import { getStorelistFromLocation } from '@libs/services/getAllStores/getStoreListLocation/getStorelistFromLocation'
+import axios from 'axios'
 
 const logger = new Logger({
   logTimestamps: true,
@@ -42,6 +43,7 @@ export async function getStorelistWithLocation(
   const maxRequestsPerSecond = requestLimiter.maxRequestsPerSecond
   let requestsThisSecond = 0
   let totalRequestsProcessed = 0
+  let errorCount = 0
 
   async function processLocation(
     location: ILocation,
@@ -54,26 +56,39 @@ export async function getStorelistWithLocation(
 
     requestsThisSecond++
 
-    const pos = await getStorelistFromLocation(
-      location,
-      countryInfo,
-      token,
-      clientId
-    )
+    try {
+      const pos = await getStorelistFromLocation(
+        location,
+        countryInfo,
+        token,
+        clientId
+      )
 
-    if (pos.length > 0) {
-      posArray.push(pos)
-      pos.forEach((p) => {
-        if (!posMap.has(p.nationalStoreNumber)) {
-          posMap.set(p.nationalStoreNumber, p)
+      if (pos.length > 0) {
+        posArray.push(pos)
+        pos.forEach((p) => {
+          if (!posMap.has(p.nationalStoreNumber)) {
+            posMap.set(p.nationalStoreNumber, p)
+          }
+        })
+      }
+
+      totalRequestsProcessed++
+
+      if (totalRequestsProcessed % requestsPerLog === 0) {
+        logger.debug(`Processed ${totalRequestsProcessed}`)
+      }
+    } catch (error) {
+      errorCount++
+      if (axios.isAxiosError(error)) {
+        const axiosError = error
+
+        if (axiosError.response?.status === 401) {
+          logger.warn('Bad request error')
         }
-      })
-    }
+      }
 
-    totalRequestsProcessed++
-
-    if (totalRequestsProcessed % requestsPerLog === 0) {
-      logger.debug(`Processed ${totalRequestsProcessed}`)
+      // logger.error('Error while getting stores for location, no axios error')
     }
   }
 
@@ -99,6 +114,8 @@ export async function getStorelistWithLocation(
   })
 
   await Promise.all(asyncTasks)
+
+  logger.info(`ErrorCount ${errorCount}`)
 
   const uniquePosArray = Array.from(posMap.values())
 
