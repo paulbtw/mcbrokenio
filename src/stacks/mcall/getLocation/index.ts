@@ -20,7 +20,8 @@ export interface IIPService {
 
 export const handler: Handler<APIGatewayEvent> = async (event) => {
   let ip = event.headers['x-forwarded-for']
-  if (!ip) {
+
+  if (ip == null) {
     return {
       statusCode: 400,
       body: JSON.stringify({

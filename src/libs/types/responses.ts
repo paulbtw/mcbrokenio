@@ -218,3 +218,19 @@ export interface RestaurantInfoEuResponse {
     type: string
   }
 }
+
+export interface RestaurantStatusResponse {
+  restaurantID: number
+  state: {
+    restaurantID: number
+    connectivity: string
+    isOpen: boolean
+    isHealthy: boolean
+    businessDate: string
+    businessDayOfWeek: string
+  }
+  productOutages: {
+    restaurantID: number
+    productIDs: string[]
+  }
+}

@@ -40,10 +40,10 @@ const serverlessConfiguration: AWS = {
         KEY: '${env:KEY}'
       }
     },
-    getItemStatus: {
+    getItemStatusEu: {
       memorySize: 368,
       timeout: 900,
-      handler: 'src/stacks/mcall/getItemStatus.handler',
+      handler: 'src/stacks/mcall/getItemStatus.handlerEu',
       events: [
         {
           schedule: 'cron(05 0 ? * SUN *)'
@@ -51,6 +51,19 @@ const serverlessConfiguration: AWS = {
       ],
       environment: {
         BASIC_TOKEN_EU: '${env:BASIC_TOKEN_EU}',
+        DATABASE_URL: '${env:DATABASE_URL}'
+      }
+    },
+    getItemStatusEl: {
+      memorySize: 368,
+      timeout: 900,
+      handler: 'src/stacks/mcall/getItemStatus.handlerEl',
+      events: [
+        {
+          schedule: 'cron(05 0 ? * SUN *)'
+        }
+      ],
+      environment: {
         DATABASE_URL: '${env:DATABASE_URL}',
         KEY: '${env:KEY}'
       }
