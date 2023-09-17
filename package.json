@@ -14,6 +14,7 @@
     "@aws-sdk/client-s3": "^3.409.0",
     "@prisma/client": "5.2.0",
     "@sailplane/logger": "^4.2.0",
+    "clsx": "^2.0.0",
     "p-queue": "^7.4.1",
     "prisma": "^5.2.0",
     "serverless-offline": "^12.0.4"

@@ -1,6 +1,9 @@
 import '@/app/globals.css'
+import { ReactQueryProvider } from '@/provider/ReactQueryProvider'
+import clsx from 'clsx'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { type PropsWithChildren } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -8,6 +11,7 @@ export const metadata: Metadata = {
   title: 'Mcbroken.io 🥤',
   description: "Tracking the McDonald's ice and milchshake status",
   viewport: 'initial-scale=1.0, width=device-width',
+  metadataBase: new URL('https://mcbroken.io'),
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -16,7 +20,7 @@ export const metadata: Metadata = {
     description: "Tracking the McDonald's ice and milchshake status",
     images: [
       {
-        url: 'https://mcbroken.io/mcbroken.png'
+        url: '/mcbroken.png'
       }
     ]
   },
@@ -29,12 +33,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children
-}: {
-  children: React.ReactNode
-}) {
+}: PropsWithChildren) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={clsx('w-screen h-screen flex items-center', inter.className)}>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+      </body>
     </html>
   )
 }

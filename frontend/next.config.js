@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/assets/:path',
-        destination: `https://mcbrokenio-export-geojson-dev.s3.eu-central-1.amazonaws.com//:path`, // Proxy to S3
+        destination: `https://mcbrokenio-export-geojson-dev.s3.eu-central-1.amazonaws.com/:path`, // Proxy to S3
       },
       {
         source: '/ip',
