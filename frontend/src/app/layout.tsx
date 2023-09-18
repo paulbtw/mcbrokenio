@@ -31,14 +31,16 @@ export const metadata: Metadata = {
   }
 }
 
-export default function RootLayout({
-  children
-}: PropsWithChildren) {
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en">
-      <body className={clsx('w-screen h-screen flex items-center', inter.className)}>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
-      </body>
+      <ReactQueryProvider>
+        <body className={clsx('bg-slate-50', inter.className)}>
+          <main className="container mx-auto px-4 sm:px-6 lg:px-8">
+            {children}
+          </main>
+        </body>
+      </ReactQueryProvider>
     </html>
   )
 }
