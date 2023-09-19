@@ -1,8 +1,10 @@
 {
-    "recommendations": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "rvest.vs-code-prettier-eslint",
-        "threadheap.serverless-ide-vscode"
-    ]
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "rvest.vs-code-prettier-eslint",
+    "threadheap.serverless-ide-vscode",
+    "nrwl.angular-console",
+    "firsttris.vscode-jest-runner"
+  ]
 }

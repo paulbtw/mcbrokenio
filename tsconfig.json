@@ -1,26 +1,33 @@
 {
-	"compilerOptions": {
-		"lib": ["es6", "es5", "ES2020"],
-		"module": "commonjs",
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"removeComments": true,
-		"sourceMap": true,
-		"target": "es6",
-		"outDir": "dist",
-		"rootDir": "./src",
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
-		"esModuleInterop": true,
-		"downlevelIteration": true,
-		"noImplicitAny": true,
-		"strictNullChecks": true,
-		"strictFunctionTypes": true,
-		"strictBindCallApply": true,
-		"alwaysStrict": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true
-	},
-	"include": ["src/**/*.ts", "src/ormconfig.ts", "tests/**/*.ts"],
-	"exclude": ["node_modules/**/*", ".serverless/**/*", ".vscode/**/*"],
+  "extends": "./tsconfig.paths.json",
+  "compilerOptions": {
+    "lib": [
+      "ESNext"
+    ],
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "target": "ES2020",
+    "outDir": "lib",
+    "strict": true,
+    "strictNullChecks": true,
+  },
+  "include": [
+    "src/**/*.ts",
+    "serverless.*.ts"
+  ],
+  "exclude": [
+    "node_modules/**/*",
+    ".serverless/**/*",
+    ".webpack/**/*",
+    "_warmup/**/*",
+    ".vscode/**/*"
+  ],
+  "ts-node": {
+    "require": [
+      "tsconfig-paths/register"
+    ]
+  }
 }

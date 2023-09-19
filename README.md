@@ -14,7 +14,7 @@ Built with:
 4. `docker-compose up` to start your local db
 5. To run a function locally use `serverless invoke local --function functionName`
 
-## MCD API:
+You can also run multiple targets:
 
 Information about the different McDonalds APIs.
 

@@ -1,6 +1,0 @@
-node_modules
-.serverless
-src/migrations
-postgres-data
-.build
-.idea
