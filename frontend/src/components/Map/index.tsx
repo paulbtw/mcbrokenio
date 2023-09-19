@@ -1,6 +1,7 @@
 'use client'
 
 import { Popover } from '@/components/Map/Popover'
+import { useLocation } from '@/hooks/queries/useLocation'
 import { type McDataProperties } from '@/hooks/queries/useMcData'
 import { useMcMarker } from '@/hooks/useMcMarker'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -22,6 +23,7 @@ interface PopupMarker {
 
 export function Map() {
   const { geoJson } = useMcMarker()
+  const { data } = useLocation()
   const [selected, setSelected] = useState<PopupMarker | null>(null)
 
   const onClick = useCallback((event: MapLayerMouseEvent) => {
