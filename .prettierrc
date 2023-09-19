@@ -1,4 +1,6 @@
 {
+  "printWidth": 80,
+  "parser": "typescript",
   "singleQuote": true,
   "trailingComma": "all",
   "semi": true,
