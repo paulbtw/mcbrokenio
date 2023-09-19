@@ -219,6 +219,8 @@ export interface RestaurantInfoEuResponse {
   }
 }
 
+export type RestaurantInfoUsResponse = RestaurantInfoEuResponse
+
 export interface RestaurantStatusResponse {
   restaurantID: number
   state: {

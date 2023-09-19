@@ -28,10 +28,43 @@ const serverlessConfiguration: AWS = {
     getAllStores: {
       memorySize: 512,
       timeout: 900,
-      handler: 'src/functions/getAllStores.handler',
+      handler: 'src/stacks/mcus/getAllStores.handler',
       events: [
         {
-          schedule: 'cron(35 0 ? * SUN *)'
+          schedule: {
+            rate: ['cron(35 0 ? * SUN *)'],
+            input: { countries: ['US'] }
+          }
+        },
+        {
+          schedule: {
+            rate: ['cron(35 1 ? * SUN *)'],
+            input: { countries: ['US2'] }
+          }
+        },
+        {
+          schedule: {
+            rate: ['cron(35 2 ? * SUN *)'],
+            input: { countries: ['US3'] }
+          }
+        },
+        {
+          schedule: {
+            rate: ['cron(35 3 ? * SUN *)'],
+            input: { countries: ['US4'] }
+          }
+        },
+        {
+          schedule: {
+            rate: ['cron(35 4 ? * SUN *)'],
+            input: { countries: ['US5'] }
+          }
+        },
+        {
+          schedule: {
+            rate: ['cron(35 5 ? * SUN *)'],
+            input: { countries: ['US6'] }
+          }
         }
       ],
       environment: {

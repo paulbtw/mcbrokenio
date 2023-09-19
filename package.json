@@ -8,6 +8,9 @@
     "mcau:local": "sls invoke local -c serverless.mcau.ts",
     "mcau:deploy": "sls deploy -c serverless.mcau.ts",
     "mcau:offline": "sls offline -c serverless.mcau.ts",
+    "mcus:local": "sls invoke local -c serverless.mcus.ts",
+    "mcus:deploy": "sls deploy -c serverless.mcus.ts",
+    "mcus:offline": "sls offline -c serverless.mcus.ts",
     "prepare": "husky install"
   },
   "dependencies": {

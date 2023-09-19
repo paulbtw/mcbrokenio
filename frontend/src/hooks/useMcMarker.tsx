@@ -7,6 +7,12 @@ interface useMcMarkerReturnType {
 export function useMcMarker(): useMcMarkerReturnType {
   const { data } = useMcData()
 
+  data?.features.forEach((feature) => {
+    if (typeof feature.properties.customItems !== 'object') {
+      console.log(feature.properties.customItems)
+    }
+  })
+
   return {
     geoJson: data
   }

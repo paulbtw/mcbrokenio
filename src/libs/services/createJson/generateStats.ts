@@ -14,9 +14,9 @@ interface QueryResult {
 
 export async function generateStats(prisma: PrismaClient) {
   const result = await prisma.$queryRaw<QueryResult[]>`
-  SELECT COUNT(*) AS TOTAL, 
-    COUNT(CASE WHEN "hasMobileOrdering" = TRUE THEN 1 END) AS TRACKABLE, 
-    COUNT(CASE WHEN "milkshakeStatus" = 'AVAILABLE' THEN 1 END) AS AVAILABLEMILKSHAKES, 
+  SELECT COUNT(*) AS TOTAL,
+    COUNT(CASE WHEN "hasMobileOrdering" = TRUE THEN 1 END) AS TRACKABLE,
+    COUNT(CASE WHEN "milkshakeStatus" = 'AVAILABLE' THEN 1 END) AS AVAILABLEMILKSHAKES,
     COUNT(CASE WHEN "milkshakeStatus" NOT IN ('UNKNOWN', 'NOT_APPLICABLE') THEN 1 END) AS TOTALMILKSHAKES,
     COUNT(CASE WHEN "mcFlurryStatus" = 'AVAILABLE' THEN 1 END) AS AVAILABLEMCFLURRY,
     COUNT(CASE WHEN "mcFlurryStatus" NOT IN ('UNKNOWN', 'NOT_APPLICABLE') THEN 1 END) AS TOTALMCFLURRY,

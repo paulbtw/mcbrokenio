@@ -1,32 +1,31 @@
 import { type Prisma } from '@prisma/client'
 
-export enum Locations {
-  AE = 'AE', // United Arab Emirates
-  AT = 'AT', // Austria
+export enum ApLocations {
   AU = 'AU', // Australia
   AU2 = 'AU2', // Australia
-  BA = 'BA', // Bosnia and Herzegovina
-  BE = 'BE', // Belgium
-  BG = 'BG', // Bulgaria
+  HK = 'HK', // Hong Kong
+}
+
+export enum ElLocations {
+  AT = 'AT', // Austria
   BH = 'BH', // Bahrain
   BY = 'BY', // Belarus
-  CA = 'CA', // Canada
+  BE = 'BE', // Belgium
+  BA = 'BA', // Bosnia and Herzegovina
+  BG = 'BG', // Bulgaria
+  HR = 'HR', // Croatia
   CY = 'CY', // Cyprus
   CZ = 'CZ', // Czech Republic
-  CH = 'CH', // Switzerland
-  DE = 'DE', // Germany
   DK = 'DK', // Denmark
-  EE = 'EE', // Estonia
   EG = 'EG', // Egypt
-  ES = 'ES', // Spain
+  SV = 'SV', // El Salvador
+  EE = 'EE', // Estonia
   FI = 'FI', // Finland
-  FR = 'FR', // United Kingdom
+  FR = 'FR', // France
   GE = 'GE', // Georgia
   GR = 'GR', // Greece
   GT = 'GT', // Guatemala
-  HK = 'HK', // Hong Kong
   HN = 'HN', // Honduras
-  HR = 'HR', // Croatia
   HU = 'HU', // Hungary
   ID = 'ID', // Indonesia
   IE = 'IE', // Ireland
@@ -37,35 +36,54 @@ export enum Locations {
   LV = 'LV', // Latvia
   LB = 'LB', // Lebanon
   LT = 'LT', // Lithuania
-  MA = 'MA', // Morocco
+  MY = 'MY', // Malaysia
   MT = 'MT', // Malta
   MU = 'MU', // Mauritius
-  MY = 'MY', // Malaysia
-  NI = 'NI', // Nicaragua
-  NL = 'NL', // Netherlands
-  NO = 'NO', // Norway
+  MA = 'MA', // Morocco
   NZ = 'NZ', // New Zealand
+  NI = 'NI', // Nicaragua
+  NO = 'NO', // Norway
   PK = 'PK', // Pakistan
+  PY = 'PY', // Paraguay
   PL = 'PL', // Poland
   PT = 'PT', // Portugal
-  PY = 'PY', // Paraguay
   RE = 'RE', // Reunion
   RO = 'RO', // Romania
   RS = 'RS', // Serbia
   SG = 'SG', // Singapore
+  SI = 'SI', // Slovenia
   SAR = 'SAR', // Saudi Arabia
   KR = 'KR', // South Korea
+  ES = 'ES', // Spain
   SE = 'SE', // Sweden
-  SI = 'SI', // Slovenia
-  SV = 'SV', // El Salvador
+  CH = 'CH', // Switzerland
   TH = 'TH', // Thailand
+  AE = 'AE', // United Arab Emirates
   UA = 'UA', // Ukraine
-  UK = 'UK', // United Kingdom
-  UNKNOWN = 'UNKNOWN',
-  US = 'US', // United States
-  US2 = 'US2', // United States
   VN = 'VN', // Vietnam
 }
+
+export enum UsLocations {
+  CA = 'CA', // Canada
+  US = 'US', // United States
+  US2 = 'US2', // United States
+  US3 = 'US3', // United States
+  US4 = 'US4', // United States
+  US5 = 'US5', // United States Alaska
+  US6 = 'US6', // United States Hawaii
+}
+
+export enum EuLocations {
+  DE = 'DE', // Germany
+  NL = 'NL', // Netherlands
+  UK = 'UK', // United Kingdom
+}
+
+export enum UnknownLocations {
+  UNKNOWN = 'UNKNOWN',
+}
+
+export type Locations = ApLocations | ElLocations | UsLocations | EuLocations | UnknownLocations
 
 export interface ILocation {
   latitude: number

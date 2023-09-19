@@ -1,4 +1,4 @@
-import { type GeoJson, type GeoJsonPos } from '@libs/types/geoJson'
+import { type CustomItemType, type GeoJson, type GeoJsonPos } from '@libs/types/geoJson'
 import { ItemStatus, type Pos } from '@prisma/client'
 
 const unknown = ItemStatus.UNKNOWN
@@ -54,6 +54,7 @@ export function createGeoJson(allPos: Pos[]): GeoJson {
         coordinates: [Number(pos.longitude), Number(pos.latitude), 0],
         type: 'Point'
       },
+
       properties: {
         hasMilchshake: pos.milkshakeStatus,
         milkshakeCount: pos.milkshakeCount,
@@ -65,6 +66,7 @@ export function createGeoJson(allPos: Pos[]): GeoJson {
         mcFlurryCount: pos.mcFlurryCount,
         mcFlurryErrorCount: pos.mcFlurryError,
         lastChecked: pos.lastChecked != null ? new Date(pos.lastChecked).getTime() : null,
+        customItems: pos.customItems as unknown as CustomItemType[],
         name: pos.name,
         dot,
         hasMobileOrdering: pos.hasMobileOrdering

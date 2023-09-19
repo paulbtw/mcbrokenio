@@ -10,6 +10,12 @@ export const defaultRequestLimiterAu = {
   concurrentRequests: 8
 }
 
+export const defaultRequestLimiterUs = {
+  maxRequestsPerSecond: 6,
+  requestsPerLog: 500,
+  concurrentRequests: 8
+}
+
 export const defaultRequestLimiterEu = {
   maxRequestsPerSecond: 6,
   requestsPerLog: 100,

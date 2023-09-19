@@ -10,7 +10,7 @@ export async function createJson() {
   const allPos = await prisma.pos.findMany()
 
   const json = createGeoJson(allPos)
-  const stats = generateStats(prisma)
+  const stats = await generateStats(prisma)
 
   const s3 = new S3Client({ region: 'eu-central-1', apiVersion: '2012-10-17' })
 
@@ -25,7 +25,13 @@ export async function createJson() {
   const paramsStatsJson: PutObjectRequest = {
     Bucket: EXPORT_BUCKET,
     Key: 'stats.json',
-    Body: JSON.stringify(stats),
+    Body: JSON.stringify(stats, (_key, value) => {
+      if (typeof value === 'bigint') {
+        return Number(value)
+      }
+
+      return value
+    }),
     ContentType: 'application/json',
     ACL: 'public-read'
   }

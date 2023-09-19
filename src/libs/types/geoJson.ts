@@ -1,5 +1,12 @@
 import { type ItemStatus } from '@prisma/client'
 
+export interface CustomItemType {
+  name: string
+  count: number
+  error: number
+  status: ItemStatus
+}
+
 export interface GeoJsonPos {
   geometry: {
     coordinates: [number, number, number]
@@ -16,6 +23,7 @@ export interface GeoJsonPos {
     mcFlurryCount: number
     mcFlurryErrorCount: number
     lastChecked: number | null
+    customItems?: CustomItemType[]
     name: string
     dot: 'RED' | 'YELLOW' | 'GREEN' | 'GREY'
     hasMobileOrdering: boolean

@@ -1,67 +1,9 @@
-import { APIType, type ICountryInfos, Locations, IceType } from '@libs/types'
+import { type ICountryInfos, APIType, IceType, ElLocations } from '@libs/types'
 
-export const CountryInfos: Record<Locations, ICountryInfos> = {
-  // EU-PROD API
-  [Locations.DE]: {
-    country: Locations.DE,
-    getStores: {
-      api: APIType.EU,
-      url: 'https://eu-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['5000', '5010', '5020'],
-      [IceType.MCFLURRY]: ['4237', '4252', '4255', '4256', '4258'],
-      [IceType.MCSUNDAE]: ['4603', '4604', '4651']
-    },
-    locationLimits: {
-      minLatitude: 47.270111,
-      maxLatitude: 55.05814,
-      minLongitude: 5.866315,
-      maxLongitude: 15.041896
-    }
-  },
-  [Locations.NL]: {
-    // Has no mobile ordering
-    country: Locations.NL,
-    getStores: {
-      api: APIType.EU,
-      url: 'https://eu-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: []
-    },
-    locationLimits: {
-      minLatitude: 51.278,
-      maxLatitude: 53.554,
-      minLongitude: 3.021,
-      maxLongitude: 7.227
-    }
-  },
-  [Locations.UK]: {
-    country: Locations.UK,
-    getStores: {
-      api: APIType.EU,
-      url: 'https://eu-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['4300', '4310', '4330', '4320'],
-      [IceType.MCFLURRY]: ['4467', '4694', '4397', '6554'],
-      [IceType.MCSUNDAE]: ['UNAVAILABLE']
-    },
-    locationLimits: {
-      minLatitude: 49.674,
-      maxLatitude: 59.454,
-      minLongitude: -8.649,
-      maxLongitude: 1.763
-    }
-  },
+export const El: Record<ElLocations, ICountryInfos> = {
   // EL-PROD API
-  [Locations.AT]: {
-    country: Locations.AT,
+  [ElLocations.AT]: {
+    country: ElLocations.AT,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/at/en-en',
@@ -73,9 +15,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['5076', '4010', '4020', '4030', '4040']
     }
   },
-  [Locations.BH]: {
+  [ElLocations.BH]: {
     // Has no mobile ordering
-    country: Locations.BH,
+    country: ElLocations.BH,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/bh/en-en'
@@ -86,9 +28,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.BY]: {
+  [ElLocations.BY]: {
     // Has no mobile ordering
-    country: Locations.BY,
+    country: ElLocations.BY,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/by/ru-ru'
@@ -99,9 +41,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.BE]: {
+  [ElLocations.BE]: {
     // Has no mobile ordering
-    country: Locations.BE,
+    country: ElLocations.BE,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/be/en-gb'
@@ -112,9 +54,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.BA]: {
+  [ElLocations.BA]: {
     // Has no mobile ordering
-    country: Locations.BA,
+    country: ElLocations.BA,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ba/en-gb'
@@ -125,9 +67,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.BG]: {
+  [ElLocations.BG]: {
     // Has no mobile ordering
-    country: Locations.BG,
+    country: ElLocations.BG,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/bg/bg-bg'
@@ -138,9 +80,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.HR]: {
+  [ElLocations.HR]: {
     // Has no mobile ordering
-    country: Locations.HR,
+    country: ElLocations.HR,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/hr/en-gb'
@@ -151,8 +93,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.CY]: {
-    country: Locations.CY,
+  [ElLocations.CY]: {
+    country: ElLocations.CY,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/cy/en-en',
@@ -173,9 +115,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['2550', '2560', '2570', '2580']
     }
   },
-  [Locations.CZ]: {
+  [ElLocations.CZ]: {
     // Has no mobile ordering
-    country: Locations.CZ,
+    country: ElLocations.CZ,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/cz/en-gb'
@@ -186,8 +128,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.DK]: {
-    country: Locations.DK,
+  [ElLocations.DK]: {
+    country: ElLocations.DK,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/dk/da-dk',
@@ -199,9 +141,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['2104', '2102', '2103']
     }
   },
-  [Locations.EG]: {
+  [ElLocations.EG]: {
     // Has no mobile ordering
-    country: Locations.EG,
+    country: ElLocations.EG,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/eg/en-gb'
@@ -212,9 +154,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.SV]: {
+  [ElLocations.SV]: {
     // Has no mobile ordering
-    country: Locations.SV,
+    country: ElLocations.SV,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/sv/es-sv'
@@ -225,8 +167,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.EE]: {
-    country: Locations.EE,
+  [ElLocations.EE]: {
+    country: ElLocations.EE,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ee/en-gb',
@@ -238,8 +180,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['4346', '4347', '4348']
     }
   },
-  [Locations.FI]: {
-    country: Locations.FI,
+  [ElLocations.FI]: {
+    country: ElLocations.FI,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/fi/fi-fi',
@@ -251,9 +193,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['5200', '5210', '5220', '5230']
     }
   },
-  [Locations.FR]: {
+  [ElLocations.FR]: {
     // TODO not working
-    country: Locations.FR,
+    country: ElLocations.FR,
     getStores: {
       api: APIType.UNKNOWN,
       url: ''
@@ -264,9 +206,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.GE]: {
+  [ElLocations.GE]: {
     // Has no mobile ordering
-    country: Locations.GE,
+    country: ElLocations.GE,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ge/ka-ge'
@@ -277,9 +219,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.GR]: {
+  [ElLocations.GR]: {
     // Has no mobile ordering
-    country: Locations.GR,
+    country: ElLocations.GR,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/gr/en-gb'
@@ -290,9 +232,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.GT]: {
+  [ElLocations.GT]: {
     // Has no mobile ordering
-    country: Locations.GT,
+    country: ElLocations.GT,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/gt/es-gt'
@@ -303,9 +245,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.HN]: {
+  [ElLocations.HN]: {
     // Has no mobile ordering
-    country: Locations.HN,
+    country: ElLocations.HN,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/hn/es-hn'
@@ -316,9 +258,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.HU]: {
+  [ElLocations.HU]: {
     // Has no mobile ordering
-    country: Locations.HU,
+    country: ElLocations.HU,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/hu/en-en'
@@ -329,9 +271,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.ID]: {
+  [ElLocations.ID]: {
     // Has no mobile ordering
-    country: Locations.ID,
+    country: ElLocations.ID,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/id/id-id'
@@ -342,9 +284,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.IE]: {
+  [ElLocations.IE]: {
     // Has no mobile ordering
-    country: Locations.IE,
+    country: ElLocations.IE,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ie/en-ie'
@@ -355,8 +297,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.IT]: {
-    country: Locations.IT,
+  [ElLocations.IT]: {
+    country: ElLocations.IT,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/it/it-it',
@@ -368,9 +310,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['4026', '4101', '4140', '4324', '4120', '4033']
     }
   },
-  [Locations.JO]: {
+  [ElLocations.JO]: {
     // Has no mobile ordering
-    country: Locations.JO,
+    country: ElLocations.JO,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/jo/en-en'
@@ -381,9 +323,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.KZ]: {
+  [ElLocations.KZ]: {
     // Has no mobile ordering
-    country: Locations.KZ,
+    country: ElLocations.KZ,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/kz/en-en'
@@ -394,9 +336,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.KW]: {
+  [ElLocations.KW]: {
     // Has no mobile ordering
-    country: Locations.KW,
+    country: ElLocations.KW,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/kw/en-en'
@@ -407,9 +349,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.LV]: {
+  [ElLocations.LV]: {
     // Has no mobile ordering
-    country: Locations.LV,
+    country: ElLocations.LV,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/lv/en-gb'
@@ -420,9 +362,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.LB]: {
+  [ElLocations.LB]: {
     // Has no mobile ordering
-    country: Locations.LB,
+    country: ElLocations.LB,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/lb/en-gb'
@@ -433,9 +375,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.LT]: {
+  [ElLocations.LT]: {
     // Has no mobile ordering
-    country: Locations.LT,
+    country: ElLocations.LT,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/lt/en-gb'
@@ -446,8 +388,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.MY]: {
-    country: Locations.MY,
+  [ElLocations.MY]: {
+    country: ElLocations.MY,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/my/en-gb',
@@ -460,9 +402,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['4000', '4001']
     }
   },
-  [Locations.MT]: {
+  [ElLocations.MT]: {
     // Has no mobile ordering
-    country: Locations.MT,
+    country: ElLocations.MT,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/mt/en-gb'
@@ -473,9 +415,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.MU]: {
+  [ElLocations.MU]: {
     // Has no mobile ordering
-    country: Locations.MU,
+    country: ElLocations.MU,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/mu/en-mu'
@@ -486,9 +428,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.MA]: {
+  [ElLocations.MA]: {
     // Has no mobile ordering
-    country: Locations.MA,
+    country: ElLocations.MA,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ma/fr-ma'
@@ -499,9 +441,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.NZ]: {
+  [ElLocations.NZ]: {
     // Has no mobile ordering
-    country: Locations.NZ,
+    country: ElLocations.NZ,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/nz/en-en'
@@ -512,9 +454,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.NI]: {
+  [ElLocations.NI]: {
     // Has no mobile ordering
-    country: Locations.NI,
+    country: ElLocations.NI,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ni/es-ni'
@@ -525,8 +467,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.NO]: {
-    country: Locations.NO,
+  [ElLocations.NO]: {
+    country: ElLocations.NO,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/no/nb-no',
@@ -538,9 +480,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['3110', '3111', '3112', '6698', '6699', '6700']
     }
   },
-  [Locations.PK]: {
+  [ElLocations.PK]: {
     // Has no mobile ordering
-    country: Locations.PK,
+    country: ElLocations.PK,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/pk/en-gb'
@@ -551,9 +493,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.PY]: {
+  [ElLocations.PY]: {
     // Has no mobile ordering
-    country: Locations.PY,
+    country: ElLocations.PY,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/py/es-py'
@@ -564,8 +506,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.PL]: {
-    country: Locations.PL,
+  [ElLocations.PL]: {
+    country: ElLocations.PL,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/pl/pl-pl',
@@ -604,8 +546,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       ]
     }
   },
-  [Locations.PT]: {
-    country: Locations.PT,
+  [ElLocations.PT]: {
+    country: ElLocations.PT,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/pt/pt-pt',
@@ -626,9 +568,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['4030', '4020', '4010']
     }
   },
-  [Locations.RE]: {
+  [ElLocations.RE]: {
     // Has no mobile ordering
-    country: Locations.RE,
+    country: ElLocations.RE,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/re/en-gb'
@@ -639,9 +581,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.RO]: {
+  [ElLocations.RO]: {
     // Has no mobile ordering
-    country: Locations.RO,
+    country: ElLocations.RO,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ro/en-gb'
@@ -652,9 +594,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.RS]: {
+  [ElLocations.RS]: {
     // Has no mobile ordering
-    country: Locations.RS,
+    country: ElLocations.RS,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/rs/en-gb'
@@ -665,8 +607,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.SG]: {
-    country: Locations.SG,
+  [ElLocations.SG]: {
+    country: ElLocations.SG,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/sg/en-gb',
@@ -678,9 +620,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['505325', '505326']
     }
   },
-  [Locations.SI]: {
+  [ElLocations.SI]: {
     // Has no mobile ordering
-    country: Locations.SI,
+    country: ElLocations.SI,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/si/sl-si'
@@ -691,9 +633,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.SAR]: {
+  [ElLocations.SAR]: {
     // Has no mobile ordering
-    country: Locations.SAR,
+    country: ElLocations.SAR,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/sar/en-gb'
@@ -704,9 +646,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.KR]: {
+  [ElLocations.KR]: {
     // Has no mobile ordering
-    country: Locations.KR,
+    country: ElLocations.KR,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/kr/en-gb'
@@ -717,8 +659,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.ES]: {
-    country: Locations.ES,
+  [ElLocations.ES]: {
+    country: ElLocations.ES,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/es/es-es',
@@ -748,8 +690,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['1200', '1190', '1195', '1180']
     }
   },
-  [Locations.SE]: {
-    country: Locations.SE,
+  [ElLocations.SE]: {
+    country: ElLocations.SE,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/se/sv-se',
@@ -761,8 +703,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['5200', '5210', '5220', '5240']
     }
   },
-  [Locations.CH]: {
-    country: Locations.CH,
+  [ElLocations.CH]: {
+    country: ElLocations.CH,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ch/de-ch',
@@ -774,9 +716,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['438', '439', '3282', '5400']
     }
   },
-  [Locations.TH]: {
+  [ElLocations.TH]: {
     // Has no mobile ordering
-    country: Locations.TH,
+    country: ElLocations.TH,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/th/th-th'
@@ -787,8 +729,8 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.AE]: {
-    country: Locations.AE,
+  [ElLocations.AE]: {
+    country: ElLocations.AE,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ae/en-gb',
@@ -800,9 +742,9 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['1201', '1202', '1203']
     }
   },
-  [Locations.UA]: {
+  [ElLocations.UA]: {
     // Has no mobile ordering
-    country: Locations.UA,
+    country: ElLocations.UA,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ua/uk-ua'
@@ -813,157 +755,12 @@ export const CountryInfos: Record<Locations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
-  [Locations.VN]: {
+  [ElLocations.VN]: {
     // Has no mobile ordering
-    country: Locations.VN,
+    country: ElLocations.VN,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/vn/vi-vn'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: []
-    }
-  },
-
-  // US-PROD API
-  // Only works with USA IP
-  [Locations.CA]: {
-    country: Locations.CA,
-    getStores: {
-      api: APIType.US,
-      url: 'https://us-prod.api.mcd.com/exp/v1/restaurant/location?distance=100000&filter=summary&pageSize=250&',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['1125', '1126', '1127', '16813'],
-      [IceType.MCFLURRY]: ['16804', '16763', '5229', '11678'],
-      [IceType.MCSUNDAE]: ['132', '133']
-    },
-    locationLimits: {
-      minLatitude: 41.676,
-      maxLatitude: 69.529,
-      minLongitude: -141.001,
-      maxLongitude: -52.617
-    }
-  },
-  [Locations.US]: {
-    country: Locations.US,
-    getStores: {
-      api: APIType.US,
-      url: 'https://us-prod.api.mcd.com/exp/v1/restaurant/location?distance=100000&filter=summary&pageSize=250&',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['1598', '1509', '1513'],
-      [IceType.MCFLURRY]: ['557', '3830', '3832'],
-      [IceType.MCSUNDAE]: ['345', '337', '478']
-    },
-    locationLimits: {
-      minLatitude: 24.9493,
-      maxLatitude: 37.9493,
-      minLongitude: -124.733,
-      maxLongitude: -66.9499
-    }
-  },
-  [Locations.US2]: {
-    country: Locations.US,
-    getStores: {
-      api: APIType.US,
-      url: 'https://us-prod.api.mcd.com/exp/v1/restaurant/location?distance=100000&filter=summary&pageSize=250&',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['1598', '1509', '1513'],
-      [IceType.MCFLURRY]: ['557', '3830', '3832'],
-      [IceType.MCSUNDAE]: ['345', '337', '478']
-    },
-    locationLimits: {
-      minLatitude: 37.9493,
-      maxLatitude: 49.5904,
-      minLongitude: -124.733,
-      maxLongitude: -66.9499
-    }
-  },
-
-  // AP-PROD API
-  [Locations.AU]: {
-    country: Locations.AU,
-    getStores: {
-      api: APIType.AP,
-      url: 'https://ap-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['1502', '1512', '1522'],
-      [IceType.MCFLURRY]: ['5739', '5738'],
-      [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004']
-    },
-    customItems: {
-      fantaRaspberry: ['2337', '2338', '2339'],
-      fantaMango: ['3319', '3336', '3534'],
-      fantaGrape: ['3474', '3475', '3480'],
-      fantaBlueberry: ['3409', '3410', '3414'],
-      frozenCoke: ['265', '266', '6081'],
-      frozenCokeZero: ['15029', '15030', '15031']
-    },
-    locationLimits: {
-      minLatitude: -23.648618,
-      maxLatitude: -9.219482,
-      minLongitude: 112.9211,
-      maxLongitude: 153.6382
-    }
-  },
-  [Locations.AU2]: {
-    country: Locations.AU,
-    getStores: {
-      api: APIType.AP,
-      url: 'https://ap-prod.api.mcd.com/exp/v1/restaurant/location?distance=10000&filter=summary&pageSize=250&',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['1502', '1512', '1522'],
-      [IceType.MCFLURRY]: ['5739', '5738'],
-      [IceType.MCSUNDAE]: ['30001', '30002', '30003', '30004']
-    },
-    customItems: {
-      fantaRaspberry: ['2337', '2338', '2339'],
-      fantaMango: ['3319', '3336', '3534'],
-      fantaGrape: ['3474', '3475', '3480'],
-      fantaBlueberry: ['3409', '3410', '3414'],
-      frozenCoke: ['265', '266', '6081'],
-      frozenCokeZero: ['15029', '15030', '15031']
-    },
-    locationLimits: {
-      minLatitude: -43.648618,
-      maxLatitude: -23.648618,
-      minLongitude: 112.9211,
-      maxLongitude: 153.6382
-    }
-  },
-
-  // AP API
-  [Locations.HK]: {
-    country: Locations.HK,
-    getStores: {
-      api: APIType.HK,
-      url: 'https://ap.api.mcd.com/v3/restaurant/location?filter=search&query=%7B%22market%22%3A%22HK%22,%22storeAttributes%22%3A%5B%5D,%22pageSize%22%3A500,%22local%22%3A%22en-HK%22,%22locationCriteria%22%3A%7B%22distance%22%3A%225000%22,%22longitude%22%3A%22114.108436%22,%22latitude%22%3A%2222.352316%22%7D%7D',
-      mobileString: 'MOBILEORDERS'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['4325', '4326', '4320'],
-      [IceType.MCFLURRY]: ['22794', '1528'],
-      [IceType.MCSUNDAE]: ['4448', '4449']
-    }
-  },
-
-  // Unknown API location
-  [Locations.UNKNOWN]: {
-    country: Locations.UNKNOWN,
-    getStores: {
-      api: APIType.UNKNOWN,
-      url: ''
     },
     productCodes: {
       [IceType.MILCHSHAKE]: [],

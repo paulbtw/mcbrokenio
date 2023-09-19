@@ -1,17 +1,24 @@
 import { type QueryFunction, useQuery } from 'react-query'
 import axios from 'axios'
+import { type ItemStatus } from '@/types'
 
-interface McDataProperties {
-  hasMilchshake: string
+export interface McDataProperties {
+  hasMilchshake: ItemStatus
   milkshakeCount: number
   milkshakeErrorCount: number
-  hasMcSundae: string
+  hasMcSundae: ItemStatus
   mcSundaeCount: number
   mcSundaeErrorCount: number
-  hasMcFlurry: string
+  hasMcFlurry: ItemStatus
   mcFlurryCount: number
   mcFlurryErrorCount: number
-  lastChecked: any
+  customItems: Record<number, {
+    name: string
+    count: number
+    error: number
+    status: ItemStatus
+  }>
+  lastChecked: string | null
   name: string
   dot: string
   hasMobileOrdering: boolean

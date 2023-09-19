@@ -20,12 +20,16 @@ const serverlessConfiguration: AWS = {
       handler: 'src/stacks/mcau/getAllStores.handler',
       events: [
         {
-          schedule: { rate: ['cron(05 1 ? * SUN *)'], input: { countries: ['AU2'] } }
-          // schedule: { rate: ['cron(17 * ? * * *)'], input: { countries: ['AU2'] } }
+          schedule: {
+            rate: ['cron(05 1 ? * SUN *)'],
+            input: { countries: ['AU2'] }
+          }
         },
         {
-          schedule: { rate: ['cron(05 2 ? * SUN *)'], input: { countries: ['AU'] } }
-
+          schedule: {
+            rate: ['cron(05 2 ? * SUN *)'],
+            input: { countries: ['AU'] }
+          }
         }
       ],
       environment: {

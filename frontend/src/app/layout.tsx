@@ -35,7 +35,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en">
       <ReactQueryProvider>
-        <body className={clsx('bg-slate-50', inter.className)}>
+        <body className={clsx('bg-slate-100', inter.className)}>
           <main className="container mx-auto px-4 sm:px-6 lg:px-8">
             {children}
           </main>
