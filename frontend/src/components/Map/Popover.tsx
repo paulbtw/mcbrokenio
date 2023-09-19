@@ -1,6 +1,7 @@
 import { type McDataProperties } from '@/hooks/queries/useMcData'
 import { ItemStatus } from '@/types'
 import clsx from 'clsx'
+import { formatDistance } from 'date-fns'
 
 const colorMap = {
   [ItemStatus.AVAILABLE]: 'bg-green-500',
@@ -21,20 +22,20 @@ function Item({
   count: number
   errorCount: number
 }) {
-  const total = count + errorCount
+  const available = count - errorCount
 
   return (
     <div>
       <div className="flex justify-between mb-0.5 flex-nowrap">
         <span className="text-base font-medium truncate">{name}</span>
         <span className="text-base font-medium ml-2 whitespace-nowrap">
-          {count} / {total}
+          {available} / {count}
         </span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2">
         <div
           className={clsx('h-2.5 rounded-full', colorMap[status])}
-          style={{ width: `${(count / total) * 100}%` }}
+          style={{ width: `${(available / count) * 100}%` }}
         ></div>
       </div>
     </div>
@@ -56,7 +57,7 @@ export function Popover({
   customItems
 }: McDataProperties) {
   return (
-    <div className="bg-white p-2 rounded overflow-hidden">
+    <div className="bg-white rounded overflow-hidden">
       <h3 className="text-lg font-semibold mb-1">{name}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
         <Item
@@ -86,6 +87,14 @@ export function Popover({
             status={status}
           />
         ))}
+      </div>
+      <div className="text-xs text-gray-500 mt-3">
+        Last checked:{' '}
+        {lastChecked != null
+          ? formatDistance(new Date(lastChecked), new Date(), {
+            addSuffix: true
+          })
+          : 'never'}
       </div>
     </div>
   )

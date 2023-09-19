@@ -46,7 +46,7 @@ const serverlessConfiguration: AWS = {
       handler: 'src/stacks/mcall/getItemStatus.handlerEu',
       events: [
         {
-          schedule: 'cron(05 0 ? * SUN *)'
+          schedule: 'cron(5 * * * ? *)'
         }
       ],
       environment: {
@@ -60,7 +60,7 @@ const serverlessConfiguration: AWS = {
       handler: 'src/stacks/mcall/getItemStatus.handlerEl',
       events: [
         {
-          schedule: 'cron(05 0 ? * SUN *)'
+          schedule: 'cron(20 0 ? * SUN *)'
         }
       ],
       environment: {
@@ -74,7 +74,7 @@ const serverlessConfiguration: AWS = {
       handler: 'src/stacks/mcall/createJson.handler',
       events: [
         {
-          schedule: 'cron(05 0 ? * SUN *)'
+          schedule: 'cron(0/15 * * * ? *)'
         }
       ],
       environment: {

@@ -43,7 +43,7 @@ const serverlessConfiguration: AWS = {
       handler: 'src/stacks/mcau/getItemStatus.handler',
       events: [
         {
-          schedule: 'cron(05 0 ? * SUN *)'
+          schedule: 'cron(0/30 * * * ? *)'
         }
       ],
       environment: {

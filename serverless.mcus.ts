@@ -71,6 +71,20 @@ const serverlessConfiguration: AWS = {
         DATABASE_URL: '${env:DATABASE_URL}',
         BASIC_TOKEN_US: '${env:BASIC_TOKEN_US}'
       }
+    },
+    getItemStatus: {
+      memorySize: 368,
+      timeout: 900,
+      handler: 'src/stacks/mcus/getItemStatus.handler',
+      events: [
+        {
+          schedule: 'cron(0/15 * * * ? *)'
+        }
+      ],
+      environment: {
+        DATABASE_URL: '${env:DATABASE_URL}',
+        BASIC_TOKEN_US: '${env:BASIC_TOKEN_US}'
+      }
     }
   },
 
