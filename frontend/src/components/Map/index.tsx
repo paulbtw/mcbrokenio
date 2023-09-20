@@ -1,8 +1,7 @@
 'use client'
 
 import { Popover } from '@/components/Map/Popover'
-import { type McDataProperties } from '@/hooks/queries/useMcData'
-import { useMcMarker } from '@/hooks/useMcMarker'
+import { useMcData, type McDataProperties } from '@/hooks/queries/useMcData'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useCallback, useState } from 'react'
 import {
@@ -21,7 +20,7 @@ interface PopupMarker {
 }
 
 export function Map() {
-  const { geoJson } = useMcMarker()
+  const { data: geoJson } = useMcData()
   const [selected, setSelected] = useState<PopupMarker | null>(null)
 
   const onClick = useCallback((event: MapLayerMouseEvent) => {
