@@ -22,6 +22,7 @@ export interface McDataProperties {
   name: string
   dot: string
   hasMobileOrdering: boolean
+  id: string
 }
 
 export type McDataGeometry = GeoJSON.FeatureCollection<

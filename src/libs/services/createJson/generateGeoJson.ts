@@ -69,7 +69,8 @@ export function createGeoJson(allPos: Pos[]): GeoJson {
         customItems: pos.customItems as unknown as CustomItemType[],
         name: pos.name,
         dot,
-        hasMobileOrdering: pos.hasMobileOrdering
+        hasMobileOrdering: pos.hasMobileOrdering,
+        id: pos.id
       },
       type: 'Feature'
     }
