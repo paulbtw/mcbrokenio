@@ -1,6 +1,7 @@
 import { getItemStatusAu } from '@libs/services/getItemStatus/getItemStatus/getItemStatusAu'
 import { getItemStatusEl } from '@libs/services/getItemStatus/getItemStatus/getItemStatusEl'
 import { type GetItemStatus, getItemStatusEu } from '@libs/services/getItemStatus/getItemStatus/getItemStatusEu'
+import { getItemStatusUs } from '@libs/services/getItemStatus/getItemStatus/getItemStatusUs'
 import { APIType, type ICountryInfos } from '@libs/types'
 import { type Pos } from '@prisma/client'
 
@@ -22,7 +23,5 @@ APIType,
   [APIType.UNKNOWN]: () => {
     throw new Error('Not implemented')
   },
-  [APIType.US]: () => {
-    throw new Error('Not implemented')
-  }
+  [APIType.US]: getItemStatusUs
 }
