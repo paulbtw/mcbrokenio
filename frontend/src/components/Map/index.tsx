@@ -96,7 +96,7 @@ export function Map() {
           latitude={selected.geometry.coordinates[1]}
           longitude={selected.geometry.coordinates[0]}
           closeOnMove={false}
-          style={{ maxWidth: '20rem' }}
+          maxWidth="20rem"
           closeButton={false}
         >
           <Popover {...selected.properties} />
