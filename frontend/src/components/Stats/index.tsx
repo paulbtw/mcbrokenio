@@ -13,7 +13,6 @@ function Section({ name, percentage }: { name: string, percentage?: number }) {
       <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900 whitespace-nowrap">
         {percentage?.toFixed(2)} %
       </dd>
-      <span></span>
     </div>
   )
 }
