@@ -50,8 +50,6 @@ export function Map() {
     }
   }, [])
 
-  console.log(selected)
-
   return (
     <MapGl
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_KEY as string}
