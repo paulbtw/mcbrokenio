@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div className="w-full box-border">
       <Stats />
-      <div className="w-full h-[70vh] rounded-xl overflow-hidden shadow">
+      <div className="w-full h-[70vh]">
         <MapContainer />
       </div>
     </div>

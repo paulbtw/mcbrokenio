@@ -1,15 +1,17 @@
 'use client'
 
+import { type ViewState } from '@/components/Map/Container'
 import { Popover } from '@/components/Map/Popover'
 import { type McDataGeometry, type McDataProperties } from '@/hooks/queries/useMcData'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { useCallback, useState } from 'react'
+import { type Dispatch, type SetStateAction, forwardRef, useCallback, useState } from 'react'
 import {
   Layer,
   Map as MapGl,
   type MapLayerMouseEvent,
   Source,
-  Popup
+  Popup,
+  type MapRef
 } from 'react-map-gl'
 
 interface PopupMarker {
@@ -21,18 +23,12 @@ interface PopupMarker {
 
 interface MapProps {
   geoJson?: McDataGeometry
-  location: {
-    lat: number
-    lon: number
-  }
+  viewState: ViewState
+  setViewState: Dispatch<SetStateAction<ViewState>>
+
 }
 
-export function Map({ geoJson, location: { lat, lon } }: MapProps) {
-  const [viewState, setViewState] = useState({
-    latitude: lat,
-    longitude: lon,
-    zoom: 10
-  })
+export const Map = forwardRef<MapRef, MapProps>(({ geoJson, viewState, setViewState }, ref) => {
   const [selected, setSelected] = useState<PopupMarker | null>(null)
 
   const onClick = useCallback((event: MapLayerMouseEvent) => {
@@ -64,6 +60,7 @@ export function Map({ geoJson, location: { lat, lon } }: MapProps) {
 
   return (
     <MapGl
+      ref={ref}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_KEY as string}
       mapLib={import('mapbox-gl')}
       {...viewState}
@@ -111,4 +108,4 @@ export function Map({ geoJson, location: { lat, lon } }: MapProps) {
       )}
     </MapGl>
   )
-}
+})
