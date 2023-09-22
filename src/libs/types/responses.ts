@@ -233,6 +233,6 @@ export interface RestaurantStatusResponse {
   }
   productOutages: {
     restaurantID: number
-    productIDs: string[]
+    productIDs: number[]
   }
 }

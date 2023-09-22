@@ -43,18 +43,21 @@ export async function getItemStatusEl(
 
     const outageProductCodes =
       data.productOutages.productIDs ?? []
+    const outagesProductCodesString = outageProductCodes.map((code) => {
+      return code.toString()
+    })
 
     const milkshakeCodes = countryInfo.productCodes.MILCHSHAKE
     const mcFlurryCodes = countryInfo.productCodes.MCFLURRY
     const mcSundaeCodes = countryInfo.productCodes.MCSUNDAE
     const customCodes = countryInfo.customItems ?? {}
 
-    const milkshake = checkForProduct(outageProductCodes, milkshakeCodes)
-    const mcFlurry = checkForProduct(outageProductCodes, mcFlurryCodes)
-    const mcSundae = checkForProduct(outageProductCodes, mcSundaeCodes)
+    const milkshake = checkForProduct(outagesProductCodesString, milkshakeCodes)
+    const mcFlurry = checkForProduct(outagesProductCodesString, mcFlurryCodes)
+    const mcSundae = checkForProduct(outagesProductCodesString, mcSundaeCodes)
     const custom = Object.entries(customCodes).map(([name, codes]) => ({
       name,
-      ...checkForProduct(outageProductCodes, codes)
+      ...checkForProduct(outagesProductCodesString, codes)
     }))
 
     return {

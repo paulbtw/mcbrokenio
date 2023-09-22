@@ -44,7 +44,7 @@ function getColorDot(
 export function createGeoJson(allPos: Pos[]): GeoJson {
   const json = allPos.map<GeoJsonPos>((pos) => {
     const dot = getColorDot(
-      pos.mcFlurryStatus,
+      pos.mcSundaeStatus,
       pos.mcFlurryStatus,
       pos.milkshakeStatus
     )
@@ -69,7 +69,8 @@ export function createGeoJson(allPos: Pos[]): GeoJson {
         customItems: pos.customItems as unknown as CustomItemType[],
         name: pos.name,
         dot,
-        hasMobileOrdering: pos.hasMobileOrdering
+        hasMobileOrdering: pos.hasMobileOrdering,
+        id: pos.id
       },
       type: 'Feature'
     }

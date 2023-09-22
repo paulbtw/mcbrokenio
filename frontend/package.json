@@ -5,15 +5,18 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:analyze": "ANALYZE=true yarn build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.5.3",
     "@floating-ui/react": "^0.25.4",
+    "@next/bundle-analyzer": "^13.5.2",
     "@types/node": "20.6.0",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
+    "@vercel/analytics": "^1.0.2",
     "autoprefixer": "10.4.15",
     "axios": "^1.5.0",
     "clsx": "^2.0.0",
@@ -28,6 +31,7 @@
     "react-map-gl": "^7.1.6",
     "react-query": "^3.39.3",
     "tailwindcss": "3.3.3",
-    "typescript": "5.2.2"
+    "typescript": "5.2.2",
+    "usehooks-ts": "^2.9.1"
   }
 }

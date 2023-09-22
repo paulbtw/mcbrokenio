@@ -4,6 +4,8 @@ import clsx from 'clsx'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { type PropsWithChildren } from 'react'
+import { Analytics } from '@vercel/analytics/react'
+import { Footer } from '@/components/Footer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -34,13 +36,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en">
-      <ReactQueryProvider>
-        <body className={clsx('bg-slate-100', inter.className)}>
+      <body className={clsx('bg-slate-100', inter.className)}>
+        <ReactQueryProvider>
           <main className="container mx-auto px-4 sm:px-6 lg:px-8">
             {children}
+            <Footer />
           </main>
-        </body>
-      </ReactQueryProvider>
+        </ReactQueryProvider>
+
+        <Analytics />
+      </body>
     </html>
   )
 }

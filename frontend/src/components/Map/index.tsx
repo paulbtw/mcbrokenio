@@ -1,16 +1,17 @@
 'use client'
 
+import { type ViewState } from '@/components/Map/Container'
 import { Popover } from '@/components/Map/Popover'
-import { type McDataProperties } from '@/hooks/queries/useMcData'
-import { useMcMarker } from '@/hooks/useMcMarker'
+import { type McDataGeometry, type McDataProperties } from '@/hooks/queries/useMcData'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { useCallback, useState } from 'react'
+import { type Dispatch, type SetStateAction, forwardRef, useCallback, useState } from 'react'
 import {
   Layer,
   Map as MapGl,
   type MapLayerMouseEvent,
   Source,
-  Popup
+  Popup,
+  type MapRef
 } from 'react-map-gl'
 
 interface PopupMarker {
@@ -20,8 +21,14 @@ interface PopupMarker {
   }
 }
 
-export function Map() {
-  const { geoJson } = useMcMarker()
+interface MapProps {
+  geoJson?: McDataGeometry
+  viewState: ViewState
+  setViewState: Dispatch<SetStateAction<ViewState>>
+
+}
+
+export const Map = forwardRef<MapRef, MapProps>(({ geoJson, viewState, setViewState }, ref) => {
   const [selected, setSelected] = useState<PopupMarker | null>(null)
 
   const onClick = useCallback((event: MapLayerMouseEvent) => {
@@ -51,17 +58,13 @@ export function Map() {
     }
   }, [])
 
-  console.log(selected)
-
   return (
     <MapGl
+      ref={ref}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_KEY as string}
       mapLib={import('mapbox-gl')}
-      initialViewState={{
-        longitude: -100,
-        latitude: 40,
-        zoom: 3.5
-      }}
+      {...viewState}
+      onMove={(nextViewState) => { setViewState(nextViewState.viewState) }}
       mapStyle="mapbox://styles/paaulbtw/ckw14wqnw07is14ny2oagkdvb"
       interactiveLayerIds={['points']}
       onClick={onClick}
@@ -97,7 +100,7 @@ export function Map() {
           latitude={selected.geometry.coordinates[1]}
           longitude={selected.geometry.coordinates[0]}
           closeOnMove={false}
-          style={{ maxWidth: '20rem' }}
+          maxWidth="20rem"
           closeButton={false}
         >
           <Popover {...selected.properties} />
@@ -105,4 +108,4 @@ export function Map() {
       )}
     </MapGl>
   )
-}
+})

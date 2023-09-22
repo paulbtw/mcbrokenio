@@ -2,6 +2,7 @@ import { type McDataProperties } from '@/hooks/queries/useMcData'
 import { ItemStatus } from '@/types'
 import clsx from 'clsx'
 import { formatDistance } from 'date-fns'
+import { useSettings } from '@/hooks/useSettings'
 
 const colorMap = {
   [ItemStatus.AVAILABLE]: 'bg-green-500',
@@ -43,6 +44,7 @@ function Item({
 }
 
 export function Popover({
+  id,
   name,
   hasMcFlurry,
   hasMcSundae,
@@ -56,6 +58,8 @@ export function Popover({
   milkshakeErrorCount,
   customItems
 }: McDataProperties) {
+  const [{ debugMode }] = useSettings()
+
   return (
     <div className="bg-white rounded overflow-hidden">
       <h3 className="text-lg font-semibold mb-1">{name}</h3>
@@ -96,6 +100,8 @@ export function Popover({
           })
           : 'never'}
       </div>
+      {debugMode === true && (<div>{id}</div>)}
+
     </div>
   )
 }
