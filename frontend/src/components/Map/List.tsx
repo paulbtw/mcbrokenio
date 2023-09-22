@@ -45,7 +45,7 @@ export function List({ isLoading, geoJson, viewState, onClick }: ListProps) {
   ])
 
   return (
-    <div className="basis-80 rounded-xl shadow h-full bg-white overflow-y-auto">
+    <div className="basis-80 rounded-xl shadow h-full bg-white overflow-y-auto hidden lg:block">
     {sortedByDistance.map((feature) => {
       const colorClassName = colorMap[feature.properties.dot]
       return (
