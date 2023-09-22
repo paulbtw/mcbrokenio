@@ -5,9 +5,7 @@ interface Settings {
 }
 
 export const useSettings = () => {
-  const [settings, setSettings] = useLocalStorage<Settings>('settings', {
+  return useLocalStorage<Settings>('settings', {
     debugMode: false
   })
-
-  return [settings, setSettings] as const
 }
