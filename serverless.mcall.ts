@@ -26,7 +26,7 @@ const serverlessConfiguration: AWS = {
 
   functions: {
     getAllStores: {
-      memorySize: 512,
+      memorySize: 368,
       timeout: 900,
       handler: 'src/stacks/mcall/getAllStores.handler',
       events: [
@@ -60,7 +60,7 @@ const serverlessConfiguration: AWS = {
       handler: 'src/stacks/mcall/getItemStatus.handlerEl',
       events: [
         {
-          schedule: 'cron(20 0 ? * SUN *)'
+          schedule: 'cron(20 * * * ? *)'
         }
       ],
       environment: {
