@@ -6,6 +6,7 @@ import { Inter } from 'next/font/google'
 import { type PropsWithChildren } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import { Footer } from '@/components/Footer'
+import PlausibleProvider from 'next-plausible'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en">
       <body className={clsx('bg-slate-100', inter.className)}>
+      <PlausibleProvider domain="mcbroken.io" selfHosted customDomain="analytics.vatiche.de">
         <ReactQueryProvider>
           <main className="container mx-auto px-4 sm:px-6 lg:px-8">
             {children}
@@ -45,6 +47,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
         </ReactQueryProvider>
 
         <Analytics />
+        </PlausibleProvider>
       </body>
     </html>
   )
