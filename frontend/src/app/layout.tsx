@@ -38,7 +38,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en">
       <body className={clsx('bg-slate-100', inter.className)}>
-      <PlausibleProvider domain="mcbroken.io" selfHosted customDomain="analytics.vatiche.de">
+      <PlausibleProvider domain="mcbroken.io" selfHosted customDomain="https://analytics.vatiche.de">
         <ReactQueryProvider>
           <main className="container mx-auto px-4 sm:px-6 lg:px-8">
             {children}
