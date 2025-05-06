@@ -1,4 +1,4 @@
-Sitemap: https://mcbroken.io/sitemap.xml
+Sitemap: https://mcbroken.vatiche.de/sitemap.xml
 
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
