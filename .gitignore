@@ -63,3 +63,6 @@ migrations.json
 # Next.js
 .next
 .yarn
+
+memory-bank
+.cursorrules
