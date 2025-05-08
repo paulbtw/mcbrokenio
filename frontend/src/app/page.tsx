@@ -11,7 +11,7 @@ export default async function Home() {
   const geoData = (geo != null)
     ? JSON.parse(geo.value)
     : { lat: DEFAULT_LATITUDE, lon: DEFAULT_LONGITUDE }
-  console.log(geoData)
+
   return (
     <>
       <Stats />

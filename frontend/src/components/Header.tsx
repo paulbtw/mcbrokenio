@@ -22,7 +22,7 @@ export function Header() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            McBroken
+            Mcdonalds Ice Maschine Status
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -37,5 +37,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  );
+  )
 }
