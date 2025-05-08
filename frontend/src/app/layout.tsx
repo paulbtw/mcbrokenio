@@ -1,17 +1,17 @@
-import '@/app/globals.css';
+import '@/app/globals.css'
 
-import { Analytics } from '@vercel/analytics/react';
-import clsx from 'clsx';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import PlausibleProvider from 'next-plausible';
-import { type PropsWithChildren } from 'react';
+import { Analytics } from '@vercel/analytics/react'
+import clsx from 'clsx'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import PlausibleProvider from 'next-plausible'
+import { type PropsWithChildren } from 'react'
 
-import { Footer } from '@/components/Footer';
-import { Header } from '@/components/Header';
-import { ReactQueryProvider } from '@/provider/ReactQueryProvider';
+import { Footer } from '@/components/Footer'
+import { Header } from '@/components/Header'
+import { ReactQueryProvider } from '@/provider/ReactQueryProvider'
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'McDonalds Ice Maschine Status 🥤',
@@ -26,16 +26,16 @@ export const metadata: Metadata = {
     description: "Tracking the McDonald's ice and milchshake status",
     images: [
       {
-        url: '/mcbroken.png',
-      },
-    ],
+        url: '/mcbroken.png'
+      }
+    ]
   },
   twitter: {
     card: 'summary_large_image',
     description: "Tracking the McDonald's ice and milchshake status",
-    title: 'McDonalds Ice Maschine Status 🥤 🥤',
-  },
-};
+    title: 'McDonalds Ice Maschine Status 🥤 🥤'
+  }
+}
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
@@ -60,5 +60,5 @@ export default function RootLayout({ children }: PropsWithChildren) {
         </PlausibleProvider>
       </body>
     </html>
-  );
+  )
 }
