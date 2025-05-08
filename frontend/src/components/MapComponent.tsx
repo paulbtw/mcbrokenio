@@ -1,24 +1,25 @@
-'use client';
+'use client'
 
-import { Dispatch, RefObject, SetStateAction } from 'react';
-import { MapRef } from 'react-map-gl';
+import { type Dispatch, type RefObject, type SetStateAction } from 'react'
+import { type MapRef } from 'react-map-gl'
 
-import { Map } from '@/components/Map';
-import { McDataGeometry } from '@/hooks/queries/useMcData';
+import { Map } from '@/components/Map'
+import { type McDataProperties, type McDataGeometry } from '@/hooks/queries/useMcData'
 
 export interface ViewState {
-  latitude: number;
-  longitude: number;
-  zoom: number;
+  latitude: number
+  longitude: number
+  zoom: number
 }
 
 interface MapComponentProps {
-  geoJson?: McDataGeometry;
-  viewState: ViewState;
-  setViewState: Dispatch<SetStateAction<ViewState>>;
-  isLoading: boolean;
-  mapRef: RefObject<MapRef | null>;
-  height?: number;
+  geoJson?: McDataGeometry
+  viewState: ViewState
+  setViewState: Dispatch<SetStateAction<ViewState>>
+  isLoading: boolean
+  mapRef: RefObject<MapRef | null>
+  height?: number
+  hoveredItem?: GeoJSON.Feature<GeoJSON.Point, McDataProperties> | null
 }
 
 export function MapComponent({
@@ -28,6 +29,7 @@ export function MapComponent({
   isLoading,
   mapRef,
   height = 500,
+  hoveredItem
 }: MapComponentProps) {
   return (
     <div className="flex h-full gap-4">
@@ -42,9 +44,10 @@ export function MapComponent({
             setViewState={setViewState}
             viewState={viewState}
             ref={mapRef}
+            hoveredItem={hoveredItem}
           />
         )}
       </div>
     </div>
-  );
+  )
 }

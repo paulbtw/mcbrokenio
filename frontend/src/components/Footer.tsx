@@ -14,5 +14,5 @@ export function Footer() {
         </a>
       </p>
     </footer>
-  );
+  )
 }

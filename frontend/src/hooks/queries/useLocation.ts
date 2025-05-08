@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { type QueryFunction,useQuery } from 'react-query'
+import { type QueryFunction, useQuery } from 'react-query'
 
 export interface LocationResponse {
   lat?: number

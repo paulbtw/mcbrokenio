@@ -1,47 +1,48 @@
-import { MapPin } from 'lucide-react';
-import { useMemo } from 'react';
+import { MapPin } from 'lucide-react'
+import { useMemo } from 'react'
 
-import { ViewState } from '@/components/MapComponent';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { type McDataGeometry } from '@/hooks/queries/useMcData';
+import { type ViewState } from '@/components/MapComponent'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
+import { type McDataProperties, type McDataGeometry } from '@/hooks/queries/useMcData'
 
 interface ListProps {
-  isLoading: boolean;
-  geoJson?: McDataGeometry;
-  viewState: ViewState;
-  onClick?: (lat: number, lon: number) => void;
+  isLoading: boolean
+  geoJson?: McDataGeometry
+  viewState: ViewState
+  onClick?: (lat: number, lon: number) => void
+  setHoveredItem?: (item: GeoJSON.Feature<GeoJSON.Point, McDataProperties> | null) => void
 }
 
 const colorMap: Record<string, string> = {
   GREY: 'text-gray-500',
   GREEN: 'text-green-500',
   YELLOW: 'text-yellow-500',
-  RED: 'text-red-500',
-};
+  RED: 'text-red-500'
+}
 
 function getDistanceFromLatLonInKm(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number,
+  lon2: number
 ): number {
-  const R = 6371; // Radius of the earth in km
-  const dLat = deg2rad(lat2 - lat1);
-  const dLon = deg2rad(lon2 - lon1);
+  const R = 6371 // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1)
+  const dLon = deg2rad(lon2 - lon1)
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(deg2rad(lat1)) *
       Math.cos(deg2rad(lat2)) *
       Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c; // Distance in km
-  return d;
+      Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const d = R * c // Distance in km
+  return d
 }
 
 function deg2rad(deg: number): number {
-  return deg * (Math.PI / 180);
+  return deg * (Math.PI / 180)
 }
 
 export function LocationList({
@@ -49,30 +50,31 @@ export function LocationList({
   geoJson,
   viewState,
   onClick,
+  setHoveredItem
 }: ListProps) {
   const sortedByDistance = useMemo(() => {
     if (geoJson == null) {
-      return [];
+      return []
     }
 
     return geoJson.features
       .map((feature) => {
-        const [lon, lat] = feature.geometry.coordinates;
+        const [lon, lat] = feature.geometry.coordinates
         const distance = getDistanceFromLatLonInKm(
           viewState.latitude,
           viewState.longitude,
           lat,
-          lon,
-        );
+          lon
+        )
 
         return {
           ...feature,
-          distance,
-        };
+          distance
+        }
       })
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 25);
-  }, [geoJson, viewState.latitude, viewState.longitude]);
+      .slice(0, 25)
+  }, [geoJson, viewState.latitude, viewState.longitude])
 
   if (isLoading) {
     return (
@@ -87,7 +89,7 @@ export function LocationList({
           </div>
         ))}
       </div>
-    );
+    )
   }
 
   return (
@@ -96,15 +98,19 @@ export function LocationList({
         {sortedByDistance.map((location) => (
           <div
             key={location.id}
-            className="flex items-start gap-3"
+            className="flex items-start gap-3 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md p-2"
             onClick={() =>
               onClick?.(
                 location.geometry.coordinates[1],
-                location.geometry.coordinates[0],
+                location.geometry.coordinates[0]
               )
             }
+            onMouseEnter={() =>
+              setHoveredItem?.(location)
+            }
+            onMouseLeave={() => setHoveredItem?.(null)}
           >
-            <div className={colorMap[location.properties.dot]}>
+            <div className={`self-center ${colorMap[location.properties.dot]}`}>
               <MapPin className="h-5 w-5" />
             </div>
             <div>
@@ -121,5 +127,5 @@ export function LocationList({
         ))}
       </div>
     </ScrollArea>
-  );
+  )
 }

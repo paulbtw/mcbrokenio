@@ -1,54 +1,56 @@
-'use client';
+'use client'
 
-import 'mapbox-gl/dist/mapbox-gl.css';
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 import {
   type Dispatch,
   forwardRef,
   type SetStateAction,
   useCallback,
-  useState,
-} from 'react';
+  useMemo,
+  useState
+} from 'react'
 import {
+  GeolocateControl,
   Layer,
   Map as MapGl,
   type MapLayerMouseEvent,
   type MapRef,
   Popup,
-  Source,
-} from 'react-map-gl';
+  Source
+} from 'react-map-gl'
 
-import { Popover } from '@/components/Map/Popover';
-import { ViewState } from '@/components/MapComponent';
+import { Popover } from '@/components/Map/Popover'
+import { type ViewState } from '@/components/MapComponent'
 import {
   type McDataGeometry,
-  type McDataProperties,
-} from '@/hooks/queries/useMcData';
+  type McDataProperties
+} from '@/hooks/queries/useMcData'
 
 interface PopupMarker {
-  properties: McDataProperties;
+  properties: McDataProperties
   geometry: {
-    coordinates: [number, number];
-  };
+    coordinates: [number, number]
+  }
 }
 
 interface MapProps {
-  geoJson?: McDataGeometry;
-  viewState: ViewState;
-  setViewState: Dispatch<SetStateAction<ViewState>>;
+  geoJson?: McDataGeometry
+  viewState: ViewState
+  setViewState: Dispatch<SetStateAction<ViewState>>
+  hoveredItem?: GeoJSON.Feature<GeoJSON.Point, McDataProperties> | null
 }
 
-// eslint-disable-next-line react/display-name
 export const Map = forwardRef<MapRef, MapProps>(
-  ({ geoJson, viewState, setViewState }, ref) => {
-    const [selected, setSelected] = useState<PopupMarker | null>(null);
+  ({ geoJson, viewState, setViewState, hoveredItem }, ref) => {
+    const [selected, setSelected] = useState<PopupMarker | null>(null)
 
     const onClick = useCallback((event: MapLayerMouseEvent) => {
-      const feature = event?.features?.[0];
+      const feature = event?.features?.[0]
 
       if (feature == null) {
-        setSelected(null);
-        return;
+        setSelected(null)
+        return
       }
 
       const properties = {
@@ -56,19 +58,30 @@ export const Map = forwardRef<MapRef, MapProps>(
         customItems: {
           ...(typeof feature.properties?.customItems === 'string'
             ? JSON.parse(feature.properties?.customItems)
-            : feature.properties?.customItems),
-        },
-      };
+            : feature.properties?.customItems)
+        }
+      }
 
       if (feature.geometry.type === 'Point') {
         setSelected({
           properties: properties as McDataProperties,
           geometry: {
-            coordinates: feature.geometry.coordinates as [number, number],
-          },
-        });
+            coordinates: feature.geometry.coordinates as [number, number]
+          }
+        })
       }
-    }, []);
+    }, [])
+
+    const hoveredItemSource: GeoJSON.FeatureCollection<GeoJSON.Point, McDataProperties> | null = useMemo(() => {
+      if (hoveredItem == null) {
+        return null
+      }
+
+      return {
+        type: 'FeatureCollection',
+        features: [hoveredItem]
+      }
+    }, [hoveredItem])
 
     return (
       <MapGl
@@ -77,7 +90,7 @@ export const Map = forwardRef<MapRef, MapProps>(
         mapLib={import('mapbox-gl')}
         {...viewState}
         onMove={(nextViewState) => {
-          setViewState(nextViewState.viewState);
+          setViewState(nextViewState.viewState)
         }}
         mapStyle="mapbox://styles/paaulbtw/ckw14wqnw07is14ny2oagkdvb"
         interactiveLayerIds={['points']}
@@ -85,6 +98,7 @@ export const Map = forwardRef<MapRef, MapProps>(
         minZoom={2}
         maxZoom={15}
       >
+        <GeolocateControl position="top-left" />
         {geoJson != null && (
           <Source id="data" type="geojson" data={geoJson}>
             <Layer
@@ -98,12 +112,29 @@ export const Map = forwardRef<MapRef, MapProps>(
                   2,
                   2,
                   15,
-                  7,
+                  7
                 ],
                 'circle-color': {
                   type: 'identity',
-                  property: 'dot',
-                },
+                  property: 'dot'
+                }
+              }}
+            />
+          </Source>
+        )}
+
+        {hoveredItemSource != null && (
+          <Source id="hovered-item" type="geojson" data={hoveredItemSource}>
+            <Layer
+              id="hovered-item"
+              type="circle"
+              source="hovered-item"
+              paint={{
+                'circle-radius': 12,
+                'circle-color': {
+                  type: 'identity',
+                  property: 'dot'
+                }
               }}
             />
           </Source>
@@ -121,6 +152,6 @@ export const Map = forwardRef<MapRef, MapProps>(
           </Popup>
         )}
       </MapGl>
-    );
-  },
-);
+    )
+  }
+)

@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { MapIcon, MapPin } from 'lucide-react';
-import { useState } from 'react';
+import { MapIcon, MapPin } from 'lucide-react'
+import { useState } from 'react'
 
-import { LocationList } from '@/components/LocationList';
-import { MapComponent } from '@/components/MapComponent';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useMapInteractions } from '@/hooks/useMapInteractions';
+import { LocationList } from '@/components/LocationList'
+import { MapComponent } from '@/components/MapComponent'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useMapInteractions } from '@/hooks/useMapInteractions'
 
-export function MobileView({ geo }: { geo: { lat: number; lon: number } }) {
-  const [activeTab, setActiveTab] = useState('map');
+export function MobileView({ geo }: { geo: { lat: number, lon: number } }) {
+  const [activeTab, setActiveTab] = useState('map')
   const {
     mapRef,
     geoJson,
@@ -17,8 +17,8 @@ export function MobileView({ geo }: { geo: { lat: number; lon: number } }) {
     viewState,
     setViewState,
     debouncedViewState,
-    panToLocation,
-  } = useMapInteractions({ geo });
+    panToLocation
+  } = useMapInteractions({ geo })
   return (
     <div className="rounded-xl bg-white shadow-sm dark:bg-slate-800">
       <Tabs defaultValue="map" className="w-full" onValueChange={setActiveTab}>
@@ -68,5 +68,5 @@ export function MobileView({ geo }: { geo: { lat: number; lon: number } }) {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

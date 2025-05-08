@@ -1,23 +1,22 @@
-import { geolocation } from '@vercel/functions';
-import { type NextRequest, NextResponse } from 'next/server';
+import { geolocation } from '@vercel/functions'
+import { type NextRequest, NextResponse } from 'next/server'
 
-import { DEFAULT_LATITUDE } from '@/lib/constants';
-import { DEFAULT_LONGITUDE } from '@/lib/constants';
+import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from '@/lib/constants'
 
 export function middleware(request: NextRequest) {
-  const geo = geolocation(request);
+  const geo = geolocation(request)
 
-  const response = NextResponse.next();
+  const response = NextResponse.next()
 
   response.cookies.set(
     'geo',
     JSON.stringify({
       lat: geo.latitude ?? DEFAULT_LATITUDE,
-      lon: geo.longitude ?? DEFAULT_LONGITUDE,
-    }),
-  );
+      lon: geo.longitude ?? DEFAULT_LONGITUDE
+    })
+  )
 
-  return response;
+  return response
 }
 
 export const config = {
@@ -29,6 +28,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
-  ],
-};
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)'
+  ]
+}
