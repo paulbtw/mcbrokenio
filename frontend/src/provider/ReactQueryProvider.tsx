@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type PropsWithChildren } from 'react'
+import { type PropsWithChildren,useState } from 'react'
 import { QueryClient, QueryClientProvider } from 'react-query'
 
 export function ReactQueryProvider({ children }: PropsWithChildren) {

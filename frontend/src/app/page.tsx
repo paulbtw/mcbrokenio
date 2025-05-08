@@ -1,13 +1,29 @@
-import { Stats } from '@/components/Stats'
-import { MapContainer } from '@/components/Map/Container'
+import { cookies } from 'next/headers';
 
-export default function Home() {
+import { DesktopView } from '@/components/DesktopView';
+import { MobileView } from '@/components/MobileView';
+import { Stats } from '@/components/Stats';
+import { DEFAULT_LATITUDE } from '@/lib/constants';
+import { DEFAULT_LONGITUDE } from '@/lib/constants';
+
+export default async function Home() {
+  const currentCookies = await cookies();
+  const geo = currentCookies.get('geo');
+  const geoData = geo
+    ? JSON.parse(geo.value)
+    : { lat: DEFAULT_LATITUDE, lon: DEFAULT_LONGITUDE };
+  console.log(geoData);
   return (
-    <div className="w-full box-border">
+    <>
       <Stats />
-      <div className="w-full h-[70vh]">
-        <MapContainer />
+
+      <div className="mt-6 hidden lg:block">
+        <DesktopView geo={geoData} />
       </div>
-    </div>
-  )
+
+      <div className="mt-6 lg:hidden">
+        <MobileView geo={geoData} />
+      </div>
+    </>
+  );
 }

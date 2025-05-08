@@ -1,29 +1,30 @@
-import { type McDataProperties } from '@/hooks/queries/useMcData'
-import { ItemStatus } from '@/types'
-import clsx from 'clsx'
-import { formatDistance } from 'date-fns'
-import { useSettings } from '@/hooks/useSettings'
+import clsx from 'clsx';
+import { formatDistance } from 'date-fns';
+
+import { type McDataProperties } from '@/hooks/queries/useMcData';
+import { useSettings } from '@/hooks/useSettings';
+import { ItemStatus } from '@/types';
 
 const colorMap = {
   [ItemStatus.AVAILABLE]: 'bg-green-500',
   [ItemStatus.UNAVAILABLE]: 'bg-red-500',
   [ItemStatus.NOT_APPLICABLE]: 'bg-gray-500',
   [ItemStatus.PARTIAL_AVAILABLE]: 'bg-yellow-500',
-  [ItemStatus.UNKNOWN]: 'bg-gray-500'
-}
+  [ItemStatus.UNKNOWN]: 'bg-gray-500',
+};
 
 function Item({
   count,
   errorCount,
   name,
-  status
+  status,
 }: {
-  name: string
-  status: ItemStatus
-  count: number
-  errorCount: number
+  name: string;
+  status: ItemStatus;
+  count: number;
+  errorCount: number;
 }) {
-  const available = count - errorCount
+  const available = count - errorCount;
 
   return (
     <div>
@@ -40,7 +41,7 @@ function Item({
         ></div>
       </div>
     </div>
-  )
+  );
 }
 
 export function Popover({
@@ -56,9 +57,9 @@ export function Popover({
   mcSundaeErrorCount,
   milkshakeCount,
   milkshakeErrorCount,
-  customItems
+  customItems,
 }: McDataProperties) {
-  const [{ debugMode }] = useSettings()
+  const [{ debugMode }] = useSettings();
 
   return (
     <div className="bg-white rounded overflow-hidden">
@@ -96,12 +97,11 @@ export function Popover({
         Last checked:{' '}
         {lastChecked != null
           ? formatDistance(new Date(lastChecked), new Date(), {
-            addSuffix: true
-          })
+              addSuffix: true,
+            })
           : 'never'}
       </div>
-      {debugMode === true && (<div>{id}</div>)}
-
+      {debugMode === true && <div>{id}</div>}
     </div>
-  )
+  );
 }

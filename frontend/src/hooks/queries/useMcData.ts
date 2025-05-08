@@ -1,5 +1,6 @@
-import { type QueryFunction, useQuery } from 'react-query'
 import axios from 'axios'
+import { type QueryFunction, useQuery } from 'react-query'
+
 import { type ItemStatus } from '@/types'
 
 export interface McDataProperties {
