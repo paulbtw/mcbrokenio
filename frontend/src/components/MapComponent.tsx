@@ -4,7 +4,7 @@ import { type Dispatch, type RefObject, type SetStateAction } from 'react'
 import { type MapRef } from 'react-map-gl'
 
 import { Map } from '@/components/Map'
-import { type McDataProperties, type McDataGeometry } from '@/hooks/queries/useMcData'
+import { type McDataGeometry,type McDataProperties } from '@/hooks/queries/useMcData'
 
 export interface ViewState {
   latitude: number

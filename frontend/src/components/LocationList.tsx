@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { type ViewState } from '@/components/MapComponent'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
-import { type McDataProperties, type McDataGeometry } from '@/hooks/queries/useMcData'
+import { type McDataGeometry,type McDataProperties } from '@/hooks/queries/useMcData'
 
 interface ListProps {
   isLoading: boolean

@@ -1,10 +1,11 @@
 'use client'
 
+import { useState } from 'react'
+
 import { LocationList } from '@/components/LocationList'
 import { MapComponent } from '@/components/MapComponent'
 import { type McDataProperties } from '@/hooks/queries/useMcData'
 import { useMapInteractions } from '@/hooks/useMapInteractions'
-import { useState } from 'react'
 
 interface DesktopViewProps {
   geo: {

@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 
 import {
   type Dispatch,
-  forwardRef,
+  RefObject,
   type SetStateAction,
   useCallback,
   useMemo,
@@ -39,11 +39,11 @@ interface MapProps {
   viewState: ViewState
   setViewState: Dispatch<SetStateAction<ViewState>>
   hoveredItem?: GeoJSON.Feature<GeoJSON.Point, McDataProperties> | null
+  ref: RefObject<MapRef>
 }
 
-export const Map = forwardRef<MapRef, MapProps>(
-  ({ geoJson, viewState, setViewState, hoveredItem }, ref) => {
-    const [selected, setSelected] = useState<PopupMarker | null>(null)
+export function Map({geoJson, viewState, setViewState, hoveredItem, ref}: MapProps) {
+  const [selected, setSelected] = useState<PopupMarker | null>(null)
 
     const onClick = useCallback((event: MapLayerMouseEvent) => {
       const feature = event?.features?.[0]
@@ -154,4 +154,3 @@ export const Map = forwardRef<MapRef, MapProps>(
       </MapGl>
     )
   }
-)
