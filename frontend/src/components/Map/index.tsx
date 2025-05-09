@@ -39,7 +39,7 @@ interface MapProps {
   viewState: ViewState
   setViewState: Dispatch<SetStateAction<ViewState>>
   hoveredItem?: GeoJSON.Feature<GeoJSON.Point, McDataProperties> | null
-  ref: RefObject<MapRef>
+  ref: RefObject<MapRef | null>
 }
 
 export function Map({geoJson, viewState, setViewState, hoveredItem, ref}: MapProps) {
