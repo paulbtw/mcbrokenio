@@ -49,6 +49,7 @@ export function MobileView({ geo }: { geo: { lat: number, lon: number } }) {
               setViewState={setViewState}
               isLoading={isLoadingGeoJson}
               mapRef={mapRef}
+              geoJson={geoJson}
             />
           </div>
         </TabsContent>
