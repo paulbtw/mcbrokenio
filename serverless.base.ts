@@ -2,7 +2,7 @@ import type { AWS } from '@serverless/typescript'
 
 export const baseServerlessConfiguration: Partial<AWS> = {
   frameworkVersion: '3',
-  plugins: ['serverless-esbuild', 'serverless-dotenv-plugin', 'serverless-offline'],
+  plugins: ['serverless-esbuild', 'serverless-dotenv-plugin'],
   useDotenv: true,
 
   package: {
@@ -18,7 +18,7 @@ export const baseServerlessConfiguration: Partial<AWS> = {
 
   provider: {
     name: 'aws',
-    runtime: 'nodejs18.x',
+    runtime: 'nodejs20.x',
     memorySize: 128,
     apiGateway: {
       minimumCompressionSize: 1024
@@ -36,7 +36,7 @@ export const baseServerlessConfiguration: Partial<AWS> = {
       minify: false,
       sourcemap: true,
       exclude: ['aws-sdk'],
-      target: 'node18',
+      target: 'node20',
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10
