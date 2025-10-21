@@ -27,7 +27,7 @@ export function Header() {
         </div>
         <div className="flex items-center gap-2">
           <a
-            href="https://github.com/paulbtw/mcbroken"
+            href="https://github.com/paulbtw/mcbrokenio"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
