@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: 'McDonalds Ice Maschine Status 🥤',
   description: "Tracking the McDonald's ice and milchshake status",
   viewport: 'initial-scale=1.0, width=device-width',
+  alternates: {
+    canonical: '/'
+  },
   metadataBase: new URL('https://mcbroken.vatiche.de'),
   openGraph: {
     type: 'website',
@@ -33,7 +36,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     description: "Tracking the McDonald's ice and milchshake status",
-    title: 'McDonalds Ice Maschine Status 🥤 🥤'
+    title: 'McDonalds Ice Maschine Status 🥤'
   }
 }
 
