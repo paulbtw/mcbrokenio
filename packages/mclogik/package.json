@@ -1,0 +1,30 @@
+{
+  "name": "@mcbroken/mclogik",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.962.0",
+    "@mcbroken/db": "workspace:*",
+    "@sailplane/logger": "^4.2.0",
+    "axios": "^1.13.2",
+    "p-queue": "^7.4.1"
+  },
+  "devDependencies": {
+    "@mcbroken/eslint-config": "workspace:*",
+    "@mcbroken/typescript-config": "workspace:*",
+    "eslint": "^9.32.0",
+    "typescript": "^5.9.2",
+    "vitest": "^4.0.16"
+  },
+  "exports": {
+    "./constants": "./src/constants/index.ts",
+    "./types": "./src/types/index.ts",
+    "./createJson": "./src/services/createJson/index.ts",
+    "./getAllStores": "./src/services/getAllStores/index.ts",
+    "./getItemStatus": "./src/services/getItemStatus/index.ts"
+  }
+}

@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: pg_isready -U postgres || exit 1
+      interval: 1m
+      timeout: 10s
+      retries: 5
+      start_period: 30s

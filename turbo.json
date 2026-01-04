@@ -1,0 +1,54 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["DATABASE_URL", "BASIC_TOKEN_EU", "KEY", "BASIC_TOKEN_AP", "BASIC_TOKEN_US", "BASIC_TOKEN_EL", "EXPORT_BUCKET"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:deploy": {
+      "cache": false
+    },
+    "package": {
+      "dependsOn": [
+        "build",
+        "test",
+        "lint"
+      ],
+      "cache": false
+    },
+    "deploy:staging": {
+      "dependsOn": [
+        "package"
+      ],
+      "cache": false
+    },
+    "deploy:production": {
+      "dependsOn": [
+        "package"
+      ],
+      "cache": false
+    }
+  }
+}
