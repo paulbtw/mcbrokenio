@@ -1,15 +1,34 @@
-import { baseServerlessConfiguration } from '@mcbroken/serverless-config'
 import type { AWS } from '@serverless/typescript'
 
 const serverlessConfiguration: AWS = {
-  ...baseServerlessConfiguration,
+  frameworkVersion: '3',
+  plugins: ['serverless-esbuild', 'serverless-offline'],
+  useDotenv: true,
   service: 'mcall',
 
+  package: {
+    individually: true,
+    patterns: [
+      'node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+      'node_modules/.prisma/client/schema.prisma',
+      '!node_modules/prisma/libquery_engine-*',
+      '!node_modules/@prisma/engines/**'
+    ]
+  },
+
   provider: {
-    ...baseServerlessConfiguration.provider!,
     name: 'aws',
     region: 'eu-central-1',
-    deploymentBucket: { name: "mcbrokenio-mcall-bucket-${opt:stage, 'dev'}" },
+    runtime: 'nodejs20.x',
+    apiGateway: {
+      minimumCompressionSize: 1024
+    },
+    stage: "${opt:stage, 'dev'}",
+    architecture: 'x86_64',
+    deploymentBucket: { name: "mcbrokenio-mcall-bucket-dev" },
+    environment: {
+      PRISMA_QUERY_ENGINE_LIBRARY: '/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node'
+    },
     iam: {
       role: {
         statements: [
@@ -64,7 +83,8 @@ const serverlessConfiguration: AWS = {
       ],
       environment: {
         DATABASE_URL: process.env.DATABASE_URL || '${env:DATABASE_URL}',
-        KEY: process.env.KEY || '${env:KEY}'
+        KEY: process.env.KEY || '${env:KEY}',
+        BASIC_TOKEN_EL: process.env.BASIC_TOKEN_EL || '${env:BASIC_TOKEN_EL}'
       }
     },
     createJson: {

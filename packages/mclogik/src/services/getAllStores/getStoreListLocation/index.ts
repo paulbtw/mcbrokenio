@@ -1,5 +1,8 @@
+import { Logger } from '@sailplane/logger'
+import axios from 'axios'
 import PQueue from 'p-queue'
-import { getMetaForApi } from '../../../utils/getMetaForApi'
+
+import { defaultRequestLimiterAu } from '../../../constants/RateLimit'
 import {
   type APIType,
   type CreatePos,
@@ -8,11 +11,10 @@ import {
   type Locations
   } from '../../../types'
 import { generateCoordinatesMesh } from '../../../utils/generateCoordinatesMesh'
-import { Logger } from '@sailplane/logger'
-import { defaultRequestLimiterAu } from '../../../constants/RateLimit'
+import { getMetaForApi } from '../../../utils/getMetaForApi'
 import { savePos } from '../savePos'
+
 import { getStorelistFromLocation } from './getStorelistFromLocation'
-import axios from 'axios'
 
 const logger = new Logger({
   logTimestamps: true,

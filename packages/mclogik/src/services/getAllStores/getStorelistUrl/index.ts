@@ -1,8 +1,10 @@
-import { getStorelistFromUrl } from './getStorelistFromUrl'
-import { savePos } from '../savePos'
+import PQueue from 'p-queue'
+
 import { type APIType, type CreatePos, type Locations } from '../../../types'
 import { getMetaForApi } from '../../../utils/getMetaForApi'
-import PQueue from 'p-queue'
+import { savePos } from '../savePos'
+
+import { getStorelistFromUrl } from './getStorelistFromUrl'
 
 const queue = new PQueue({ concurrency: 2, interval: 500 })
 

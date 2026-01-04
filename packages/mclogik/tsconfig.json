@@ -4,9 +4,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "./dist",
-    "paths": {},
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"]
   },
   "include": [

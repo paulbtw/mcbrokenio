@@ -1,8 +1,9 @@
+import { Logger } from '@sailplane/logger'
+import axios from 'axios'
+
 import { KEY } from '../../../constants'
 import { type CreatePos, type ICountryInfos } from '../../../types'
 import { type IRestaurantsUrlResponse } from '../../../types/responses'
-import { Logger } from '@sailplane/logger'
-import axios from 'axios'
 
 const logger = new Logger('getStorelistFromUrl')
 

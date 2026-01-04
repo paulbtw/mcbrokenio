@@ -13,7 +13,7 @@ export interface IRestaurantLocationResponse {
         longitude: number
       }
       mcDeliveries: {
-        mcDelivery: any[]
+        mcDelivery: unknown[]
       }
       name: string
       nationalStoreNumber: number
@@ -78,7 +78,7 @@ export interface RestaurantInfoEuResponse {
         postalZip: string
         stateProvince: string
       }
-      areas: any[]
+      areas: unknown[]
       availableMenuProducts: {
         2: number[]
         3: number[]

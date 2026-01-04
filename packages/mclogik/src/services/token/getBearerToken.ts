@@ -1,5 +1,6 @@
-import axios from 'axios'
 import { Logger } from '@sailplane/logger'
+import axios from 'axios'
+
 import { BASIC_TOKEN_AP, BASIC_TOKEN_EL, BASIC_TOKEN_EU, BASIC_TOKEN_US } from '../../constants'
 import { APIType } from '../../types'
 

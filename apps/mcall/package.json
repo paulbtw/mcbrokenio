@@ -7,10 +7,10 @@
     "dev": "serverless offline start",
     "check:updates": "npx npm-check-updates",
     "check:updates:u": "npx npm-check-updates -u && pnpm i",
-    "deploy:staging": "serverless deploy --aws-profile $AWS_PROFILE --stage staging",
-    "deploy:production": "serverless deploy --aws-profile $AWS_PROFILE --stage production",
-    "test": "vitest run --coverage --passWithNoTests",
-    "test:watch": "vitest --passWithNoTests",
+    "predeploy": "mkdir -p node_modules/.prisma/client && cp -r ../../packages/database/generated/prisma/* node_modules/.prisma/client/",
+    "deploy:staging": "pnpm predeploy && serverless deploy --stage staging",
+    "deploy:production": "pnpm predeploy && serverless deploy --stage production --force",
+    "check-types": "tsc --noEmit",
     "lint": "eslint '**/*.ts'",
     "lint:fix": "eslint '**/*.ts' --fix",
     "invoke": "serverless invoke local --function",
@@ -18,7 +18,6 @@
   },
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",
-    "@mcbroken/serverless-config": "workspace:*",
     "@mcbroken/typescript-config": "workspace:*",
     "@serverless/typescript": "^3.38.0",
     "typescript": "^5.9.2"

@@ -10,7 +10,10 @@ const serverlessConfiguration: AWS = {
     ...baseServerlessConfiguration.provider!,
     name: 'aws',
     region: 'us-east-2',
-    deploymentBucket: { name: "mcbrokenio-mcus-bucket-${opt:stage, 'dev'}" },
+    deploymentBucket: { name: "mcbrokenio-mcus-bucket-dev" },
+    environment: {
+      PRISMA_QUERY_ENGINE_LIBRARY: '/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node'
+    },
     iam: {
       role: {
         statements: [
@@ -22,6 +25,16 @@ const serverlessConfiguration: AWS = {
         ]
       }
     }
+  },
+
+  package: {
+    individually: true,
+    patterns: [
+      'node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+      'node_modules/.prisma/client/schema.prisma',
+      '!node_modules/prisma/libquery_engine-*',
+      '!node_modules/@prisma/engines/**'
+    ]
   },
 
   functions: {

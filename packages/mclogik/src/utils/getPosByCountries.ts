@@ -1,4 +1,7 @@
 import { type PrismaClient } from '@mcbroken/db'
+import { Logger } from '@sailplane/logger'
+
+const logger = new Logger('getPosByCountries')
 
 export async function getPosByCountries(prisma: PrismaClient, countries?: string[]) {
   try {
@@ -15,6 +18,7 @@ export async function getPosByCountries(prisma: PrismaClient, countries?: string
       }
     })
   } catch (error) {
+    logger.error(error as Error)
     throw Error('Error while getting pos by countries')
   }
 }

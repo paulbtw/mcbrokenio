@@ -63,8 +63,8 @@ export function LocationList({
         const distance = getDistanceFromLatLonInKm(
           viewState.latitude,
           viewState.longitude,
-          lat,
-          lon
+          lat ?? 0,
+          lon ?? 0
         )
 
         return {
@@ -101,8 +101,8 @@ export function LocationList({
             className="flex items-start gap-3 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md p-2"
             onClick={() =>
               onClick?.(
-                location.geometry.coordinates[1],
-                location.geometry.coordinates[0]
+                location.geometry.coordinates[1] ?? 0,
+                location.geometry.coordinates[0] ?? 0
               )
             }
             onMouseEnter={() =>

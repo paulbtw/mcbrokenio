@@ -1,4 +1,5 @@
 import axios from 'axios'
+
 import { type CreatePos, type ICountryInfos, type ILocation } from '../../../types'
 import { type IRestaurantLocationResponse } from '../../../types/responses'
 import { randomUserAgent } from '../../../utils/randomUserAgent'

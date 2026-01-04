@@ -2,6 +2,13 @@
   "extends": "@mcbroken/typescript-config/base.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
   },
   "include": ["src/**/*.ts", "serverless.ts"],
   "exclude": ["node_modules"]

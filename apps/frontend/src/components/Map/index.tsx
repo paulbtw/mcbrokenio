@@ -87,7 +87,6 @@ export function Map({geoJson, viewState, setViewState, hoveredItem, ref}: MapPro
       <MapGl
         ref={ref}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_KEY as string}
-        mapLib={import('mapbox-gl')}
         {...viewState}
         onMove={(nextViewState) => {
           setViewState(nextViewState.viewState)
