@@ -181,6 +181,9 @@ importers:
       '@serverless/typescript':
         specifier: ^3.38.0
         version: 3.38.0
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.2(jiti@2.6.1)
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -203,6 +206,9 @@ importers:
       '@serverless/typescript':
         specifier: ^3.38.0
         version: 3.38.0
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.2(jiti@2.6.1)
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -225,6 +231,9 @@ importers:
       '@serverless/typescript':
         specifier: ^3.38.0
         version: 3.38.0
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.2(jiti@2.6.1)
       typescript:
         specifier: ^5.9.2
         version: 5.9.3

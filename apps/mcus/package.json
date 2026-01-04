@@ -21,7 +21,8 @@
     "@mcbroken/serverless-config": "workspace:*",
     "@mcbroken/typescript-config": "workspace:*",
     "@serverless/typescript": "^3.38.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "eslint": "^9.39.1"
   },
   "dependencies": {
     "@mcbroken/mclogik": "workspace:*"

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-restricted-imports */
 import { baseServerlessConfiguration } from '@mcbroken/serverless-config'
 import type { AWS } from '@serverless/typescript'
 
