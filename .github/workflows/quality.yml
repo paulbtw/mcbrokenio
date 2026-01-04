@@ -31,5 +31,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Generate Prisma client
+        run: pnpm turbo run db:generate
+
       - name: Run CI tasks
         run: pnpm turbo run check-types lint test
