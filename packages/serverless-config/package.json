@@ -1,0 +1,15 @@
+{
+  "name": "@mcbroken/serverless-config",
+  "version": "0.0.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "devDependencies": {
+    "@mcbroken/typescript-config": "workspace:*",
+    "typescript": "^5.9.2",
+    "@serverless/typescript": "^3.38.0"
+  },
+  "exports": {
+    ".": "./index.ts"
+  }
+}
+

@@ -2,47 +2,32 @@
   "name": "mcserverless",
   "version": "1.0.0",
   "engines": {
-    "node": "^20"
+    "node": ">=22",
+    "pnpm": ">=9",
+    "npm": "please-use-pnpm",
+    "yarn": "please-use-pnpm"
   },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "mcall:local": "sls invoke local -c serverless.mcall.ts",
-    "mcall:deploy": "sls deploy -c serverless.mcall.ts",
-    "mcall:offline": "sls offline -c serverless.mcall.ts",
-    "mcau:local": "sls invoke local -c serverless.mcau.ts",
-    "mcau:deploy": "sls deploy -c serverless.mcau.ts",
-    "mcau:offline": "sls offline -c serverless.mcau.ts",
-    "mcus:local": "sls invoke local -c serverless.mcus.ts",
-    "mcus:deploy": "sls deploy -c serverless.mcus.ts",
-    "mcus:offline": "sls offline -c serverless.mcus.ts",
     "prepare": "husky install"
   },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.409.0",
-    "@prisma/client": "5.22.0",
-    "@sailplane/logger": "^4.2.0",
-    "clsx": "^2.0.0",
-    "p-queue": "^7.4.1",
-    "prisma": "^5.2.0",
-    "serverless-offline": "^12.0.4"
-  },
   "devDependencies": {
-    "@serverless/typescript": "^3.30.1",
-    "@types/aws-lambda": "^8.10.71",
-    "@types/node": "^14.14.25",
-    "@typescript-eslint/eslint-plugin": "^6.4.0",
-    "esbuild": "^0.14.11",
-    "eslint": "^8.0.1",
-    "eslint-config-standard-with-typescript": "^39.0.0",
-    "eslint-plugin-import": "^2.25.2",
-    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
-    "eslint-plugin-promise": "^6.0.0",
+    "@mcbroken/eslint-config": "workspace:*",
+    "@mcbroken/typescript-config": "workspace:*",
+    "@types/aws-lambda": "^8.10.159",
+    "@types/node": "22",
+    "esbuild": "0.25.0",
     "husky": "^8.0.3",
-    "serverless": "^3",
-    "serverless-dotenv-plugin": "^6.0.0",
-    "serverless-esbuild": "^1.46.0",
-    "ts-node": "^10.4.0",
-    "tsconfig-paths": "^3.9.0",
-    "typescript": "*"
+    "prettier": "^3.7.4",
+    "serverless": "3.40.0",
+    "serverless-esbuild": "1.54.6",
+    "serverless-offline": "14.4.0",
+    "ts-node": "10.9.2",
+    "turbo": "^2.7.2",
+    "typescript": "^5.9.2"
   },
   "license": "MIT",
   "lint-staged": {
@@ -53,5 +38,6 @@
     "*.{md,json,yml,yaml,html}": [
       "prettier --write"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.25.0"
 }

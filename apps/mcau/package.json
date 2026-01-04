@@ -1,0 +1,30 @@
+{
+  "name": "@mcbroken/mcau",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "serverless offline start",
+    "check:updates": "npx npm-check-updates",
+    "check:updates:u": "npx npm-check-updates -u && pnpm i",
+    "predeploy": "mkdir -p node_modules/.prisma/client && cp -r ../../packages/database/generated/prisma/* node_modules/.prisma/client/",
+    "deploy:staging": "pnpm predeploy && serverless deploy --stage staging",
+    "deploy:production": "pnpm predeploy && serverless deploy --stage production",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint '**/*.ts'",
+    "lint:fix": "eslint '**/*.ts' --fix",
+    "invoke": "serverless invoke local --function",
+    "package": "serverless package"
+  },
+  "devDependencies": {
+    "@mcbroken/eslint-config": "workspace:*",
+    "@mcbroken/serverless-config": "workspace:*",
+    "@mcbroken/typescript-config": "workspace:*",
+    "@serverless/typescript": "^3.38.0",
+    "typescript": "^5.9.2",
+    "eslint": "^9.39.1"
+  },
+  "dependencies": {
+    "@mcbroken/mclogik": "workspace:*"
+  }
+}

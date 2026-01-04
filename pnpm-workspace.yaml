@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - packages/*
+
+autoInstallPeers: true
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - aws-sdk
+  - es5-ext
+  - esbuild
+  - prisma
+  - serverless
+  - sharp
+  - unrs-resolver
