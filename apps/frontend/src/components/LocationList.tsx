@@ -60,11 +60,16 @@ export function LocationList({
     return geoJson.features
       .map((feature) => {
         const [lon, lat] = feature.geometry.coordinates
+
+        if (lat == null || lon == null) {
+          return null
+        }
+
         const distance = getDistanceFromLatLonInKm(
           viewState.latitude,
           viewState.longitude,
-          lat ?? 0,
-          lon ?? 0
+          lat,
+          lon
         )
 
         return {
@@ -72,7 +77,8 @@ export function LocationList({
           distance
         }
       })
-      .sort((a, b) => a.distance - b.distance)
+      .filter((feature) => feature != null)
+      .sort((a, b) => a?.distance - b?.distance)
       .slice(0, 25)
   }, [geoJson, viewState.latitude, viewState.longitude])
 
@@ -99,12 +105,23 @@ export function LocationList({
           <div
             key={location.id}
             className="flex items-start gap-3 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md p-2"
-            onClick={() =>
-              onClick?.(
-                location.geometry.coordinates[1] ?? 0,
-                location.geometry.coordinates[0] ?? 0
-              )
-            }
+            onClick={() => {
+              const coords = location.geometry.coordinates
+              const lat = coords?.[1]
+              const lon = coords?.[0]
+              if (
+                coords == null ||
+                coords.length < 2 ||
+                lat == null ||
+                lon == null ||
+                !Number.isFinite(lat) ||
+                !Number.isFinite(lon)
+              ) {
+                console.error('Invalid coordinates for location:', location)
+                return
+              }
+              onClick?.(lat, lon)
+            }}
             onMouseEnter={() =>
               setHoveredItem?.(location)
             }

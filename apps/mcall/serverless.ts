@@ -27,7 +27,8 @@ const serverlessConfiguration: AWS = {
     architecture: 'x86_64',
     deploymentBucket: { name: "mcbrokenio-mcall-bucket-dev" },
     environment: {
-      PRISMA_QUERY_ENGINE_LIBRARY: '/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node'
+      PRISMA_QUERY_ENGINE_LIBRARY: '/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+      EXPORT_BUCKET: process.env.EXPORT_BUCKET || '${env:EXPORT_BUCKET}'
     },
     iam: {
       role: {
@@ -35,7 +36,10 @@ const serverlessConfiguration: AWS = {
           {
             Effect: 'Allow',
             Action: ['s3:PutObject', 's3:PutObjectAcl', 's3:GetObject'],
-            Resource: ['arn:aws:s3:::*']
+            Resource: [
+              'arn:aws:s3:::${env:EXPORT_BUCKET}',
+              'arn:aws:s3:::${env:EXPORT_BUCKET}/*'
+            ]
           }
         ]
       }

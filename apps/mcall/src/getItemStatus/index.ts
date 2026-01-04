@@ -3,13 +3,35 @@ import { getItemStatus } from '@mcbroken/mclogik/getItemStatus'
 import { APIType } from '@mcbroken/mclogik/types'
 
 export const handlerEu = async () => {
-  await getItemStatus(APIType.EU, defaultRequestLimiterEu)
+  try {
+    await getItemStatus(APIType.EU, defaultRequestLimiterEu)
 
-  return null
+    return {
+      statusCode: 200,
+      success: true
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Error in getItemStatus handlerEu:', errorMessage, error)
+
+    // Throw to let Lambda handle retries for scheduled events
+    throw error
+  }
 }
 
 export const handlerEl = async () => {
-  await getItemStatus(APIType.EL, defaultRequestLimiterEu)
+  try {
+    await getItemStatus(APIType.EL, defaultRequestLimiterEu)
 
-  return null
+    return {
+      statusCode: 200,
+      success: true
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Error in getItemStatus handlerEl:', errorMessage, error)
+
+    // Throw to let Lambda handle retries for scheduled events
+    throw error
+  }
 }

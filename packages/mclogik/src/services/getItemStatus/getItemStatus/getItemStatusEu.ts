@@ -31,6 +31,10 @@ export async function getItemStatusEu(
   try {
     const countryInfo = countriesRecord[pos.country]
 
+    if (countryInfo == null) {
+      return null
+    }
+
     const { data } = await axios.get<RestaurantInfoEuResponse>(
       `https://eu-prod.api.mcd.com/exp/v1/restaurant/${pos.nationalStoreNumber}?filter=full&storeUniqueIdType=NatlStrNumber`,
       {
@@ -44,10 +48,6 @@ export async function getItemStatusEu(
         }
       }
     )
-
-    if (countryInfo == null) {
-      return null
-    }
 
     const outageProductCodes =
       data.response?.restaurant?.catalog?.outageProductCodes ?? []

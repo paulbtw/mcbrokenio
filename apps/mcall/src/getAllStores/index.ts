@@ -3,8 +3,19 @@ import { getStorelistWithLocation, getStorelistWithUrl } from '@mcbroken/mclogik
 import { APIType } from '@mcbroken/mclogik/types'
 
 export const handler = async () => {
-  await getStorelistWithLocation(APIType.EU, 50, defaultRequestLimiterEu)
-  await getStorelistWithUrl(APIType.EL)
+  try {
+    await getStorelistWithLocation(APIType.EU, 50, defaultRequestLimiterEu)
+    await getStorelistWithUrl(APIType.EL)
 
-  return null
+    return {
+      statusCode: 200,
+      success: true
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Error in getAllStores handler:', errorMessage, error)
+
+    // Throw to let Lambda handle retries for scheduled events
+    throw error
+  }
 }
