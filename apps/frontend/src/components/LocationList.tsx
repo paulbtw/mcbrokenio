@@ -57,6 +57,10 @@ export function LocationList({
       return []
     }
 
+    type LocationWithDistance = GeoJSON.Feature<GeoJSON.Point, McDataProperties> & {
+      distance: number
+    }
+
     return geoJson.features
       .map((feature) => {
         const [lon, lat] = feature.geometry.coordinates
@@ -75,10 +79,10 @@ export function LocationList({
         return {
           ...feature,
           distance
-        }
+        } as LocationWithDistance
       })
-      .filter((feature) => feature != null)
-      .sort((a, b) => a?.distance - b?.distance)
+      .filter((feature): feature is LocationWithDistance => feature != null)
+      .sort((a, b) => a.distance - b.distance)
       .slice(0, 25)
   }, [geoJson, viewState.latitude, viewState.longitude])
 

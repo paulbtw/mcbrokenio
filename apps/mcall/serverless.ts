@@ -1,33 +1,16 @@
+import { baseServerlessConfiguration } from '@mcbroken/serverless-config'
 import type { AWS } from '@serverless/typescript'
 
 const serverlessConfiguration: AWS = {
-  frameworkVersion: '3',
-  plugins: ['serverless-esbuild', 'serverless-offline'],
-  useDotenv: true,
+  ...baseServerlessConfiguration,
   service: 'mcall',
 
-  package: {
-    individually: true,
-    patterns: [
-      'node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
-      'node_modules/.prisma/client/schema.prisma',
-      '!node_modules/prisma/libquery_engine-*',
-      '!node_modules/@prisma/engines/**'
-    ]
-  },
-
   provider: {
-    name: 'aws',
+    ...baseServerlessConfiguration.provider!,
     region: 'eu-central-1',
-    runtime: 'nodejs20.x',
-    apiGateway: {
-      minimumCompressionSize: 1024
-    },
-    stage: "${opt:stage, 'dev'}",
-    architecture: 'x86_64',
     deploymentBucket: { name: "mcbrokenio-mcall-bucket-dev" },
     environment: {
-      PRISMA_QUERY_ENGINE_LIBRARY: '/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+      ...baseServerlessConfiguration.provider!.environment,
       EXPORT_BUCKET: process.env.EXPORT_BUCKET || '${env:EXPORT_BUCKET}'
     },
     iam: {
@@ -104,19 +87,6 @@ const serverlessConfiguration: AWS = {
         DATABASE_URL: process.env.DATABASE_URL || '${env:DATABASE_URL}',
         EXPORT_BUCKET: process.env.EXPORT_BUCKET || '${env:EXPORT_BUCKET}'
       }
-    },
-  },
-
-  custom: {
-    esbuild: {
-      bundle: true,
-      minify: false,
-      sourcemap: true,
-      exclude: ['aws-sdk'],
-      target: 'node20',
-      define: { 'require.resolve': undefined },
-      platform: 'node',
-      concurrency: 10
     }
   }
 }
