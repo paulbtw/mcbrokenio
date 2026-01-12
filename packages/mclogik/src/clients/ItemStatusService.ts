@@ -8,6 +8,15 @@ import {
 } from './McdonaldsApiClient'
 
 /**
+ * Special marker used in country configurations to indicate that a product
+ * category is not applicable for a particular market (e.g., sundaes in UK).
+ *
+ * When this marker is present in the product codes array, the product
+ * category will be marked as NOT_APPLICABLE instead of checking availability.
+ */
+export const NOT_APPLICABLE_MARKER = 'UNAVAILABLE'
+
+/**
  * Status result for a single product category
  */
 export interface ProductStatus {
@@ -52,7 +61,7 @@ export function checkProductAvailability(
   }
 
   // Special marker indicating product is not applicable for this market
-  if (productCodes.includes('UNAILABLE')) {
+  if (productCodes.includes(NOT_APPLICABLE_MARKER)) {
     return {
       status: 'NOT_APPLICABLE' as ItemStatusEnum,
       count,

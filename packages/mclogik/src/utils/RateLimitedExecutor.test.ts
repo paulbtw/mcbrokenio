@@ -30,7 +30,7 @@ describe('RateLimitedExecutor', () => {
       expect(result.totalProcessed).toBe(5)
       expect(result.failures).toBe(0)
       expect(result.results).toHaveLength(5)
-      expect(result.results.sort((a, b) => a - b)).toEqual([2, 4, 6, 8, 10])
+      expect((result.results as number[]).sort((a, b) => a - b)).toEqual([2, 4, 6, 8, 10])
     })
 
     it('should handle empty items array', async () => {

@@ -1,5 +1,7 @@
 import { ItemStatus } from '@mcbroken/db'
 
+import { NOT_APPLICABLE_MARKER } from '../../clients'
+
 export function checkForProduct(
   outrageProductList: string[],
   items: string[]
@@ -19,7 +21,7 @@ export function checkForProduct(
     }
   }
 
-  if (items.includes('UNAILABLE')) {
+  if (items.includes(NOT_APPLICABLE_MARKER)) {
     return {
       status: ItemStatus.NOT_APPLICABLE,
       count,

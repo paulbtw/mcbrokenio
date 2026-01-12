@@ -7,7 +7,8 @@ import {
   calculateStoreItemStatus,
   checkProductAvailability,
   createItemStatusService,
-  ItemStatusService
+  ItemStatusService,
+  NOT_APPLICABLE_MARKER
 } from './ItemStatusService'
 import { type McdonaldsApiClient } from './McdonaldsApiClient'
 
@@ -24,11 +25,11 @@ describe('checkProductAvailability', () => {
     })
   })
 
-  describe('when product codes include UNAILABLE marker', () => {
+  describe('when product codes include NOT_APPLICABLE_MARKER', () => {
     it('should return NOT_APPLICABLE status', () => {
       const result = checkProductAvailability(
         ['CODE1', 'CODE2'],
-        ['UNAILABLE', 'CODE3']
+        [NOT_APPLICABLE_MARKER, 'CODE3']
       )
 
       expect(result).toEqual({

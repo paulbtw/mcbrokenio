@@ -30,6 +30,9 @@ export interface BatchExecutionResult<T> {
 /**
  * Executes async operations with rate limiting
  * Extracted from getItemStatus to be reusable and testable
+ *
+ * Uses p-queue's built-in rate limiting (intervalCap/interval) to ensure
+ * thread-safe rate limiting across concurrent tasks.
  */
 export class RateLimitedExecutor {
   private readonly limiter: RequestLimiter
@@ -53,24 +56,19 @@ export class RateLimitedExecutor {
     items: TInput[],
     executor: (item: TInput) => Promise<TOutput | null>
   ): Promise<BatchExecutionResult<TOutput>> {
+    // Use p-queue's built-in rate limiting for thread-safe operation
     const queue = new PQueue({
-      concurrency: this.limiter.concurrentRequests
+      concurrency: this.limiter.concurrentRequests,
+      intervalCap: this.limiter.maxRequestsPerSecond,
+      interval: 1000
     })
 
     const results: TOutput[] = []
-    let requestsThisSecond = 0
     let totalProcessed = 0
     let failures = 0
 
     const tasks = items.map((item) =>
       queue.add(async () => {
-        // Rate limiting
-        if (requestsThisSecond >= this.limiter.maxRequestsPerSecond) {
-          await this.sleep(1000)
-          requestsThisSecond = 0
-        }
-
-        requestsThisSecond++
         totalProcessed++
 
         // Progress logging
@@ -103,10 +101,6 @@ export class RateLimitedExecutor {
       totalProcessed,
       failures
     }
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 

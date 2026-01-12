@@ -86,7 +86,7 @@ describe('S3StorageClient', () => {
   describe('constructor', () => {
     it('should use provided S3 client', async () => {
       const mockS3 = createMockS3Client()
-      vi.mocked(mockS3.send).mockResolvedValue({})
+      vi.mocked(mockS3.send).mockResolvedValue({} as never)
 
       const client = new S3StorageClient(
         { bucket: 'test-bucket', region: 'us-east-1' },
@@ -100,7 +100,7 @@ describe('S3StorageClient', () => {
 
     it('should default publicRead to true', async () => {
       const mockS3 = createMockS3Client()
-      vi.mocked(mockS3.send).mockResolvedValue({})
+      vi.mocked(mockS3.send).mockResolvedValue({} as never)
 
       const client = new S3StorageClient(
         { bucket: 'test-bucket', region: 'us-east-1' },
@@ -109,7 +109,7 @@ describe('S3StorageClient', () => {
 
       await client.uploadJson('test.json', {})
 
-      const callArg = vi.mocked(mockS3.send).mock.calls[0][0] as unknown as {
+      const callArg = vi.mocked(mockS3.send).mock.calls[0]![0] as unknown as {
         input: { ACL?: string }
       }
       expect(callArg.input.ACL).toBe('public-read')
@@ -117,7 +117,7 @@ describe('S3StorageClient', () => {
 
     it('should respect publicRead=false', async () => {
       const mockS3 = createMockS3Client()
-      vi.mocked(mockS3.send).mockResolvedValue({})
+      vi.mocked(mockS3.send).mockResolvedValue({} as never)
 
       const client = new S3StorageClient(
         { bucket: 'test-bucket', region: 'us-east-1', publicRead: false },
@@ -126,7 +126,7 @@ describe('S3StorageClient', () => {
 
       await client.uploadJson('test.json', {})
 
-      const callArg = vi.mocked(mockS3.send).mock.calls[0][0] as unknown as {
+      const callArg = vi.mocked(mockS3.send).mock.calls[0]![0] as unknown as {
         input: { ACL?: string }
       }
       expect(callArg.input.ACL).toBeUndefined()
@@ -136,7 +136,7 @@ describe('S3StorageClient', () => {
   describe('uploadJson', () => {
     it('should send PutObjectCommand with correct params', async () => {
       const mockS3 = createMockS3Client()
-      vi.mocked(mockS3.send).mockResolvedValue({})
+      vi.mocked(mockS3.send).mockResolvedValue({} as never)
 
       const client = new S3StorageClient(
         { bucket: 'test-bucket', region: 'us-east-1' },
@@ -146,7 +146,7 @@ describe('S3StorageClient', () => {
       await client.uploadJson('data.json', { test: 'data' })
 
       expect(mockS3.send).toHaveBeenCalledTimes(1)
-      const callArg = vi.mocked(mockS3.send).mock.calls[0][0] as unknown as {
+      const callArg = vi.mocked(mockS3.send).mock.calls[0]![0] as unknown as {
         input: {
           Bucket: string
           Key: string
@@ -162,7 +162,7 @@ describe('S3StorageClient', () => {
 
     it('should handle BigInt values in data', async () => {
       const mockS3 = createMockS3Client()
-      vi.mocked(mockS3.send).mockResolvedValue({})
+      vi.mocked(mockS3.send).mockResolvedValue({} as never)
 
       const client = new S3StorageClient(
         { bucket: 'test-bucket', region: 'us-east-1' },
@@ -171,7 +171,7 @@ describe('S3StorageClient', () => {
 
       await client.uploadJson('data.json', { count: BigInt(12345) })
 
-      const callArg = vi.mocked(mockS3.send).mock.calls[0][0] as unknown as {
+      const callArg = vi.mocked(mockS3.send).mock.calls[0]![0] as unknown as {
         input: { Body: string }
       }
       // BigInt should be converted to number

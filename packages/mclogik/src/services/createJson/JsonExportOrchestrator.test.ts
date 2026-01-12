@@ -182,7 +182,7 @@ describe('JsonExportOrchestrator', () => {
 
       const statsData = inMemoryStorage.get('stats.json') as CountryStats[]
       expect(statsData).toHaveLength(1)
-      expect(statsData[0].country).toBe('US')
+      expect(statsData[0]!.country).toBe('US')
     })
 
     it('should propagate storage errors', async () => {

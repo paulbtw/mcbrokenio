@@ -3,8 +3,10 @@ export {
   checkProductAvailability,
   createItemStatusService,
   ItemStatusService,
+  NOT_APPLICABLE_MARKER,
   type ProductStatus,
-  type StoreItemStatus} from './ItemStatusService'
+  type StoreItemStatus
+} from './ItemStatusService'
 export {
   API_CLIENT_CONFIGS,
   type ApiClientConfig,
@@ -21,4 +23,5 @@ export {
   InMemoryStorageClient,
   S3StorageClient,
   type S3StorageClientConfig,
-  type StorageClient} from './StorageClient'
+  type StorageClient
+} from './StorageClient'
