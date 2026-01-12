@@ -9,6 +9,18 @@ const logger = new Logger('savePos')
 const PREPARED_STATEMENT_LIMIT = 32767 - 1
 const PREPARED_STATEMENT_COUNT = 7
 
+/**
+ * Save or update multiple POS records in the database.
+ *
+ * @remarks
+ * **Breaking Change:** This function no longer calls `prisma.$disconnect()`.
+ * Callers are responsible for managing the Prisma client lifecycle.
+ * For Lambda handlers, connection cleanup happens automatically at the end of the handler.
+ * For long-running processes, ensure you handle connection cleanup appropriately.
+ *
+ * @param posArray - Array of POS records to upsert
+ * @throws Re-throws any database errors after logging
+ */
 export async function savePos(posArray: CreatePos[]) {
 
   const chunkedPosArray = chunkArray(posArray, Math.floor(PREPARED_STATEMENT_LIMIT / PREPARED_STATEMENT_COUNT))
@@ -36,7 +48,6 @@ export async function savePos(posArray: CreatePos[]) {
   } catch (error) {
     logger.error(error as Error)
     logger.error('error while saving pos')
-  } finally {
-    await prisma.$disconnect()
+    throw error
   }
 }

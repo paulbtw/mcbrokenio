@@ -5,6 +5,18 @@ import { type UpdatePos } from '../../types'
 
 const logger = new Logger('updatePos')
 
+/**
+ * Update item status for multiple POS records in the database.
+ *
+ * @remarks
+ * **Breaking Change:** This function no longer calls `prisma.$disconnect()`.
+ * Callers are responsible for managing the Prisma client lifecycle.
+ * For Lambda handlers, connection cleanup happens automatically at the end of the handler.
+ * For long-running processes, ensure you handle connection cleanup appropriately.
+ *
+ * @param posArray - Array of POS records with updated status information
+ * @throws Re-throws any database errors after logging
+ */
 export async function updatePos(posArray: UpdatePos[]) {
 
 
@@ -42,9 +54,7 @@ export async function updatePos(posArray: UpdatePos[]) {
     )
   } catch (error) {
     logger.error(error as Error)
-
     logger.error('error while saving pos')
-  } finally {
-    await prisma.$disconnect()
+    throw error
   }
 }
