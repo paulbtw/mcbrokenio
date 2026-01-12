@@ -46,8 +46,7 @@ export class S3StorageClient implements StorageClient {
     this.bucket = config.bucket
     this.publicRead = config.publicRead ?? true
     this.s3 = s3Client ?? new S3Client({
-      region: config.region,
-      apiVersion: '2012-10-17'
+      region: config.region
     })
   }
 

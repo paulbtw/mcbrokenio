@@ -159,7 +159,7 @@ export class PrismaPosRepository implements PosRepository {
 
     logger.info(`Upserting ${posArray.length} stores`)
     const chunkedPosArray = chunkArray(
-      posArray,
+      [...posArray],
       Math.floor(PREPARED_STATEMENT_LIMIT / PREPARED_STATEMENT_COUNT)
     )
 
