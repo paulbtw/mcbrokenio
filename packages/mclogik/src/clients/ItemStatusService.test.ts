@@ -1,7 +1,7 @@
 import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
-import { APIType, IceType,type ICountryInfos } from '../types'
+import { APIType, IceType, type ICountryInfos, UsLocations } from '../types'
 
 import {
   calculateStoreItemStatus,
@@ -123,7 +123,7 @@ describe('calculateStoreItemStatus', () => {
   const createCountryInfo = (
     overrides: Partial<ICountryInfos> = {}
   ): ICountryInfos => ({
-    country: 'US' as never,
+    country: UsLocations.US,
     getStores: {
       api: APIType.US,
       url: 'https://example.com'
@@ -239,7 +239,7 @@ describe('ItemStatusService', () => {
   })
 
   const createCountryInfo = (): ICountryInfos => ({
-    country: 'US' as never,
+    country: UsLocations.US,
     getStores: {
       api: APIType.US,
       url: 'https://example.com'
@@ -255,7 +255,8 @@ describe('ItemStatusService', () => {
     it('should fetch outages and calculate status', async () => {
       const mockApiClient = createMockApiClient()
       vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: ['SHAKE1', 'FLURRY1']
+        outageProductCodes: ['SHAKE1', 'FLURRY1'],
+        success: true
       })
 
       const service = new ItemStatusService(mockApiClient)
@@ -287,7 +288,8 @@ describe('ItemStatusService', () => {
     it('should return all available when no outages', async () => {
       const mockApiClient = createMockApiClient()
       vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: []
+        outageProductCodes: [],
+        success: true
       })
 
       const service = new ItemStatusService(mockApiClient)
@@ -304,6 +306,27 @@ describe('ItemStatusService', () => {
       expect(result!.milkshake.status).toBe('AVAILABLE')
       expect(result!.mcFlurry.status).toBe('AVAILABLE')
       expect(result!.mcSundae.status).toBe('AVAILABLE')
+    })
+
+    it('should return null when API call fails', async () => {
+      const mockApiClient = createMockApiClient()
+      vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
+        outageProductCodes: [],
+        success: false
+      })
+
+      const service = new ItemStatusService(mockApiClient)
+      const pos = createMockPos()
+      const countryInfo = createCountryInfo()
+
+      const result = await service.getStoreItemStatus(
+        pos,
+        countryInfo,
+        'test-token',
+        'test-client-id'
+      )
+
+      expect(result).toBeNull()
     })
   })
 

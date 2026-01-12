@@ -11,6 +11,8 @@ const logger = new Logger('McdonaldsApiClient')
 export interface OutageResponse {
   /** Product codes that are currently unavailable */
   outageProductCodes: string[]
+  /** Whether the API call was successful (false indicates an error occurred) */
+  success: boolean
 }
 
 /**
@@ -120,10 +122,10 @@ export class StandardApiClient implements McdonaldsApiClient {
       const outageProductCodes =
         data.response?.restaurant?.catalog?.outageProductCodes ?? []
 
-      return { outageProductCodes }
+      return { outageProductCodes, success: true }
     } catch (error) {
       this.handleError(error, storeNumber)
-      return { outageProductCodes: [] }
+      return { outageProductCodes: [], success: false }
     }
   }
 
@@ -177,10 +179,10 @@ export class ElApiClient implements McdonaldsApiClient {
         (code) => code.toString()
       )
 
-      return { outageProductCodes }
+      return { outageProductCodes, success: true }
     } catch (error) {
       this.handleError(error, storeNumber)
-      return { outageProductCodes: [] }
+      return { outageProductCodes: [], success: false }
     }
   }
 

@@ -64,18 +64,11 @@ export class RateLimitedExecutor {
     })
 
     const results: TOutput[] = []
-    let totalProcessed = 0
+    let totalCompleted = 0
     let failures = 0
 
     const tasks = items.map((item) =>
       queue.add(async () => {
-        totalProcessed++
-
-        // Progress logging
-        if (totalProcessed % this.limiter.requestsPerLog === 0) {
-          this.executorLogger.debug(`Processed ${totalProcessed}/${items.length}`)
-        }
-
         try {
           const result = await executor(item)
           if (result !== null) {
@@ -87,18 +80,26 @@ export class RateLimitedExecutor {
           failures++
           this.executorLogger.error(`Error processing item: ${error}`)
         }
+
+        // Increment after async work completes for accurate progress
+        totalCompleted++
+
+        // Progress logging
+        if (totalCompleted % this.limiter.requestsPerLog === 0) {
+          this.executorLogger.debug(`Completed ${totalCompleted}/${items.length}`)
+        }
       })
     )
 
     await Promise.all(tasks)
 
     this.executorLogger.info(
-      `Completed: ${results.length} successful, ${failures} failed out of ${totalProcessed} total`
+      `Completed: ${results.length} successful, ${failures} failed out of ${totalCompleted} total`
     )
 
     return {
       results,
-      totalProcessed,
+      totalProcessed: totalCompleted,
       failures
     }
   }

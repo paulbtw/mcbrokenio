@@ -1,4 +1,4 @@
-import { type ItemStatus as ItemStatusEnum, type Pos } from '@mcbroken/db'
+import { ItemStatus, type Pos } from '@mcbroken/db'
 
 import { type ICountryInfos } from '../types'
 
@@ -13,14 +13,16 @@ import {
  *
  * When this marker is present in the product codes array, the product
  * category will be marked as NOT_APPLICABLE instead of checking availability.
+ *
+ * Note: This uses a distinct value to avoid confusion with the ItemStatus enum.
  */
-export const NOT_APPLICABLE_MARKER = 'UNAVAILABLE'
+export const NOT_APPLICABLE_MARKER = '__NOT_APPLICABLE__'
 
 /**
  * Status result for a single product category
  */
 export interface ProductStatus {
-  status: ItemStatusEnum
+  status: ItemStatus
   count: number
   unavailable: number
   name?: string
@@ -54,7 +56,7 @@ export function checkProductAvailability(
   // No products defined for this category
   if (productCodes.length === 0) {
     return {
-      status: 'UNAVAILABLE' as ItemStatusEnum,
+      status: ItemStatus.UNAVAILABLE,
       count,
       unavailable
     }
@@ -63,7 +65,7 @@ export function checkProductAvailability(
   // Special marker indicating product is not applicable for this market
   if (productCodes.includes(NOT_APPLICABLE_MARKER)) {
     return {
-      status: 'NOT_APPLICABLE' as ItemStatusEnum,
+      status: ItemStatus.NOT_APPLICABLE,
       count,
       unavailable
     }
@@ -77,13 +79,13 @@ export function checkProductAvailability(
   }
 
   // Determine overall status
-  let status: ItemStatusEnum
+  let status: ItemStatus
   if (unavailable === count) {
-    status = 'UNAVAILABLE' as ItemStatusEnum
+    status = ItemStatus.UNAVAILABLE
   } else if (unavailable > 0) {
-    status = 'PARTIAL_AVAILABLE' as ItemStatusEnum
+    status = ItemStatus.PARTIAL_AVAILABLE
   } else {
-    status = 'AVAILABLE' as ItemStatusEnum
+    status = ItemStatus.AVAILABLE
   }
 
   return {
@@ -166,9 +168,11 @@ export class ItemStatusService {
       headers
     )
 
-    // If we got no outage codes at all, the API call may have failed
-    // The API client handles errors internally and returns empty array
-    // We still calculate status - an empty outage list means everything available
+    // If the API call failed, return null to indicate we couldn't check
+    // This distinguishes "no outages" (success=true, empty array) from "couldn't check" (success=false)
+    if (!response.success) {
+      return null
+    }
 
     return calculateStoreItemStatus(response.outageProductCodes, countryInfo)
   }

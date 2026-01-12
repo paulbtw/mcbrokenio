@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { type McdonaldsApiClient } from '../../clients'
 import { type RequestLimiter } from '../../constants/RateLimit'
 import { type PosRepository } from '../../repositories'
-import { APIType, IceType,type ICountryInfos } from '../../types'
+import { APIType, IceType, type ICountryInfos, UsLocations } from '../../types'
 
 import {
   createItemStatusOrchestrator,
@@ -55,7 +55,7 @@ describe('ItemStatusOrchestrator', () => {
   })
 
   const createCountryInfo = (country: string = 'US'): ICountryInfos => ({
-    country: country as never,
+    country: country === 'US' ? UsLocations.US : (country as UsLocations),
     getStores: {
       api: APIType.US,
       url: 'https://example.com'
@@ -80,7 +80,8 @@ describe('ItemStatusOrchestrator', () => {
 
       vi.mocked(mockPosRepository.findByCountries).mockResolvedValue(stores)
       vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: ['SHAKE1']
+        outageProductCodes: ['SHAKE1'],
+        success: true
       })
       vi.mocked(mockPosRepository.updateManyStatus).mockResolvedValue(2)
 
@@ -99,6 +100,7 @@ describe('ItemStatusOrchestrator', () => {
       expect(result.storesChecked).toBe(2)
       expect(result.storesUpdated).toBe(2)
       expect(result.failures).toBe(0)
+      expect(result.skipped).toBe(0)
 
       expect(mockPosRepository.findByCountries).toHaveBeenCalledWith(
         ['US'],
@@ -144,13 +146,14 @@ describe('ItemStatusOrchestrator', () => {
       expect(result).toEqual({
         storesChecked: 0,
         storesUpdated: 0,
-        failures: 0
+        failures: 0,
+        skipped: 0
       })
 
       expect(mockPosRepository.updateManyStatus).not.toHaveBeenCalled()
     })
 
-    it('should handle stores without matching country info', async () => {
+    it('should handle stores without matching country info as skipped', async () => {
       const mockPosRepository = createMockPosRepository()
       const mockApiClient = createMockApiClient()
       const rateLimiter = createRateLimiter()
@@ -162,7 +165,8 @@ describe('ItemStatusOrchestrator', () => {
 
       vi.mocked(mockPosRepository.findByCountries).mockResolvedValue(stores)
       vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: []
+        outageProductCodes: [],
+        success: true
       })
       vi.mocked(mockPosRepository.updateManyStatus).mockResolvedValue(1)
 
@@ -180,7 +184,8 @@ describe('ItemStatusOrchestrator', () => {
 
       expect(result.storesChecked).toBe(2)
       expect(result.storesUpdated).toBe(1)
-      expect(result.failures).toBe(1) // CA store counted as failure
+      expect(result.failures).toBe(0)
+      expect(result.skipped).toBe(1) // CA store counted as skipped, not failure
     })
 
     it('should handle API errors gracefully', async () => {
@@ -195,8 +200,8 @@ describe('ItemStatusOrchestrator', () => {
 
       vi.mocked(mockPosRepository.findByCountries).mockResolvedValue(stores)
       vi.mocked(mockApiClient.fetchRestaurantOutages)
-        .mockResolvedValueOnce({ outageProductCodes: [] })
-        .mockRejectedValueOnce(new Error('API Error'))
+        .mockResolvedValueOnce({ outageProductCodes: [], success: true })
+        .mockResolvedValueOnce({ outageProductCodes: [], success: false }) // API failure
       vi.mocked(mockPosRepository.updateManyStatus).mockResolvedValue(1)
 
       const orchestrator = new ItemStatusOrchestrator({
@@ -212,11 +217,12 @@ describe('ItemStatusOrchestrator', () => {
       })
 
       expect(result.storesChecked).toBe(2)
-      // One succeeded, one failed
-      expect(result.failures).toBeGreaterThanOrEqual(1)
+      expect(result.storesUpdated).toBe(1)
+      expect(result.failures).toBe(1) // One API failure
+      expect(result.skipped).toBe(0)
     })
 
-    it('should not call updateManyStatus when all stores fail', async () => {
+    it('should not call updateManyStatus when all stores are skipped', async () => {
       const mockPosRepository = createMockPosRepository()
       const mockApiClient = createMockApiClient()
       const rateLimiter = createRateLimiter()
@@ -237,7 +243,10 @@ describe('ItemStatusOrchestrator', () => {
         clientId: 'test-client'
       })
 
+      expect(result.storesChecked).toBe(1)
       expect(result.storesUpdated).toBe(0)
+      expect(result.failures).toBe(0)
+      expect(result.skipped).toBe(1)
       expect(mockPosRepository.updateManyStatus).not.toHaveBeenCalled()
     })
 
@@ -250,7 +259,8 @@ describe('ItemStatusOrchestrator', () => {
 
       vi.mocked(mockPosRepository.findByCountries).mockResolvedValue(stores)
       vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: []
+        outageProductCodes: [],
+        success: true
       })
       vi.mocked(mockPosRepository.updateManyStatus).mockResolvedValue(1)
 

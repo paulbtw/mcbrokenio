@@ -47,8 +47,10 @@ export interface ItemStatusUpdateResult {
   storesChecked: number
   /** Number of stores successfully updated */
   storesUpdated: number
-  /** Number of failures */
+  /** Number of API failures (errors during fetch) */
   failures: number
+  /** Number of stores skipped due to missing country config */
+  skipped: number
 }
 
 /**
@@ -96,7 +98,32 @@ export class ItemStatusOrchestrator {
       return {
         storesChecked: 0,
         storesUpdated: 0,
-        failures: 0
+        failures: 0,
+        skipped: 0
+      }
+    }
+
+    // Filter stores by those with valid country config
+    // Track skipped stores separately from API failures
+    const storesWithConfig: Array<{ pos: Pos; countryInfo: ICountryInfos }> = []
+    let skipped = 0
+
+    for (const pos of storesToCheck) {
+      const countryInfo = countriesRecord[pos.country]
+      if (!countryInfo) {
+        logger.warn(`No country info for store ${pos.id} in ${pos.country} - skipping`)
+        skipped++
+      } else {
+        storesWithConfig.push({ pos, countryInfo })
+      }
+    }
+
+    if (storesWithConfig.length === 0) {
+      return {
+        storesChecked: storesToCheck.length,
+        storesUpdated: 0,
+        failures: 0,
+        skipped
       }
     }
 
@@ -110,15 +137,10 @@ export class ItemStatusOrchestrator {
     )
 
     // Fetch status for each store with rate limiting
+    // Only stores with valid config are passed here, so failures are true API errors
     const { results, failures } = await executor.executeAll(
-      storesToCheck,
-      async (pos: Pos) => {
-        const countryInfo = countriesRecord[pos.country]
-        if (!countryInfo) {
-          logger.warn(`No country info for store ${pos.id} in ${pos.country}`)
-          return null
-        }
-
+      storesWithConfig,
+      async ({ pos, countryInfo }) => {
         const status = await itemStatusService.getStoreItemStatus(
           pos,
           countryInfo,
@@ -142,7 +164,8 @@ export class ItemStatusOrchestrator {
     return {
       storesChecked: storesToCheck.length,
       storesUpdated: results.length,
-      failures
+      failures,
+      skipped
     }
   }
 
