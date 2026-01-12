@@ -42,9 +42,7 @@ export async function updatePos(posArray: UpdatePos[]) {
     )
   } catch (error) {
     logger.error(error as Error)
-
     logger.error('error while saving pos')
-  } finally {
-    await prisma.$disconnect()
+    throw error
   }
 }

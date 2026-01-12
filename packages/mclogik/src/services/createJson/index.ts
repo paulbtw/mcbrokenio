@@ -45,7 +45,5 @@ export async function createJson() {
   } catch (error) {
     console.error('Error in createJson:', error)
     throw error
-  } finally {
-    await prisma.$disconnect()
   }
 }

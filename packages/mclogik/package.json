@@ -28,6 +28,8 @@
   "exports": {
     "./constants": "./src/constants/index.ts",
     "./types": "./src/types/index.ts",
+    "./repositories": "./src/repositories/index.ts",
+    "./clients": "./src/clients/index.ts",
     "./createJson": "./src/services/createJson/index.ts",
     "./getAllStores": "./src/services/getAllStores/index.ts",
     "./getItemStatus": "./src/services/getItemStatus/index.ts"
