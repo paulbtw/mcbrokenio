@@ -4,7 +4,8 @@ import { Logger } from '@sailplane/logger'
 import {
   createItemStatusService,
   type McdonaldsApiClient,
-  type StoreItemStatus} from '../../clients'
+  type StoreItemStatus
+} from '../../clients'
 import { type RequestLimiter } from '../../constants/RateLimit'
 import {
   type PosRepository,

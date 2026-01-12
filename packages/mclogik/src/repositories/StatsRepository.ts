@@ -88,7 +88,9 @@ export class PrismaStatsRepository implements StatsRepository {
       }))
     } catch (error) {
       logger.error(error as Error)
-      throw new Error('Failed to get aggregated stats')
+      throw new Error(
+        `Failed to get aggregated stats: ${error instanceof Error ? error.message : error}`
+      )
     }
   }
 }
