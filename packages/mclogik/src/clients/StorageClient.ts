@@ -73,9 +73,14 @@ export class S3StorageClient implements StorageClient {
 
   /**
    * JSON replacer function to handle BigInt values
+   * Converts to Number if safe, otherwise to string to preserve precision
    */
   private bigIntReplacer(_key: string, value: unknown): unknown {
     if (typeof value === 'bigint') {
+      // Convert to string if value exceeds safe integer range to preserve precision
+      if (value > BigInt(Number.MAX_SAFE_INTEGER) || value < BigInt(Number.MIN_SAFE_INTEGER)) {
+        return value.toString()
+      }
       return Number(value)
     }
     return value

@@ -98,7 +98,7 @@ export class PrismaPosRepository implements PosRepository {
       })
     } catch (error) {
       logger.error(error as Error)
-      throw new Error('Failed to find stores by countries')
+      throw new Error(`Failed to find stores by countries: ${error instanceof Error ? error.message : error}`)
     }
   }
 
@@ -107,7 +107,7 @@ export class PrismaPosRepository implements PosRepository {
       return await this.prisma.pos.findMany()
     } catch (error) {
       logger.error(error as Error)
-      throw new Error('Failed to find all stores')
+      throw new Error(`Failed to find all stores: ${error instanceof Error ? error.message : error}`)
     }
   }
 
@@ -148,7 +148,7 @@ export class PrismaPosRepository implements PosRepository {
       return posArray.length
     } catch (error) {
       logger.error(error as Error)
-      throw new Error('Failed to update store statuses')
+      throw new Error(`Failed to update store statuses: ${error instanceof Error ? error.message : error}`)
     }
   }
 
@@ -186,7 +186,7 @@ export class PrismaPosRepository implements PosRepository {
       return posArray.length
     } catch (error) {
       logger.error(error as Error)
-      throw new Error('Failed to upsert stores')
+      throw new Error(`Failed to upsert stores: ${error instanceof Error ? error.message : error}`)
     }
   }
 }
