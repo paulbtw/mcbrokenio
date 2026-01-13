@@ -22,7 +22,7 @@ The project idea is inspired by [McBroken.com](https://mcbroken.com/) made by [r
 
 This project uses a monorepo structure managed by Turborepo:
 
-```
+```text
 apps/
 ├── frontend/      # Next.js 15 application - @mcbroken/frosty
 ├── mcall/         # Serverless: EU region - @mcbroken/mcall
@@ -73,8 +73,8 @@ pnpm turbo run test
 
 # Invoke a serverless function locally
 cd apps/mcall
-pnpm invoke -f functionName
-pnpm invoke -f getItemStatus --data '{"countryList": ["US"]}'
+pnpm invoke functionName
+pnpm invoke getItemStatus -- --data '{"countryList": ["US"]}'
 ```
 
 ## Documentation
