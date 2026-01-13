@@ -68,5 +68,6 @@ migrations.json
 memory-bank
 .cursorrules
 .turbo
+.context
 
 packages/database/generated
