@@ -1,9 +1,3 @@
-export enum IceType {
-  MCFLURRY = 'MCFLURRY',
-  MCSUNDAE = 'MCSUNDAE',
-  MILCHSHAKE = 'MILCHSHAKE',
-}
-
 export enum ItemStatus {
   'AVAILABLE' = 'AVAILABLE',
   'PARTIAL_AVAILABLE' = 'PARTIAL_AVAILABLE',
