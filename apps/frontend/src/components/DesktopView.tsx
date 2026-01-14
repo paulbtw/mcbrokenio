@@ -25,7 +25,7 @@ export function DesktopView({ geo }: DesktopViewProps) {
     debouncedViewState,
     panToLocation
   } = useMapInteractions({ geo })
-  console.log(hoveredItem)
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="col-span-2 rounded-xl bg-white p-4 shadow-sm dark:bg-slate-800">
