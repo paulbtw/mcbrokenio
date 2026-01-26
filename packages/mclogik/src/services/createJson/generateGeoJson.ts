@@ -15,8 +15,14 @@ const unavailable: ItemStatus[] = [
 function getColorDot(
   hasMcFlurry: ItemStatus,
   hasMcSundae: ItemStatus,
-  hasMilchshake: ItemStatus
+  hasMilchshake: ItemStatus,
+  isResponsive: boolean
 ) {
+  // Non-responsive stores get GREY (same as stores without mobile ordering)
+  if (!isResponsive) {
+    return 'GREY'
+  }
+
   if (
     hasMcFlurry === unknown &&
     hasMcSundae === unknown &&
@@ -47,7 +53,8 @@ export function createGeoJson(allPos: Pos[]): GeoJson {
     const dot = getColorDot(
       pos.mcSundaeStatus,
       pos.mcFlurryStatus,
-      pos.milkshakeStatus
+      pos.milkshakeStatus,
+      pos.isResponsive
     )
 
     return {
@@ -71,6 +78,7 @@ export function createGeoJson(allPos: Pos[]): GeoJson {
         name: pos.name,
         dot,
         hasMobileOrdering: pos.hasMobileOrdering,
+        isResponsive: pos.isResponsive,
         id: pos.id
       },
       type: 'Feature'

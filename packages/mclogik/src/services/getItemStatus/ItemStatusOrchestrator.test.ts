@@ -38,6 +38,8 @@ describe('ItemStatusOrchestrator', () => {
     longitude: '-74.0060',
     country: 'US',
     hasMobileOrdering: true,
+    errorCounter: 0,
+    isResponsive: true,
     mcFlurryCount: 0,
     mcFlurryError: 0,
     mcFlurryStatus: 'UNKNOWN',

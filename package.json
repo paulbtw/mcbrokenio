@@ -12,7 +12,11 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "check-api": "ts-node --transpile-only scripts/check-api-health.ts",
+    "check-api:us": "ts-node --transpile-only scripts/check-api-health.ts us",
+    "check-api:europe": "ts-node --transpile-only scripts/check-api-health.ts europe",
+    "check-api:australia": "ts-node --transpile-only scripts/check-api-health.ts australia"
   },
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",

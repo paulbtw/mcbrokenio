@@ -29,6 +29,8 @@ model Pos {
   milkshakeStatus     ItemStatus @default(UNKNOWN)
   customItems         Json       @default("[]")
   hasMobileOrdering   Boolean    @default(false)
+  errorCounter        Int        @default(0)
+  isResponsive        Boolean    @default(true)
   lastChecked         DateTime?
   country             String
   updatedAt           DateTime   @updatedAt @default(now())
