@@ -46,6 +46,8 @@ export async function updatePos(posArray: UpdatePos[]) {
             milkshakeError: pos.milkshakeError,
             milkshakeStatus: pos.milkshakeStatus,
             customItems: pos.customItems,
+            errorCounter: pos.errorCounter,
+            isResponsive: pos.isResponsive,
             lastChecked: now,
             updatedAt: now
           }

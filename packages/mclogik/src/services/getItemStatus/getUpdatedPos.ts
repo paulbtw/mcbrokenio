@@ -4,7 +4,18 @@ import { type UpdatePos } from '../../types'
 
 import { type GetItemStatus } from './getItemStatus/getItemStatusEu'
 
-export function getUpdatedPos(pos: Pos, itemStatus: GetItemStatus) {
+/**
+ * Number of consecutive API failures before marking a store as unresponsive.
+ * Value of 3 balances false positives (transient network issues) against
+ * detection speed (quickly identifying truly broken APIs).
+ */
+const ERROR_THRESHOLD = 3
+
+/**
+ * Build update payload for a successful API response.
+ * Resets errorCounter and ensures isResponsive = true.
+ */
+export function getUpdatedPos(pos: Pos, itemStatus: GetItemStatus): UpdatePos {
   const { milkshake, mcFlurry, mcSundae, custom } = itemStatus
 
   const updatedPos: UpdatePos = {
@@ -23,8 +34,25 @@ export function getUpdatedPos(pos: Pos, itemStatus: GetItemStatus) {
       count: customItem.count,
       error: customItem.unavailable,
       status: customItem.status
-    }))
+    })),
+    errorCounter: 0,
+    isResponsive: true
   }
 
   return updatedPos
+}
+
+/**
+ * Build update payload for a failed API response.
+ * Increments errorCounter and sets isResponsive = false if threshold reached.
+ */
+export function getFailedPos(pos: Pos): UpdatePos {
+  const newErrorCount = pos.errorCounter + 1
+  const isResponsive = newErrorCount < ERROR_THRESHOLD
+
+  return {
+    id: pos.id,
+    errorCounter: newErrorCount,
+    isResponsive
+  }
 }

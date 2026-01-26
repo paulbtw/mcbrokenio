@@ -27,6 +27,7 @@ export interface GeoJsonPos {
     name: string
     dot: 'RED' | 'YELLOW' | 'GREEN' | 'GREY'
     hasMobileOrdering: boolean
+    isResponsive: boolean
     id: string
   }
   type: 'Feature'
