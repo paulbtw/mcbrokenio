@@ -37,6 +37,8 @@ describe('JsonExportOrchestrator', () => {
     longitude: '-74.0060',
     country: 'US',
     hasMobileOrdering: true,
+    errorCounter: 0,
+    isResponsive: true,
     mcFlurryCount: 2,
     mcFlurryError: 0,
     mcFlurryStatus: 'AVAILABLE',
@@ -272,7 +274,8 @@ describe('JsonExportOrchestrator', () => {
           hasMilchshake: 'AVAILABLE',
           hasMcFlurry: 'UNAVAILABLE',
           hasMcSundae: 'PARTIAL_AVAILABLE',
-          hasMobileOrdering: true
+          hasMobileOrdering: true,
+          isResponsive: true
         }
       })
     })

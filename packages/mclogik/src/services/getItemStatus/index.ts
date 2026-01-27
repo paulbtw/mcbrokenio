@@ -8,7 +8,7 @@ import { getMetaForApi } from '../../utils/getMetaForApi'
 import { getPosByCountries } from '../../utils/getPosByCountries'
 
 import { getItemStatusMap } from './getItemStatus/index'
-import { getUpdatedPos } from './getUpdatedPos'
+import { getFailedPos, getUpdatedPos } from './getUpdatedPos'
 import { updatePos } from './updatePos'
 
 const logger = new Logger('getItemStatus')
@@ -62,11 +62,21 @@ export async function getItemStatus(
     )
 
     if (itemStatus == null) {
+      // API call failed - track the failure
+      const failedPosUpdate = getFailedPos(pos)
+      posMap.set(pos.id, failedPosUpdate)
+
+      // Log when a store transitions to unresponsive
+      if (pos.isResponsive && !failedPosUpdate.isResponsive) {
+        logger.warn(
+          `Store ${pos.id} (${pos.name}) marked as unresponsive after ${failedPosUpdate.errorCounter} consecutive failures`
+        )
+      }
       return
     }
 
+    // API call succeeded - reset error counter and update status
     const posToUpdate = getUpdatedPos(pos, itemStatus)
-
     posMap.set(pos.id, posToUpdate)
   }
 
