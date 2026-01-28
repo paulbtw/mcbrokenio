@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/aws-serverless'
 
+// Ensures Sentry.init() is only called once per Lambda container
 let initializationAttempted = false
 
 export type Region = 'eu' | 'us' | 'au'
@@ -20,7 +21,7 @@ export function initSentry(config: SentryConfig): void {
 
   Sentry.init({
     dsn,
-    environment: process.env.NODE_ENV || 'production',
+    environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'production',
     initialScope: {
       tags: { region: config.region },
     },

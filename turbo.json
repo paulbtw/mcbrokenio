@@ -5,7 +5,7 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["DATABASE_URL", "BASIC_TOKEN_EU", "KEY", "BASIC_TOKEN_AP", "BASIC_TOKEN_US", "BASIC_TOKEN_EL", "EXPORT_BUCKET", "MCD_DEVICEID", "API_KEY_AP", "SENTRY_DSN", "NODE_ENV"]
+      "env": ["DATABASE_URL", "BASIC_TOKEN_EU", "KEY", "BASIC_TOKEN_AP", "BASIC_TOKEN_US", "BASIC_TOKEN_EL", "EXPORT_BUCKET", "MCD_DEVICEID", "API_KEY_AP", "SENTRY_DSN", "SENTRY_ENVIRONMENT", "NODE_ENV"]
     },
     "lint": {
       "dependsOn": ["^lint"]
