@@ -14,6 +14,7 @@
     "@aws-sdk/client-s3": "^3.962.0",
     "@mcbroken/db": "workspace:*",
     "@sailplane/logger": "^4.2.0",
+    "@sentry/aws-serverless": "^9.17.0",
     "axios": "^1.13.2",
     "p-queue": "^7.4.1"
   },
@@ -30,6 +31,7 @@
     "./types": "./src/types/index.ts",
     "./repositories": "./src/repositories/index.ts",
     "./clients": "./src/clients/index.ts",
+    "./sentry": "./src/sentry/index.ts",
     "./createJson": "./src/services/createJson/index.ts",
     "./getAllStores": "./src/services/getAllStores/index.ts",
     "./getItemStatus": "./src/services/getItemStatus/index.ts"
