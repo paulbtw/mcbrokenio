@@ -1,18 +1,13 @@
-import { createJson } from '@mcbroken/mclogik/createJson';
+import { createJson } from '@mcbroken/mclogik/createJson'
+import { initSentry, wrapHandler } from '@mcbroken/mclogik/sentry'
 
-export const handler = async () => {
-  try {
-    await createJson()
+initSentry({ region: 'eu' })
 
-    return {
-      statusCode: 200,
-      success: true
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Error in createJson handler:', errorMessage, error)
+export const handler = wrapHandler(async () => {
+  await createJson()
 
-    // Throw to let Lambda handle retries for scheduled events
-    throw error
+  return {
+    statusCode: 200,
+    success: true,
   }
-}
+})

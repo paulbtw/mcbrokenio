@@ -1,37 +1,24 @@
 import { defaultRequestLimiterEu } from '@mcbroken/mclogik/constants'
 import { getItemStatus } from '@mcbroken/mclogik/getItemStatus'
+import { initSentry, wrapHandler } from '@mcbroken/mclogik/sentry'
 import { APIType } from '@mcbroken/mclogik/types'
 
-export const handlerEu = async () => {
-  try {
-    await getItemStatus(APIType.EU, defaultRequestLimiterEu)
+initSentry({ region: 'eu' })
 
-    return {
-      statusCode: 200,
-      success: true
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Error in getItemStatus handlerEu:', errorMessage, error)
+export const handlerEu = wrapHandler(async () => {
+  await getItemStatus(APIType.EU, defaultRequestLimiterEu)
 
-    // Throw to let Lambda handle retries for scheduled events
-    throw error
+  return {
+    statusCode: 200,
+    success: true,
   }
-}
+})
 
-export const handlerEl = async () => {
-  try {
-    await getItemStatus(APIType.EL, defaultRequestLimiterEu)
+export const handlerEl = wrapHandler(async () => {
+  await getItemStatus(APIType.EL, defaultRequestLimiterEu)
 
-    return {
-      statusCode: 200,
-      success: true
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Error in getItemStatus handlerEl:', errorMessage, error)
-
-    // Throw to let Lambda handle retries for scheduled events
-    throw error
+  return {
+    statusCode: 200,
+    success: true,
   }
-}
+})

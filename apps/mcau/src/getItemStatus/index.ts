@@ -1,20 +1,15 @@
 import { defaultRequestLimiterAu } from '@mcbroken/mclogik/constants'
 import { getItemStatus } from '@mcbroken/mclogik/getItemStatus'
+import { initSentry, wrapHandler } from '@mcbroken/mclogik/sentry'
 import { APIType } from '@mcbroken/mclogik/types'
 
-export const handler = async () => {
-  try {
-    await getItemStatus(APIType.AP, defaultRequestLimiterAu)
+initSentry({ region: 'au' })
 
-    return {
-      statusCode: 200,
-      success: true
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Error in getItemStatus handler:', errorMessage, error)
+export const handler = wrapHandler(async () => {
+  await getItemStatus(APIType.AP, defaultRequestLimiterAu)
 
-    // Throw to let Lambda handle retries for scheduled events
-    throw error
+  return {
+    statusCode: 200,
+    success: true,
   }
-}
+})

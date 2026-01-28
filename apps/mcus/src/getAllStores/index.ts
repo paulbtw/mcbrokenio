@@ -1,20 +1,15 @@
 import { defaultRequestLimiterUs } from '@mcbroken/mclogik/constants'
 import { getStorelistWithLocation } from '@mcbroken/mclogik/getAllStores'
+import { initSentry, wrapHandler } from '@mcbroken/mclogik/sentry'
 import { APIType, type Locations } from '@mcbroken/mclogik/types'
 
-export const handler = async (event: { countries?: Locations[] }) => {
-  try {
-    await getStorelistWithLocation(APIType.US, 30, defaultRequestLimiterUs, event.countries)
+initSentry({ region: 'us' })
 
-    return {
-      statusCode: 200,
-      success: true
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Error in getAllStores handler:', errorMessage, error)
+export const handler = wrapHandler(async (event: { countries?: Locations[] }) => {
+  await getStorelistWithLocation(APIType.US, 30, defaultRequestLimiterUs, event.countries)
 
-    // Throw to let Lambda handle retries for scheduled events
-    throw error
+  return {
+    statusCode: 200,
+    success: true,
   }
-}
+})
