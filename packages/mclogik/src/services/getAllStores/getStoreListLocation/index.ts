@@ -1,6 +1,4 @@
 import { Logger } from '@sailplane/logger'
-import axios from 'axios'
-import PQueue from 'p-queue'
 
 import { defaultRequestLimiterAu } from '../../../constants/RateLimit'
 import {
@@ -12,6 +10,7 @@ import {
   } from '../../../types'
 import { generateCoordinatesMesh } from '../../../utils/generateCoordinatesMesh'
 import { getMetaForApi } from '../../../utils/getMetaForApi'
+import { createRateLimitedExecutor } from '../../../utils/RateLimitedExecutor'
 import { savePos } from '../savePos'
 
 import { getStorelistFromLocation } from './getStorelistFromLocation'
@@ -21,76 +20,24 @@ const logger = new Logger({
   module: 'getStoreListLocation'
 })
 
+interface LocationTask {
+  location: ILocation
+  countryInfo: ICountryInfos
+}
+
 export async function getStorelistWithLocation(
   apiType: APIType,
   intervalKilometer: number,
   requestLimiter = defaultRequestLimiterAu,
   countryList?: Locations[]
 ) {
-  const queue = new PQueue({
-    concurrency: requestLimiter.concurrentRequests
-  })
-
   const { token, clientId, countryInfos } = await getMetaForApi(
     apiType,
     countryList,
     true
   )
 
-  const posMap = new Map<string, CreatePos>()
-  const posArray: CreatePos[][] = []
-  const asyncTasks: Array<Promise<void>> = []
-
-  const requestsPerLog = requestLimiter.requestsPerLog
-  const maxRequestsPerSecond = requestLimiter.maxRequestsPerSecond
-  let requestsThisSecond = 0
-  let totalRequestsProcessed = 0
-  let errorCount = 0
-
-  async function processLocation(
-    location: ILocation,
-    countryInfo: ICountryInfos
-  ) {
-    if (requestsThisSecond >= maxRequestsPerSecond) {
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Delay 1 second
-      requestsThisSecond = 0
-    }
-
-    requestsThisSecond++
-
-    try {
-      const pos = await getStorelistFromLocation(
-        location,
-        countryInfo,
-        token,
-        clientId
-      )
-
-      if (pos.length > 0) {
-        posArray.push(pos)
-        pos.forEach((p) => {
-          if (!posMap.has(p.nationalStoreNumber)) {
-            posMap.set(p.nationalStoreNumber, p)
-          }
-        })
-      }
-
-      totalRequestsProcessed++
-
-      if (totalRequestsProcessed % requestsPerLog === 0) {
-        logger.debug(`Processed ${totalRequestsProcessed}`)
-      }
-    } catch (error) {
-      errorCount++
-      if (axios.isAxiosError(error)) {
-        const axiosError = error
-
-        if (axiosError.response?.status === 401) {
-          logger.warn('Bad request error')
-        }
-      }
-    }
-  }
+  const tasks: LocationTask[] = []
 
   countryInfos.forEach((countryInfo) => {
     if (countryInfo.country === 'UK') {
@@ -109,13 +56,33 @@ export async function getStorelistWithLocation(
     )
 
     locations.forEach((location) => {
-      asyncTasks.push(queue.add(async () => { await processLocation(location, countryInfo) }))
+      tasks.push({ location, countryInfo })
     })
   })
 
-  await Promise.all(asyncTasks)
+  const executor = createRateLimitedExecutor(requestLimiter, 'getStoreListLocation')
 
-  logger.info(`ErrorCount ${errorCount}`)
+  const { results, failures } = await executor.executeAll<LocationTask, CreatePos[]>(
+    tasks,
+    async ({ location, countryInfo }) => {
+      const pos = await getStorelistFromLocation(
+        location,
+        countryInfo,
+        token,
+        clientId
+      )
+      return pos.length > 0 ? pos : null
+    }
+  )
+
+  logger.info(`ErrorCount ${failures}`)
+
+  const posMap = new Map<string, CreatePos>()
+  results.flat().forEach((p) => {
+    if (!posMap.has(p.nationalStoreNumber)) {
+      posMap.set(p.nationalStoreNumber, p)
+    }
+  })
 
   const uniquePosArray = Array.from(posMap.values())
 

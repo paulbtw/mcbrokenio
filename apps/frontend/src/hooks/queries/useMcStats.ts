@@ -24,6 +24,7 @@ const fetchMcStats: QueryFunction<McStats[]> = async ({ signal }) => {
 export const useMcStats = () => {
   return useQuery({
     queryKey: 'mcStats',
-    queryFn: fetchMcStats
+    queryFn: fetchMcStats,
+    refetchInterval: 5 * 60 * 1000
   })
 }

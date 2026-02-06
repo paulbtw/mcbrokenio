@@ -38,6 +38,7 @@ model Pos {
 
   @@index([country], type: Hash)
   @@index([country, hasMobileOrdering])
+  @@index([updatedAt])
 }
 
 model Stats {

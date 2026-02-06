@@ -42,6 +42,7 @@ const fetchMcData: QueryFunction<McDataGeometry> = async ({ signal }) => {
 export const useMcData = () => {
   return useQuery({
     queryKey: 'mcData',
-    queryFn: fetchMcData
+    queryFn: fetchMcData,
+    refetchInterval: 5 * 60 * 1000
   })
 }
