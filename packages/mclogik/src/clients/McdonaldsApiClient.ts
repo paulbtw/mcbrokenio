@@ -1,9 +1,6 @@
-import { Logger } from '@sailplane/logger'
 import axios, { type AxiosInstance } from 'axios'
 
 import { type APIType } from '../types'
-
-const logger = new Logger('McdonaldsApiClient')
 
 /**
  * Response from the McDonald's API containing outage information
@@ -123,23 +120,8 @@ export class StandardApiClient implements McdonaldsApiClient {
         data.response?.restaurant?.catalog?.outageProductCodes ?? []
 
       return { outageProductCodes, success: true }
-    } catch (error) {
-      this.handleError(error, storeNumber)
+    } catch {
       return { outageProductCodes: [], success: false }
-    }
-  }
-
-  private handleError(error: unknown, storeNumber: string): void {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 401) {
-        logger.warn(`Authentication error for store ${storeNumber}`)
-      } else {
-        logger.error(
-          `API error for store ${storeNumber}: ${error.response?.status}`
-        )
-      }
-    } else {
-      logger.error(`Unexpected error for store ${storeNumber}`, error)
     }
   }
 }
@@ -180,23 +162,8 @@ export class ElApiClient implements McdonaldsApiClient {
       )
 
       return { outageProductCodes, success: true }
-    } catch (error) {
-      this.handleError(error, storeNumber)
+    } catch {
       return { outageProductCodes: [], success: false }
-    }
-  }
-
-  private handleError(error: unknown, storeNumber: string): void {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 401) {
-        logger.warn(`Authentication error for store ${storeNumber}`)
-      } else {
-        logger.error(
-          `API error for store ${storeNumber}: ${error.response?.status}`
-        )
-      }
-    } else {
-      logger.error(`Unexpected error for store ${storeNumber}`, error)
     }
   }
 }
