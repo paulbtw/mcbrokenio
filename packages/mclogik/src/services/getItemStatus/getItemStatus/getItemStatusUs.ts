@@ -1,12 +1,9 @@
 import { type ItemStatus as ItemStatusPrisma, type Pos } from '@mcbroken/db'
-import { Logger } from '@sailplane/logger'
 import axios from 'axios'
 
 import { type ICountryInfos } from '../../../types'
 import { type RestaurantInfoUsResponse } from '../../../types/responses'
 import { checkForProduct } from '../checkForProduct'
-
-const logger = new Logger('getStore')
 
 export interface ItemStatus {
   status: ItemStatusPrisma
@@ -71,22 +68,8 @@ export async function getItemStatusUs(
       mcSundae,
       custom
     }
-  } catch (error) {
-    // check if error is AxiosError
-    if (axios.isAxiosError(error)) {
-      const axiosError = error
-
-      if (axiosError.response?.status === 401) {
-        logger.warn('Bad request error')
-      } else {
-        logger.error('Error while getting store status ')
-      }
-    }
-
-    logger.error(
-      'Error while getting stores for location, no axios error',
-      pos.id
-    )
+  } catch {
+    // Errors are tracked via batch summary in the orchestrator
   }
 
   return null
