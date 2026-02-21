@@ -2,6 +2,7 @@ import { ObjectCannedACL, PutObjectCommand, type PutObjectCommandInput, S3Client
 import { prisma } from '@mcbroken/db'
 
 import { EXPORT_BUCKET } from '../../constants'
+import { Sentry } from '../../sentry'
 
 import { createGeoJson } from './generateGeoJson'
 import { generateStats } from './generateStats'
@@ -43,7 +44,10 @@ export async function createJson() {
       s3.send(new PutObjectCommand(paramsStatsJson))
     ])
   } catch (error) {
-    console.error('Error in createJson:', error)
+    Sentry.withScope((scope) => {
+      scope.setTag('operation', 'createJson')
+      Sentry.captureException(error)
+    })
     throw error
   }
 }

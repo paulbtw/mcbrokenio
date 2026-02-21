@@ -1,8 +1,8 @@
 import { type Pos, prisma } from '@mcbroken/db'
-import { Logger } from '@sailplane/logger'
 import PQueue from 'p-queue'
 
 import { type RequestLimiter } from '../../constants/RateLimit'
+import { addBreadcrumb, captureBatchSummary } from '../../sentry'
 import { type APIType, type ICountryInfos,type Locations, type UpdatePos } from '../../types'
 import { getMetaForApi } from '../../utils/getMetaForApi'
 import { getPosByCountries } from '../../utils/getPosByCountries'
@@ -10,8 +10,6 @@ import { getPosByCountries } from '../../utils/getPosByCountries'
 import { getItemStatusMap } from './getItemStatus/index'
 import { getFailedPos, getUpdatedPos } from './getUpdatedPos'
 import { updatePos } from './updatePos'
-
-const logger = new Logger('getItemStatus')
 
 export async function getItemStatus(
   apiType: APIType,
@@ -24,11 +22,11 @@ export async function getItemStatus(
 
   const asyncTasks: Array<Promise<void>> = []
   const posMap = new Map<string, UpdatePos>()
+  const countryStats: Record<string, { total: number; failed: number }> = {}
+  const startTime = Date.now()
 
-  const requestsPerLog = requestLimiter.requestsPerLog
   const maxRequestsPerSecond = requestLimiter.maxRequestsPerSecond
   let requestsThisSecond = 0
-  let totalRequestsProcessed = 0
 
   const { token, clientId, countryInfos } = await getMetaForApi(
     apiType,
@@ -43,16 +41,18 @@ export async function getItemStatus(
 
   async function processPos(pos: Pos) {
     if (requestsThisSecond >= maxRequestsPerSecond) {
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Delay 1 second
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       requestsThisSecond = 0
     }
 
     requestsThisSecond++
-    totalRequestsProcessed++
 
-    if (totalRequestsProcessed % requestsPerLog === 0) {
-      logger.debug(`Processed ${totalRequestsProcessed}`)
+    // Track per-country stats
+    const country = pos.country
+    if (!countryStats[country]) {
+      countryStats[country] = { total: 0, failed: 0 }
     }
+    countryStats[country].total++
 
     const itemStatus = await getItemStatusMap[apiType](
       pos,
@@ -62,27 +62,23 @@ export async function getItemStatus(
     )
 
     if (itemStatus == null) {
-      // API call failed - track the failure
+      countryStats[country].failed++
+
       const failedPosUpdate = getFailedPos(pos)
       posMap.set(pos.id, failedPosUpdate)
-
-      // Log when a store transitions to unresponsive
-      if (pos.isResponsive && !failedPosUpdate.isResponsive) {
-        logger.warn(
-          `Store ${pos.id} (${pos.name}) marked as unresponsive after ${failedPosUpdate.errorCounter} consecutive failures`
-        )
-      }
       return
     }
 
-    // API call succeeded - reset error counter and update status
     const posToUpdate = getUpdatedPos(pos, itemStatus)
     posMap.set(pos.id, posToUpdate)
   }
 
   const posToCheck = await getPosByCountries(prisma, countries)
 
-  logger.info(`Found ${posToCheck.length} pos to check`)
+  addBreadcrumb('Starting batch processing', {
+    apiType,
+    storeCount: posToCheck.length,
+  })
 
   if (posToCheck.length === 0) {
     return
@@ -93,6 +89,17 @@ export async function getItemStatus(
   })
 
   await Promise.all(asyncTasks)
+
+  const totalFailed = Object.values(countryStats).reduce((sum, s) => sum + s.failed, 0)
+
+  captureBatchSummary({
+    apiType,
+    totalStores: posToCheck.length,
+    successCount: posToCheck.length - totalFailed,
+    failedCount: totalFailed,
+    countryBreakdown: countryStats,
+    durationMs: Date.now() - startTime,
+  })
 
   const uniquePosArray = Array.from(posMap.values())
 
