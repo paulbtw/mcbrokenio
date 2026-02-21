@@ -71,3 +71,5 @@ memory-bank
 .context
 
 packages/database/generated
+postgres-data
+jean.json

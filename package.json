@@ -16,7 +16,12 @@
     "check-api": "ts-node --transpile-only scripts/check-api-health.ts",
     "check-api:us": "ts-node --transpile-only scripts/check-api-health.ts us",
     "check-api:europe": "ts-node --transpile-only scripts/check-api-health.ts europe",
-    "check-api:australia": "ts-node --transpile-only scripts/check-api-health.ts australia"
+    "check-api:australia": "ts-node --transpile-only scripts/check-api-health.ts australia",
+    "invoke": "./scripts/invoke-local.sh",
+    "deploy": "turbo run deploy:production",
+    "deploy:mcall": "turbo run deploy:production --filter=@mcbroken/mcall",
+    "deploy:mcus": "turbo run deploy:production --filter=@mcbroken/mcus",
+    "deploy:mcau": "turbo run deploy:production --filter=@mcbroken/mcau"
   },
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",
