@@ -16,7 +16,7 @@
     "check-types": "turbo run check-types",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "verify": "turbo run db:generate check-types lint test",
+    "verify": "pnpm --filter @mcbroken/db db:generate && turbo run check-types lint test",
     "check-api": "ts-node --transpile-only scripts/check-api-health.ts",
     "check-api:us": "ts-node --transpile-only scripts/check-api-health.ts us",
     "check-api:europe": "ts-node --transpile-only scripts/check-api-health.ts europe",
