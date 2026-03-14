@@ -1,9 +1,9 @@
-import { prisma } from '@mcbroken/db'
-import { Logger } from '@sailplane/logger'
+import { prisma } from "@mcbroken/db/client";
+import { Logger } from "@sailplane/logger";
 
-import { type UpdatePos } from '../../types'
+import { type UpdatePos } from "../../types";
 
-const logger = new Logger('updatePos')
+const logger = new Logger("updatePos");
 
 /**
  * Update item status for multiple POS records in the database.
@@ -18,22 +18,20 @@ const logger = new Logger('updatePos')
  * @throws Re-throws any database errors after logging
  */
 export async function updatePos(posArray: UpdatePos[]) {
+  logger.info(`saving ${posArray.length} pos`);
 
-
-  logger.info(`saving ${posArray.length} pos`)
-
-  const now = new Date()
+  const now = new Date();
 
   try {
     await prisma.$transaction(
       posArray.map((pos) => {
-        if (typeof pos.id !== 'string') {
-          throw Error('pos.id is missing')
+        if (typeof pos.id !== "string") {
+          throw Error("pos.id is missing");
         }
 
         return prisma.pos.update({
           where: {
-            id: pos.id
+            id: pos.id,
           },
           data: {
             mcFlurryCount: pos.mcFlurryCount,
@@ -49,14 +47,14 @@ export async function updatePos(posArray: UpdatePos[]) {
             errorCounter: pos.errorCounter,
             isResponsive: pos.isResponsive,
             lastChecked: now,
-            updatedAt: now
-          }
-        })
-      })
-    )
+            updatedAt: now,
+          },
+        });
+      }),
+    );
   } catch (error) {
-    logger.error(error as Error)
-    logger.error('error while saving pos')
-    throw error
+    logger.error(error as Error);
+    logger.error("error while saving pos");
+    throw error;
   }
 }

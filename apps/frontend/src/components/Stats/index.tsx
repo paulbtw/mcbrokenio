@@ -1,43 +1,16 @@
-'use client'
+"use client";
 
-import { useMemo } from 'react'
-import { Coffee, IceCream, Milk, Percent } from 'lucide-react'
+import { Coffee, IceCream, Milk, Percent } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useMcStats } from '@/hooks/queries/useMcStats'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMcStats } from "@/hooks/queries/useMcStats";
+import { getStatsSummary } from "@/lib/stats";
 
 export function Stats() {
-  const { data, isLoading } = useMcStats()
+  const { data, isLoading } = useMcStats();
 
-  const stats = useMemo(() => {
-    const totalStats = data?.find((item) => item.country === 'UNKNOWN')
-
-    if (totalStats == null) {
-      return {
-        trackablePercentage: 0,
-        milkshakePercentage: 0,
-        mcFlurryPercentage: 0,
-        mcSundaePercentage: 0
-      }
-    }
-
-    const trackablePercentage =
-      (totalStats?.trackable / totalStats?.total) * 100
-    const milkshakePercentage =
-      (totalStats?.availablemilkshakes / totalStats?.totalmilkshakes) * 100
-    const mcFlurryPercentage =
-      (totalStats?.availablemcflurry / totalStats?.totalmcflurry) * 100
-    const mcSundaePercentage =
-      (totalStats?.availablemcsundae / totalStats?.totalmcsundae) * 100
-
-    return {
-      trackablePercentage,
-      milkshakePercentage,
-      mcFlurryPercentage,
-      mcSundaePercentage
-    }
-  }, [data])
+  const stats = getStatsSummary(data);
 
   return (
     <>
@@ -51,15 +24,13 @@ export function Stats() {
             <Percent className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            {isLoading
-              ? (
+            {isLoading ? (
               <Skeleton className="h-8 w-24" />
-                )
-              : (
+            ) : (
               <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                {stats?.trackablePercentage.toFixed(2)}%
+                {stats.trackablePercentage.toFixed(2)}%
               </div>
-                )}
+            )}
           </CardContent>
         </Card>
 
@@ -71,15 +42,13 @@ export function Stats() {
             <Milk className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            {isLoading
-              ? (
+            {isLoading ? (
               <Skeleton className="h-8 w-24" />
-                )
-              : (
+            ) : (
               <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                {stats?.milkshakePercentage.toFixed(2)}%
+                {stats.milkshakePercentage.toFixed(2)}%
               </div>
-                )}
+            )}
           </CardContent>
         </Card>
 
@@ -91,15 +60,13 @@ export function Stats() {
             <IceCream className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            {isLoading
-              ? (
+            {isLoading ? (
               <Skeleton className="h-8 w-24" />
-                )
-              : (
+            ) : (
               <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                {stats?.mcFlurryPercentage.toFixed(2)}%
+                {stats.mcFlurryPercentage.toFixed(2)}%
               </div>
-                )}
+            )}
           </CardContent>
         </Card>
 
@@ -111,15 +78,13 @@ export function Stats() {
             <Coffee className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            {isLoading
-              ? (
+            {isLoading ? (
               <Skeleton className="h-8 w-24" />
-                )
-              : (
+            ) : (
               <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                {stats?.mcSundaePercentage.toFixed(2)}%
+                {stats.mcSundaePercentage.toFixed(2)}%
               </div>
-                )}
+            )}
           </CardContent>
         </Card>
       </div>
@@ -130,15 +95,13 @@ export function Stats() {
           <div className="flex items-center justify-between p-3">
             <div>
               <p className="text-xs font-medium text-slate-500">Trackable</p>
-              {isLoading
-                ? (
+              {isLoading ? (
                 <Skeleton className="mt-1 h-6 w-16" />
-                  )
-                : (
+              ) : (
                 <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {stats?.trackablePercentage.toFixed(2)}%
+                  {stats.trackablePercentage.toFixed(2)}%
                 </p>
-                  )}
+              )}
             </div>
             <Percent className="h-5 w-5 text-slate-500" />
           </div>
@@ -148,15 +111,13 @@ export function Stats() {
           <div className="flex items-center justify-between p-3">
             <div>
               <p className="text-xs font-medium text-slate-500">Milkshakes</p>
-              {isLoading
-                ? (
+              {isLoading ? (
                 <Skeleton className="mt-1 h-6 w-16" />
-                  )
-                : (
+              ) : (
                 <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {stats?.milkshakePercentage.toFixed(2)}%
+                  {stats.milkshakePercentage.toFixed(2)}%
                 </p>
-                  )}
+              )}
             </div>
             <Milk className="h-5 w-5 text-slate-500" />
           </div>
@@ -166,15 +127,13 @@ export function Stats() {
           <div className="flex items-center justify-between p-3">
             <div>
               <p className="text-xs font-medium text-slate-500">McFlurries</p>
-              {isLoading
-                ? (
+              {isLoading ? (
                 <Skeleton className="mt-1 h-6 w-16" />
-                  )
-                : (
+              ) : (
                 <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {stats?.mcFlurryPercentage.toFixed(2)}%
+                  {stats.mcFlurryPercentage.toFixed(2)}%
                 </p>
-                  )}
+              )}
             </div>
             <IceCream className="h-5 w-5 text-slate-500" />
           </div>
@@ -184,20 +143,18 @@ export function Stats() {
           <div className="flex items-center justify-between p-3">
             <div>
               <p className="text-xs font-medium text-slate-500">McSundaes</p>
-              {isLoading
-                ? (
+              {isLoading ? (
                 <Skeleton className="mt-1 h-6 w-16" />
-                  )
-                : (
+              ) : (
                 <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {stats?.mcSundaePercentage.toFixed(2)}%
+                  {stats.mcSundaePercentage.toFixed(2)}%
                 </p>
-                  )}
+              )}
             </div>
             <Coffee className="h-5 w-5 text-slate-500" />
           </div>
         </Card>
       </div>
     </>
-  )
+  );
 }

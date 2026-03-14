@@ -1,11 +1,25 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "globalEnv": ["ANALYZE", "MCBROKEN_ASSETS_ORIGIN", "SLS_STAGE", "STAGE"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["DATABASE_URL", "BASIC_TOKEN_EU", "KEY", "BASIC_TOKEN_AP", "BASIC_TOKEN_US", "BASIC_TOKEN_EL", "EXPORT_BUCKET", "MCD_DEVICEID", "API_KEY_AP", "SENTRY_DSN", "SENTRY_ENVIRONMENT", "NODE_ENV"]
+      "env": [
+        "DATABASE_URL",
+        "BASIC_TOKEN_EU",
+        "KEY",
+        "BASIC_TOKEN_AP",
+        "BASIC_TOKEN_US",
+        "BASIC_TOKEN_EL",
+        "EXPORT_BUCKET",
+        "MCD_DEVICEID",
+        "API_KEY_AP",
+        "SENTRY_DSN",
+        "SENTRY_ENVIRONMENT",
+        "NODE_ENV"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -18,7 +32,7 @@
     },
     "test": {
       "dependsOn": ["^test"],
-      "outputs": ["coverage/**"]
+      "outputs": []
     },
     "dev": {
       "persistent": true,
@@ -36,25 +50,57 @@
       "cache": false
     },
     "package": {
-      "dependsOn": [
-        "build",
-        "test",
-        "lint"
-      ],
+      "dependsOn": ["build", "test", "lint"],
       "cache": false
     },
     "deploy:staging": {
-      "env": ["AWS_PROFILE"],
-      "dependsOn": [
-        "package"
+      "env": [
+        "AWS_PROFILE",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+        "AWS_REGION",
+        "AWS_DEFAULT_REGION",
+        "DATABASE_URL",
+        "BASIC_TOKEN_EU",
+        "BASIC_TOKEN_EL",
+        "BASIC_TOKEN_US",
+        "BASIC_TOKEN_AP",
+        "KEY",
+        "EXPORT_BUCKET",
+        "MCALL_DEPLOYMENT_BUCKET",
+        "MCAU_DEPLOYMENT_BUCKET",
+        "MCUS_DEPLOYMENT_BUCKET",
+        "SENTRY_DSN",
+        "SENTRY_ENVIRONMENT",
+        "SLS_STAGE"
       ],
+      "dependsOn": ["package"],
       "cache": false
     },
     "deploy:production": {
-      "env": ["AWS_PROFILE"],
-      "dependsOn": [
-        "package"
+      "env": [
+        "AWS_PROFILE",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+        "AWS_REGION",
+        "AWS_DEFAULT_REGION",
+        "DATABASE_URL",
+        "BASIC_TOKEN_EU",
+        "BASIC_TOKEN_EL",
+        "BASIC_TOKEN_US",
+        "BASIC_TOKEN_AP",
+        "KEY",
+        "EXPORT_BUCKET",
+        "MCALL_DEPLOYMENT_BUCKET",
+        "MCAU_DEPLOYMENT_BUCKET",
+        "MCUS_DEPLOYMENT_BUCKET",
+        "SENTRY_DSN",
+        "SENTRY_ENVIRONMENT",
+        "SLS_STAGE"
       ],
+      "dependsOn": ["package"],
       "cache": false
     }
   }

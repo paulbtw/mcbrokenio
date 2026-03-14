@@ -13,12 +13,18 @@
   ],
   "scripts": {
     "prepare": "husky install",
+    "check-types": "turbo run check-types",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "verify": "pnpm --filter @mcbroken/db db:generate && turbo run check-types lint test",
     "check-api": "ts-node --transpile-only scripts/check-api-health.ts",
     "check-api:us": "ts-node --transpile-only scripts/check-api-health.ts us",
     "check-api:europe": "ts-node --transpile-only scripts/check-api-health.ts europe",
     "check-api:australia": "ts-node --transpile-only scripts/check-api-health.ts australia",
     "invoke": "./scripts/invoke-local.sh",
-    "deploy": "turbo run deploy:production",
+    "deploy": "pnpm deploy:production",
+    "deploy:staging": "turbo run deploy:staging --filter=./apps/mc*",
+    "deploy:production": "turbo run deploy:production --filter=./apps/mc*",
     "deploy:mcall": "turbo run deploy:production --filter=@mcbroken/mcall",
     "deploy:mcus": "turbo run deploy:production --filter=@mcbroken/mcus",
     "deploy:mcau": "turbo run deploy:production --filter=@mcbroken/mcau"
@@ -26,17 +32,17 @@
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",
     "@mcbroken/typescript-config": "workspace:*",
-    "@types/aws-lambda": "^8.10.159",
+    "@types/aws-lambda": "^8.10.161",
     "@types/node": "22",
     "esbuild": "0.25.0",
     "husky": "^8.0.3",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.1",
     "serverless": "3.40.0",
-    "serverless-esbuild": "1.54.6",
+    "serverless-esbuild": "1.57.0",
     "serverless-offline": "14.4.0",
     "ts-node": "10.9.2",
-    "turbo": "^2.7.2",
-    "typescript": "^5.9.2"
+    "turbo": "^2.8.16",
+    "typescript": "^5.9.3"
   },
   "license": "MIT",
   "lint-staged": {

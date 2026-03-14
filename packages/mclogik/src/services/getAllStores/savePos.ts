@@ -1,13 +1,14 @@
-import { Prisma, prisma } from '@mcbroken/db'
-import { Logger } from '@sailplane/logger'
+import { Prisma } from "@mcbroken/db";
+import { prisma } from "@mcbroken/db/client";
+import { Logger } from "@sailplane/logger";
 
-import { type CreatePos } from '../../types'
-import { chunkArray } from '../../utils/chunkArray'
+import { type CreatePos } from "../../types";
+import { chunkArray } from "../../utils/chunkArray";
 
-const logger = new Logger('savePos')
+const logger = new Logger("savePos");
 
-const PREPARED_STATEMENT_LIMIT = 32767 - 1
-const PREPARED_STATEMENT_COUNT = 7
+const PREPARED_STATEMENT_LIMIT = 32767 - 1;
+const PREPARED_STATEMENT_COUNT = 7;
 
 /**
  * Save or update multiple POS records in the database.
@@ -22,8 +23,10 @@ const PREPARED_STATEMENT_COUNT = 7
  * @throws Re-throws any database errors after logging
  */
 export async function savePos(posArray: CreatePos[]) {
-
-  const chunkedPosArray = chunkArray(posArray, Math.floor(PREPARED_STATEMENT_LIMIT / PREPARED_STATEMENT_COUNT))
+  const chunkedPosArray = chunkArray(
+    posArray,
+    Math.floor(PREPARED_STATEMENT_LIMIT / PREPARED_STATEMENT_COUNT),
+  );
 
   try {
     await prisma.$transaction(
@@ -38,16 +41,16 @@ export async function savePos(posArray: CreatePos[]) {
                 value.latitude,
                 value.longitude,
                 value.hasMobileOrdering,
-                value.country
-              ])})`
-          )
+                value.country,
+              ])})`,
+          ),
         )}
-        ON CONFLICT (id) DO UPDATE SET "hasMobileOrdering" = EXCLUDED."hasMobileOrdering"`
-      })
-    )
+        ON CONFLICT (id) DO UPDATE SET "hasMobileOrdering" = EXCLUDED."hasMobileOrdering"`;
+      }),
+    );
   } catch (error) {
-    logger.error(error as Error)
-    logger.error('error while saving pos')
-    throw error
+    logger.error(error as Error);
+    logger.error("error while saving pos");
+    throw error;
   }
 }

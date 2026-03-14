@@ -1,16 +1,13 @@
-import { cookies } from 'next/headers'
+import { cookies } from "next/headers";
 
-import { DesktopView } from '@/components/DesktopView'
-import { MobileView } from '@/components/MobileView'
-import { Stats } from '@/components/Stats'
-import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from '@/lib/constants'
+import { DesktopView } from "@/components/DesktopView";
+import { MobileView } from "@/components/MobileView";
+import { Stats } from "@/components/Stats";
+import { parseGeoCookie } from "@/lib/geo";
 
 export default async function Home() {
-  const currentCookies = await cookies()
-  const geo = currentCookies.get('geo')
-  const geoData = (geo != null)
-    ? JSON.parse(geo.value)
-    : { lat: DEFAULT_LATITUDE, lon: DEFAULT_LONGITUDE }
+  const currentCookies = await cookies();
+  const geoData = parseGeoCookie(currentCookies.get("geo")?.value);
 
   return (
     <>
@@ -24,5 +21,5 @@ export default async function Home() {
         <MobileView geo={geoData} />
       </div>
     </>
-  )
+  );
 }

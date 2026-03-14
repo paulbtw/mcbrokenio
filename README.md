@@ -53,23 +53,23 @@ packages/
 ## Development
 
 ```bash
-# Start all services
-pnpm dev
-
 # Run a specific app
 pnpm --filter @mcbroken/frosty dev
 
 # Generate Prisma client (required after schema changes)
-pnpm turbo run db:generate
+pnpm --filter @mcbroken/db db:generate
 
 # Run type checking
-pnpm turbo run check-types
+pnpm check-types
 
 # Run linting
-pnpm turbo run lint
+pnpm lint
 
 # Run tests
-pnpm turbo run test
+pnpm test
+
+# Run the full local CI suite
+pnpm verify
 
 # Invoke a serverless function locally
 cd apps/mcall
@@ -77,9 +77,41 @@ pnpm invoke functionName
 pnpm invoke getItemStatus -- --data '{"countryList": ["US"]}'
 ```
 
+## GitHub Actions Deployments
+
+Manual deployments are handled through [`deploy.yml`](.github/workflows/deploy.yml) with the GitHub Actions "Run workflow" button.
+
+- Choose `staging` or `production`
+- Choose `all`, `mcall`, `mcus`, `mcau`, or `frontend`
+- Every deployment runs the full verification suite first
+
+### Required GitHub Environment Secrets
+
+Configure the `staging` and `production` GitHub environments with these secrets:
+
+- `AWS_DEPLOY_ROLE_ARN`
+- `DATABASE_URL`
+- `BASIC_TOKEN_EU`
+- `BASIC_TOKEN_EL`
+- `BASIC_TOKEN_US`
+- `BASIC_TOKEN_AP`
+- `KEY`
+- `EXPORT_BUCKET`
+- `MCALL_DEPLOYMENT_BUCKET`
+- `MCUS_DEPLOYMENT_BUCKET`
+- `MCAU_DEPLOYMENT_BUCKET`
+- `SENTRY_DSN`
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+- `NEXT_PUBLIC_MAPBOX_KEY`
+
+If the deployment bucket secrets are omitted, the serverless apps fall back to stage-based names like `mcbrokenio-mcall-bucket-production`.
+
 ## Documentation
 
 For detailed documentation, see the `.ai/` directory:
+
 - Project overview and architecture
 - Development workflow
 - Code patterns and conventions

@@ -1,16 +1,16 @@
-import clsx from 'clsx';
-import { formatDistance } from 'date-fns';
+import clsx from "clsx";
+import { formatDistance } from "date-fns";
 
-import { type McDataProperties } from '@/hooks/queries/useMcData';
-import { useSettings } from '@/hooks/useSettings';
-import { ItemStatus } from '@/types';
+import { type McDataProperties } from "@/hooks/queries/useMcData";
+import { useSettings } from "@/hooks/useSettings";
+import { ItemStatus } from "@/types";
 
 const colorMap = {
-  [ItemStatus.AVAILABLE]: 'bg-green-500',
-  [ItemStatus.UNAVAILABLE]: 'bg-red-500',
-  [ItemStatus.NOT_APPLICABLE]: 'bg-gray-500',
-  [ItemStatus.PARTIAL_AVAILABLE]: 'bg-yellow-500',
-  [ItemStatus.UNKNOWN]: 'bg-gray-500',
+  [ItemStatus.AVAILABLE]: "bg-green-500",
+  [ItemStatus.UNAVAILABLE]: "bg-red-500",
+  [ItemStatus.NOT_APPLICABLE]: "bg-gray-500",
+  [ItemStatus.PARTIAL_AVAILABLE]: "bg-yellow-500",
+  [ItemStatus.UNKNOWN]: "bg-gray-500",
 };
 
 function Item({
@@ -36,7 +36,7 @@ function Item({
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2">
         <div
-          className={clsx('h-2.5 rounded-full', colorMap[status])}
+          className={clsx("h-2.5 rounded-full", colorMap[status])}
           style={{ width: `${(available / count) * 100}%` }}
         ></div>
       </div>
@@ -83,7 +83,7 @@ export function Popover({
           errorCount={mcSundaeErrorCount}
           status={hasMcSundae}
         />
-        {Object.values(customItems).map(({ name, count, error, status }) => (
+        {customItems.map(({ name, count, error, status }) => (
           <Item
             key={name}
             name={name}
@@ -94,12 +94,12 @@ export function Popover({
         ))}
       </div>
       <div className="text-xs text-gray-500 mt-3">
-        Last checked:{' '}
+        Last checked:{" "}
         {lastChecked != null
           ? formatDistance(new Date(lastChecked), new Date(), {
               addSuffix: true,
             })
-          : 'never'}
+          : "never"}
       </div>
       {debugMode === true && <div>{id}</div>}
     </div>
