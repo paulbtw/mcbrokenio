@@ -1,0 +1,260 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        default: production
+        options:
+          - staging
+          - production
+      target:
+        description: Deployment target
+        required: true
+        type: choice
+        default: all
+        options:
+          - all
+          - mcall
+          - mcus
+          - mcau
+          - frontend
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ inputs.environment }}-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    name: Verify Before Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run verification
+        run: pnpm verify
+
+  deploy-mcall:
+    name: Deploy mcall
+    runs-on: ubuntu-latest
+    needs: quality
+    if: ${{ inputs.target == 'all' || inputs.target == 'mcall' }}
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @mcbroken/db db:generate
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: github-actions-mcall
+          aws-region: eu-central-1
+
+      - name: Deploy mcall
+        run: pnpm --filter @mcbroken/mcall deploy:${{ inputs.environment }}
+        env:
+          SLS_STAGE: ${{ inputs.environment }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BASIC_TOKEN_EU: ${{ secrets.BASIC_TOKEN_EU }}
+          BASIC_TOKEN_EL: ${{ secrets.BASIC_TOKEN_EL }}
+          KEY: ${{ secrets.KEY }}
+          EXPORT_BUCKET: ${{ secrets.EXPORT_BUCKET }}
+          MCALL_DEPLOYMENT_BUCKET: ${{ secrets.MCALL_DEPLOYMENT_BUCKET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: ${{ inputs.environment }}
+
+  deploy-mcus:
+    name: Deploy mcus
+    runs-on: ubuntu-latest
+    needs: quality
+    if: ${{ inputs.target == 'all' || inputs.target == 'mcus' }}
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @mcbroken/db db:generate
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: github-actions-mcus
+          aws-region: us-east-2
+
+      - name: Deploy mcus
+        run: pnpm --filter @mcbroken/mcus deploy:${{ inputs.environment }}
+        env:
+          SLS_STAGE: ${{ inputs.environment }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BASIC_TOKEN_US: ${{ secrets.BASIC_TOKEN_US }}
+          KEY: ${{ secrets.KEY }}
+          MCUS_DEPLOYMENT_BUCKET: ${{ secrets.MCUS_DEPLOYMENT_BUCKET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: ${{ inputs.environment }}
+
+  deploy-mcau:
+    name: Deploy mcau
+    runs-on: ubuntu-latest
+    needs: quality
+    if: ${{ inputs.target == 'all' || inputs.target == 'mcau' }}
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @mcbroken/db db:generate
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: github-actions-mcau
+          aws-region: ap-southeast-2
+
+      - name: Deploy mcau
+        run: pnpm --filter @mcbroken/mcau deploy:${{ inputs.environment }}
+        env:
+          SLS_STAGE: ${{ inputs.environment }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BASIC_TOKEN_AP: ${{ secrets.BASIC_TOKEN_AP }}
+          KEY: ${{ secrets.KEY }}
+          MCAU_DEPLOYMENT_BUCKET: ${{ secrets.MCAU_DEPLOYMENT_BUCKET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: ${{ inputs.environment }}
+
+  deploy-frontend:
+    name: Deploy frontend
+    runs-on: ubuntu-latest
+    needs: quality
+    if: ${{ inputs.target == 'all' || inputs.target == 'frontend' }}
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve Vercel environment
+        id: vercel-env
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            echo "name=production" >> "$GITHUB_OUTPUT"
+            echo "flag=--prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=preview" >> "$GITHUB_OUTPUT"
+            echo "flag=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pull Vercel project settings
+        working-directory: apps/frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: pnpm dlx vercel@latest pull --yes --environment="${{ steps.vercel-env.outputs.name }}" --token="$VERCEL_TOKEN"
+
+      - name: Build frontend
+        working-directory: apps/frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          NEXT_PUBLIC_MAPBOX_KEY: ${{ secrets.NEXT_PUBLIC_MAPBOX_KEY }}
+          EXPORT_BUCKET: ${{ secrets.EXPORT_BUCKET }}
+        run: pnpm dlx vercel@latest build ${{ steps.vercel-env.outputs.flag }} --token="$VERCEL_TOKEN"
+
+      - name: Deploy frontend
+        working-directory: apps/frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: pnpm dlx vercel@latest deploy --prebuilt ${{ steps.vercel-env.outputs.flag }} --token="$VERCEL_TOKEN"

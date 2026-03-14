@@ -4,8 +4,9 @@
 
 | Package | Framework | Location |
 |---------|-----------|----------|
-| `@mcbroken/mclogik` | Vitest | `packages/mclogik/tests/` |
-| Root | Jest | `jest.config.ts` |
+| `@mcbroken/mclogik` | Vitest | `packages/mclogik/src/**/*.test.ts` |
+| `@mcbroken/frosty` | Vitest | `apps/frontend/src/**/*.test.ts` |
+| `@mcbroken/serverless-config` | Vitest | `packages/serverless-config/*.test.ts` |
 
 ## Running Tests
 

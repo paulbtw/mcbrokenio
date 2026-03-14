@@ -3,13 +3,20 @@
   "version": "0.0.0",
   "main": "index.ts",
   "types": "index.ts",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run --passWithNoTests"
+  },
   "devDependencies": {
+    "@mcbroken/eslint-config": "workspace:*",
     "@mcbroken/typescript-config": "workspace:*",
+    "@serverless/typescript": "^3.38.0",
+    "eslint": "^9.39.1",
     "typescript": "^5.9.2",
-    "@serverless/typescript": "^3.38.0"
+    "vitest": "^4.1.0"
   },
   "exports": {
     ".": "./index.ts"
   }
 }
-
