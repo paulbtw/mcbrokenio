@@ -55,10 +55,40 @@ jobs:
       - name: Run verification
         run: pnpm verify
 
+  migrate-db:
+    name: Apply Database Migrations
+    runs-on: ubuntu-latest
+    needs: quality
+    if: ${{ inputs.target != 'frontend' }}
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply Prisma migrations
+        run: pnpm --filter @mcbroken/db db:deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
   deploy-mcall:
     name: Deploy mcall
     runs-on: ubuntu-latest
-    needs: quality
+    needs:
+      - quality
+      - migrate-db
     if: ${{ inputs.target == 'all' || inputs.target == 'mcall' }}
     environment: ${{ inputs.environment }}
 
@@ -104,7 +134,9 @@ jobs:
   deploy-mcus:
     name: Deploy mcus
     runs-on: ubuntu-latest
-    needs: quality
+    needs:
+      - quality
+      - migrate-db
     if: ${{ inputs.target == 'all' || inputs.target == 'mcus' }}
     environment: ${{ inputs.environment }}
 
@@ -148,7 +180,9 @@ jobs:
   deploy-mcau:
     name: Deploy mcau
     runs-on: ubuntu-latest
-    needs: quality
+    needs:
+      - quality
+      - migrate-db
     if: ${{ inputs.target == 'all' || inputs.target == 'mcau' }}
     environment: ${{ inputs.environment }}
 
