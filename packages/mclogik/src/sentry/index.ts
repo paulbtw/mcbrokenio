@@ -28,7 +28,49 @@ export function initSentry(config: SentryConfig): void {
   })
 }
 
-export const wrapHandler = Sentry.wrapHandler
+function logUnhandledError(error: unknown, context?: unknown): void {
+  const requestId =
+    typeof context === 'object' &&
+    context !== null &&
+    'awsRequestId' in context &&
+    typeof context.awsRequestId === 'string'
+      ? context.awsRequestId
+      : undefined
+
+  if (error instanceof Error) {
+    console.error('Unhandled Lambda error', {
+      functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+      requestId,
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    })
+    return
+  }
+
+  console.error('Unhandled Lambda error', {
+    functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+    requestId,
+    error,
+  })
+}
+
+export function wrapHandler<TEvent = unknown, TResult = unknown>(
+  handler: (
+    event: TEvent,
+    context?: unknown,
+    callback?: unknown
+  ) => Promise<TResult> | TResult
+) {
+  return Sentry.wrapHandler(async (event: TEvent, context?: unknown, callback?: unknown) => {
+    try {
+      return await handler(event, context, callback)
+    } catch (error) {
+      logUnhandledError(error, context)
+      throw error
+    }
+  })
+}
 
 export { Sentry }
 

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   getDeploymentStage,
   getExportBucket,
+  getOptionalEnv,
   getRequiredEnv,
   getServiceDeploymentBucket,
   getStageBucketName,
@@ -11,11 +12,13 @@ import {
 const ORIGINAL_SLS_STAGE = process.env.SLS_STAGE;
 const ORIGINAL_STAGE = process.env.STAGE;
 const ORIGINAL_DATABASE_URL = process.env.DATABASE_URL;
+const ORIGINAL_SENTRY_DSN = process.env.SENTRY_DSN;
 
 afterEach(() => {
   process.env.SLS_STAGE = ORIGINAL_SLS_STAGE;
   process.env.STAGE = ORIGINAL_STAGE;
   process.env.DATABASE_URL = ORIGINAL_DATABASE_URL;
+  process.env.SENTRY_DSN = ORIGINAL_SENTRY_DSN;
 });
 
 describe("getDeploymentStage", () => {
@@ -93,5 +96,19 @@ describe("getRequiredEnv", () => {
     delete process.env.DATABASE_URL;
 
     expect(getRequiredEnv("DATABASE_URL")).toBe("${env:DATABASE_URL}");
+  });
+});
+
+describe("getOptionalEnv", () => {
+  it("returns the trimmed local env value when available", () => {
+    process.env.SENTRY_DSN = "  https://example.com/123  ";
+
+    expect(getOptionalEnv("SENTRY_DSN")).toBe("https://example.com/123");
+  });
+
+  it("returns undefined when the env is missing", () => {
+    delete process.env.SENTRY_DSN;
+
+    expect(getOptionalEnv("SENTRY_DSN")).toBeUndefined();
   });
 });

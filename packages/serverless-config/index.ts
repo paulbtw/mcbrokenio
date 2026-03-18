@@ -40,6 +40,10 @@ export function getRequiredEnv(name: string): string {
   return getTrimmedValue(process.env[name]) ?? `\${env:${name}}`;
 }
 
+export function getOptionalEnv(name: string): string | undefined {
+  return getTrimmedValue(process.env[name]);
+}
+
 export function getStageBucketName(
   prefix: string,
   stage: string = getDeploymentStage(),
@@ -91,6 +95,11 @@ export const baseServerlessConfiguration: Partial<AWS> = {
       LOG_LEVEL: "NONE",
       PRISMA_QUERY_ENGINE_LIBRARY:
         "/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
+      SENTRY_ENVIRONMENT:
+        getOptionalEnv("SENTRY_ENVIRONMENT") ?? getDeploymentStage(),
+      ...(getOptionalEnv("SENTRY_DSN")
+        ? { SENTRY_DSN: getOptionalEnv("SENTRY_DSN") }
+        : {}),
     },
     architecture: "x86_64",
   },
