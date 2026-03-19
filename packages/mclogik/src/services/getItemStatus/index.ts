@@ -6,8 +6,8 @@ import PQueue from "p-queue";
 import { type RequestLimiter } from "../../constants/RateLimit";
 import {
   addBreadcrumb,
-  captureBatchSummary,
   type BatchFailureSample,
+  captureBatchSummary,
 } from "../../sentry";
 import {
   type APIType,
