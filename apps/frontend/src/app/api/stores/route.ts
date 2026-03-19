@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
 import {
@@ -9,12 +8,9 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const getCachedStoreGeoJson = unstable_cache(getStoreGeoJson, ["store-geojson"], {
-  revalidate: STORE_DATA_REVALIDATE_SECONDS,
-});
-
 export async function GET() {
-  const storeGeoJson = await getCachedStoreGeoJson();
+  // The stores payload is large enough to exceed Next's unstable_cache item limit.
+  const storeGeoJson = await getStoreGeoJson();
 
   return NextResponse.json(storeGeoJson, {
     headers: {
