@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   addBreadcrumb,
   type BatchSummary,
-  captureBatchSummary
+  captureBatchSummary,
+  wrapHandler
 } from './index'
 
 vi.mock('@sentry/aws-serverless', () => {
@@ -211,5 +212,37 @@ describe('addBreadcrumb', () => {
       data: undefined,
       level: 'info',
     })
+  })
+})
+
+describe('wrapHandler', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('logs structured error details before rethrowing', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    process.env.AWS_LAMBDA_FUNCTION_NAME = 'test-function'
+
+    const error = new Error('boom')
+    const handler = wrapHandler(async () => {
+      throw error
+    })
+    const context = { awsRequestId: 'req-123' } as Parameters<typeof handler>[1]
+    const callback = (() => undefined) as Parameters<typeof handler>[2]
+
+    await expect(handler({}, context, callback)).rejects.toThrow('boom')
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Unhandled Lambda error',
+      expect.objectContaining({
+        functionName: 'test-function',
+        requestId: 'req-123',
+        name: 'Error',
+        message: 'boom',
+      })
+    )
+
+    consoleErrorSpy.mockRestore()
   })
 })

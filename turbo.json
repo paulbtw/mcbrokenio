@@ -1,6 +1,12 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalEnv": ["ANALYZE", "MCBROKEN_ASSETS_ORIGIN", "SLS_STAGE", "STAGE"],
+  "globalEnv": [
+    "ANALYZE",
+    "MCBROKEN_ASSETS_ORIGIN",
+    "SLS_STAGE",
+    "STAGE",
+    "AWS_LAMBDA_FUNCTION_NAME"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
