@@ -1,14 +1,12 @@
 import {
   baseServerlessConfiguration,
   getDeploymentStage,
-  getExportBucket,
   getRequiredEnv,
   getServiceDeploymentBucket,
 } from "@mcbroken/serverless-config";
 import type { AWS } from "@serverless/typescript";
 
 const stage = getDeploymentStage();
-const exportBucket = getExportBucket(stage, process.env.EXPORT_BUCKET);
 
 const serverlessConfiguration: AWS = {
   ...baseServerlessConfiguration,
@@ -23,24 +21,6 @@ const serverlessConfiguration: AWS = {
         stage,
         process.env.MCALL_DEPLOYMENT_BUCKET,
       ),
-    },
-    environment: {
-      ...baseServerlessConfiguration.provider!.environment,
-      EXPORT_BUCKET: exportBucket,
-    },
-    iam: {
-      role: {
-        statements: [
-          {
-            Effect: "Allow",
-            Action: ["s3:PutObject", "s3:PutObjectAcl", "s3:GetObject"],
-            Resource: [
-              `arn:aws:s3:::${exportBucket}`,
-              `arn:aws:s3:::${exportBucket}/*`,
-            ],
-          },
-        ],
-      },
     },
   },
 
@@ -87,20 +67,6 @@ const serverlessConfiguration: AWS = {
         DATABASE_URL: getRequiredEnv("DATABASE_URL"),
         KEY: getRequiredEnv("KEY"),
         BASIC_TOKEN_EL: getRequiredEnv("BASIC_TOKEN_EL"),
-      },
-    },
-    createJson: {
-      memorySize: 368,
-      timeout: 60,
-      handler: "src/createJson/index.handler",
-      events: [
-        {
-          schedule: "cron(0/15 * * * ? *)",
-        },
-      ],
-      environment: {
-        DATABASE_URL: getRequiredEnv("DATABASE_URL"),
-        EXPORT_BUCKET: exportBucket,
       },
     },
   },

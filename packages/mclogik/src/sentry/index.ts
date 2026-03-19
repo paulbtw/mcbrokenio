@@ -81,6 +81,29 @@ interface CountryStats {
   failed: number
 }
 
+export interface BatchFailureSample {
+  signature: string
+  apiType: string
+  country: string
+  storeId: string
+  nationalStoreNumber: string
+  errorName: string
+  errorMessage: string
+  requestUrl?: string
+  httpStatus?: number
+  responseCode?: string
+  responseType?: string
+  responseMessage?: string
+  responseService?: string
+  responseErrors?: Array<{
+    code?: string
+    type?: string
+    message?: string
+    property?: string
+    service?: string
+  }>
+}
+
 export interface BatchSummary {
   apiType: string
   totalStores: number
@@ -88,6 +111,7 @@ export interface BatchSummary {
   failedCount: number
   countryBreakdown: Record<string, CountryStats>
   durationMs: number
+  sampleErrors?: BatchFailureSample[]
 }
 
 /**
@@ -127,6 +151,11 @@ export function captureBatchSummary(summary: BatchSummary): void {
       countriesFullyDown,
     })
     scope.setContext('country_breakdown', countryBreakdown)
+    if ((summary.sampleErrors?.length ?? 0) > 0) {
+      scope.setContext('sample_errors', {
+        samples: summary.sampleErrors,
+      })
+    }
 
     Sentry.captureMessage(message, level)
   })

@@ -29,6 +29,7 @@
   "exports": {
     "./constants": "./src/constants/index.ts",
     "./types": "./src/types/index.ts",
+    "./geoJson": "./src/services/createJson/generateGeoJson.ts",
     "./repositories": "./src/repositories/index.ts",
     "./clients": "./src/clients/index.ts",
     "./sentry": "./src/sentry/index.ts",

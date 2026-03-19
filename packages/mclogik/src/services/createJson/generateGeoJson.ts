@@ -2,6 +2,8 @@ import { ItemStatus, type Pos } from '@mcbroken/db'
 
 import { type CustomItemType, type GeoJson, type GeoJsonPos } from '../../types/geoJson'
 
+export type { CustomItemType, GeoJson, GeoJsonPos } from '../../types/geoJson'
+
 const unknown = ItemStatus.UNKNOWN
 const available: ItemStatus[] = [
   ItemStatus.AVAILABLE,
@@ -11,6 +13,27 @@ const unavailable: ItemStatus[] = [
   ItemStatus.UNAVAILABLE,
   ItemStatus.NOT_APPLICABLE
 ]
+
+export type GeoJsonSourcePos = Pick<
+  Pos,
+  | 'id'
+  | 'name'
+  | 'latitude'
+  | 'longitude'
+  | 'milkshakeStatus'
+  | 'milkshakeCount'
+  | 'milkshakeError'
+  | 'mcSundaeStatus'
+  | 'mcSundaeCount'
+  | 'mcSundaeError'
+  | 'mcFlurryStatus'
+  | 'mcFlurryCount'
+  | 'mcFlurryError'
+  | 'lastChecked'
+  | 'customItems'
+  | 'hasMobileOrdering'
+  | 'isResponsive'
+>
 
 function getColorDot(
   hasMcFlurry: ItemStatus,
@@ -48,7 +71,7 @@ function getColorDot(
   return 'YELLOW'
 }
 
-export function createGeoJson(allPos: Pos[]): GeoJson {
+export function createGeoJson(allPos: GeoJsonSourcePos[]): GeoJson {
   const json = allPos.map<GeoJsonPos>((pos) => {
     const dot = getColorDot(
       pos.mcSundaeStatus,

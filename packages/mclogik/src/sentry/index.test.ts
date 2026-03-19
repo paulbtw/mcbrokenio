@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   addBreadcrumb,
+  type BatchFailureSample,
   type BatchSummary,
   captureBatchSummary,
   wrapHandler
@@ -56,6 +57,34 @@ describe('captureBatchSummary', () => {
       ES: { total: 50, failed: 2 },
     },
     durationMs: 30000,
+    ...overrides,
+  })
+
+  const createSampleError = (
+    overrides: Partial<BatchFailureSample> = {}
+  ): BatchFailureSample => ({
+    signature: 'EU|DE|400|40000|ValidationException|Invalid storeUniqueIdType',
+    apiType: 'EU',
+    country: 'DE',
+    storeId: 'DE-27601435',
+    nationalStoreNumber: '27601435',
+    errorName: 'AxiosError',
+    errorMessage: 'Request failed with status code 400',
+    requestUrl: 'https://eu-prod.api.mcd.com/exp/v1/restaurant/27601435?filter=full&storeUniqueIdType=NatlStrNumber',
+    httpStatus: 400,
+    responseCode: '40000',
+    responseType: 'ValidationException',
+    responseMessage: 'Invalid storeUniqueIdType: NatlStrNumber',
+    responseService: 'Restaurant',
+    responseErrors: [
+      {
+        code: '40041',
+        type: 'InvalidStoreUniqueIdTypeException',
+        message: 'Invalid storeUniqueIdType: NatlStrNumber',
+        property: 'Request',
+        service: 'prox_search_api',
+      },
+    ],
     ...overrides,
   })
 
@@ -156,6 +185,26 @@ describe('captureBatchSummary', () => {
     expect(Sentry.captureMessage).toHaveBeenCalledWith(
       expect.stringContaining('ES, FR fully down'),
       'error'
+    )
+  })
+
+  it('should include sample errors in context when provided', () => {
+    const sampleErrors = [createSampleError()]
+
+    captureBatchSummary(createSummary({
+      failedCount: 50,
+      totalStores: 100,
+      successCount: 50,
+      countryBreakdown: {
+        DE: { total: 50, failed: 50 },
+        ES: { total: 50, failed: 0 },
+      },
+      sampleErrors,
+    }))
+
+    expect(Sentry.__mockScope.setContext).toHaveBeenCalledWith(
+      'sample_errors',
+      { samples: sampleErrors }
     )
   })
 

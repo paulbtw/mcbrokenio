@@ -1,9 +1,14 @@
 import { type Pos } from "@mcbroken/db";
 import { prisma } from "@mcbroken/db/client";
+import axios from "axios";
 import PQueue from "p-queue";
 
 import { type RequestLimiter } from "../../constants/RateLimit";
-import { addBreadcrumb, captureBatchSummary } from "../../sentry";
+import {
+  addBreadcrumb,
+  captureBatchSummary,
+  type BatchFailureSample,
+} from "../../sentry";
 import {
   type APIType,
   type ICountryInfos,
@@ -17,6 +22,102 @@ import { getItemStatusMap } from "./getItemStatus/index";
 import { getFailedPos, getUpdatedPos } from "./getUpdatedPos";
 import { updatePos } from "./updatePos";
 
+type JsonRecord = Record<string, unknown>;
+
+function getStringValue(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  return undefined;
+}
+
+function getRecordValue(value: unknown): JsonRecord | undefined {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    return value as JsonRecord;
+  }
+
+  return undefined;
+}
+
+function createFailureSignature(sample: Omit<BatchFailureSample, "signature">) {
+  return [
+    sample.apiType,
+    sample.country,
+    sample.httpStatus ?? "unknown",
+    sample.responseCode ?? "unknown",
+    sample.responseType ?? sample.errorName,
+    sample.responseMessage ?? sample.errorMessage,
+  ].join("|");
+}
+
+function createBatchFailureSample(
+  error: unknown,
+  apiType: APIType,
+  pos: Pos,
+): BatchFailureSample {
+  const baseSample = {
+    apiType,
+    country: pos.country,
+    storeId: pos.id,
+    nationalStoreNumber: pos.nationalStoreNumber,
+  };
+
+  if (axios.isAxiosError(error)) {
+    const responseData = getRecordValue(error.response?.data);
+    const statusData = getRecordValue(responseData?.status);
+    const responseErrors = Array.isArray(statusData?.errors)
+      ? statusData.errors
+          .slice(0, 3)
+          .map((item) => getRecordValue(item))
+          .filter((item): item is JsonRecord => item != null)
+          .map((item) => ({
+            code: getStringValue(item.code),
+            type: getStringValue(item.type),
+            message: getStringValue(item.message),
+            property: getStringValue(item.property),
+            service: getStringValue(item.service),
+          }))
+      : undefined;
+
+    const sample: Omit<BatchFailureSample, "signature"> = {
+      ...baseSample,
+      errorName: error.name,
+      errorMessage: error.message,
+      requestUrl: error.config?.url,
+      httpStatus: error.response?.status,
+      responseCode: getStringValue(statusData?.code),
+      responseType: getStringValue(statusData?.type),
+      responseMessage:
+        getStringValue(statusData?.message) ??
+        getStringValue(responseData?.message),
+      responseService: getStringValue(statusData?.service),
+      responseErrors,
+    };
+
+    return {
+      ...sample,
+      signature: createFailureSignature(sample),
+    };
+  }
+
+  const sample: Omit<BatchFailureSample, "signature"> = {
+    ...baseSample,
+    errorName: error instanceof Error ? error.name : "UnknownError",
+    errorMessage:
+      error instanceof Error ? error.message : "Item status request failed",
+  };
+
+  return {
+    ...sample,
+    signature: createFailureSignature(sample),
+  };
+}
+
 export async function getItemStatus(
   apiType: APIType,
   requestLimiter: RequestLimiter,
@@ -29,6 +130,7 @@ export async function getItemStatus(
   const asyncTasks: Array<Promise<void>> = [];
   const posMap = new Map<string, UpdatePos>();
   const countryStats: Record<string, { total: number; failed: number }> = {};
+  const sampleErrors = new Map<string, BatchFailureSample>();
   const startTime = Date.now();
 
   const maxRequestsPerSecond = requestLimiter.maxRequestsPerSecond;
@@ -48,6 +150,25 @@ export async function getItemStatus(
     {},
   );
 
+  function recordFailure(pos: Pos, error: unknown) {
+    const sample = createBatchFailureSample(error, apiType, pos);
+    const stats = countryStats[pos.country] ?? { total: 0, failed: 0 };
+
+    if (
+      !sampleErrors.has(sample.signature) &&
+      sampleErrors.size < 5
+    ) {
+      sampleErrors.set(sample.signature, sample);
+      console.error("Item status request failed", sample);
+    }
+
+    stats.failed++;
+    countryStats[pos.country] = stats;
+
+    const failedPosUpdate = getFailedPos(pos);
+    posMap.set(pos.id, failedPosUpdate);
+  }
+
   async function processPos(pos: Pos) {
     if (requestsThisSecond >= maxRequestsPerSecond) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -63,23 +184,25 @@ export async function getItemStatus(
     }
     countryStats[country].total++;
 
-    const itemStatus = await getItemStatusMap[apiType](
-      pos,
-      countriesRecord,
-      token,
-      clientId,
-    );
+    try {
+      const itemStatus = await getItemStatusMap[apiType](
+        pos,
+        countriesRecord,
+        token,
+        clientId,
+      );
 
-    if (itemStatus == null) {
-      countryStats[country].failed++;
+      if (itemStatus == null) {
+        recordFailure(pos, new Error("Item status request returned null"));
+        return;
+      }
 
-      const failedPosUpdate = getFailedPos(pos);
-      posMap.set(pos.id, failedPosUpdate);
+      const posToUpdate = getUpdatedPos(pos, itemStatus);
+      posMap.set(pos.id, posToUpdate);
+    } catch (error) {
+      recordFailure(pos, error);
       return;
     }
-
-    const posToUpdate = getUpdatedPos(pos, itemStatus);
-    posMap.set(pos.id, posToUpdate);
   }
 
   const posToCheck = await getPosByCountries(prisma, countries);
@@ -115,6 +238,7 @@ export async function getItemStatus(
     failedCount: totalFailed,
     countryBreakdown: countryStats,
     durationMs: Date.now() - startTime,
+    sampleErrors: Array.from(sampleErrors.values()),
   });
 
   const uniquePosArray = Array.from(posMap.values());
