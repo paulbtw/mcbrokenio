@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
 import {
@@ -9,12 +8,8 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const getCachedStoreStats = unstable_cache(getStoreStats, ["store-stats"], {
-  revalidate: STORE_DATA_REVALIDATE_SECONDS,
-});
-
 export async function GET() {
-  const storeStats = await getCachedStoreStats();
+  const storeStats = await getStoreStats();
 
   return NextResponse.json(storeStats, {
     headers: {
