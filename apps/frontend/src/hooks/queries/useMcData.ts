@@ -35,7 +35,7 @@ export type McDataGeometry = GeoJSON.FeatureCollection<
 >;
 
 const fetchMcData: QueryFunction<McDataGeometry> = async ({ signal }) => {
-  const { data } = await axios.get<McDataGeometry>("/assets/marker.json", {
+  const { data } = await axios.get<McDataGeometry>("/api/stores", {
     signal,
   });
 

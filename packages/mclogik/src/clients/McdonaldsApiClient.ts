@@ -180,7 +180,7 @@ export const API_CLIENT_CONFIGS: Record<
     apiType: 'EU' as APIType,
     sourceApp: 'GMA',
     acceptLanguage: 'en-GB',
-    storeIdType: 'NatlStrNumber'
+    storeIdType: 'gblNumber'
   },
   US: {
     baseUrl: 'https://us-prod.api.mcd.com',

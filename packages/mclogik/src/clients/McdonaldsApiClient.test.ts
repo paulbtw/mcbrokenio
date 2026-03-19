@@ -133,6 +133,10 @@ describe('StandardApiClient', () => {
           })
         })
       )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        expect.stringContaining('storeUniqueIdType=gblNumber'),
+        expect.anything()
+      )
     })
 
     it('should use correct config for AP region', async () => {

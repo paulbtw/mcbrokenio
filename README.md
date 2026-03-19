@@ -96,7 +96,6 @@ Configure the `staging` and `production` GitHub environments with these secrets:
 - `BASIC_TOKEN_US`
 - `BASIC_TOKEN_AP`
 - `KEY`
-- `EXPORT_BUCKET`
 - `MCALL_DEPLOYMENT_BUCKET`
 - `MCUS_DEPLOYMENT_BUCKET`
 - `MCAU_DEPLOYMENT_BUCKET`

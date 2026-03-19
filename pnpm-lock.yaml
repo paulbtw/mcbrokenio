@@ -50,6 +50,12 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@mcbroken/db':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@mcbroken/mclogik':
+        specifier: workspace:*
+        version: link:../../packages/mclogik
       '@next/bundle-analyzer':
         specifier: 15.3.2
         version: 15.3.2

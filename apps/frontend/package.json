@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "pnpm --filter @mcbroken/db db:generate",
     "dev": "next dev --turbopack",
     "build": "next build",
     "build:analyze": "ANALYZE=true pnpm build",
@@ -14,6 +15,8 @@
     "test:watch": "vitest --passWithNoTests"
   },
   "dependencies": {
+    "@mcbroken/db": "workspace:*",
+    "@mcbroken/mclogik": "workspace:*",
     "@next/bundle-analyzer": "15.3.2",
     "@vercel/analytics": "^1.0.2",
     "@vercel/functions": "^2.0.3",
