@@ -2,38 +2,13 @@ import type { AWS } from "@serverless/typescript";
 
 const DEFAULT_STAGE = "dev";
 
-function getCliStage(cliArgs: string[]): string | undefined {
-  const inlineStage = cliArgs.find(
-    (arg) => arg.startsWith("--stage=") || arg.startsWith("-s="),
-  );
-
-  if (inlineStage) {
-    return inlineStage.split("=")[1];
-  }
-
-  const stageFlagIndex = cliArgs.findIndex(
-    (arg) => arg === "--stage" || arg === "-s",
-  );
-
-  if (stageFlagIndex === -1) {
-    return undefined;
-  }
-
-  return cliArgs[stageFlagIndex + 1];
-}
-
 function getTrimmedValue(value?: string): string | undefined {
   const trimmedValue = value?.trim();
   return trimmedValue ? trimmedValue : undefined;
 }
 
-export function getDeploymentStage(cliArgs: string[] = process.argv): string {
-  return (
-    getTrimmedValue(process.env.SLS_STAGE) ??
-    getTrimmedValue(process.env.STAGE) ??
-    getTrimmedValue(getCliStage(cliArgs)) ??
-    DEFAULT_STAGE
-  );
+export function getDeploymentStage(): string {
+  return DEFAULT_STAGE;
 }
 
 export function getRequiredEnv(name: string): string {
@@ -46,25 +21,20 @@ export function getOptionalEnv(name: string): string | undefined {
 
 export function getStageBucketName(
   prefix: string,
-  stage: string = getDeploymentStage(),
   override?: string,
 ): string {
-  return getTrimmedValue(override) ?? `${prefix}-${stage}`;
+  return getTrimmedValue(override) ?? `${prefix}-${DEFAULT_STAGE}`;
 }
 
 export function getServiceDeploymentBucket(
   service: string,
-  stage: string = getDeploymentStage(),
   override?: string,
 ): string {
-  return getStageBucketName(`mcbrokenio-${service}-bucket`, stage, override);
+  return getStageBucketName(`mcbrokenio-${service}-bucket`, override);
 }
 
-export function getExportBucket(
-  stage: string = getDeploymentStage(),
-  override?: string,
-): string {
-  return getStageBucketName("mcbrokenio-export-geojson", stage, override);
+export function getExportBucket(override?: string): string {
+  return getTrimmedValue(override) ?? "mcbrokenio-export-geojson-dev";
 }
 
 export const baseServerlessConfiguration: Partial<AWS> = {
@@ -89,14 +59,13 @@ export const baseServerlessConfiguration: Partial<AWS> = {
     apiGateway: {
       minimumCompressionSize: 1024,
     },
-    stage: getDeploymentStage(),
+    stage: DEFAULT_STAGE,
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       LOG_LEVEL: "NONE",
       PRISMA_QUERY_ENGINE_LIBRARY:
         "/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
-      SENTRY_ENVIRONMENT:
-        getOptionalEnv("SENTRY_ENVIRONMENT") ?? getDeploymentStage(),
+      SENTRY_ENVIRONMENT: getOptionalEnv("SENTRY_ENVIRONMENT") ?? DEFAULT_STAGE,
       ...(getOptionalEnv("SENTRY_DSN")
         ? { SENTRY_DSN: getOptionalEnv("SENTRY_DSN") }
         : {}),

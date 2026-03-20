@@ -3,8 +3,6 @@
   "globalEnv": [
     "ANALYZE",
     "MCBROKEN_ASSETS_ORIGIN",
-    "SLS_STAGE",
-    "STAGE",
     "AWS_LAMBDA_FUNCTION_NAME"
   ],
   "tasks": {
@@ -59,7 +57,7 @@
       "dependsOn": ["build", "test", "lint"],
       "cache": false
     },
-    "deploy:staging": {
+    "deploy:dev": {
       "env": [
         "AWS_PROFILE",
         "AWS_ACCESS_KEY_ID",
@@ -78,33 +76,7 @@
         "MCAU_DEPLOYMENT_BUCKET",
         "MCUS_DEPLOYMENT_BUCKET",
         "SENTRY_DSN",
-        "SENTRY_ENVIRONMENT",
-        "SLS_STAGE"
-      ],
-      "dependsOn": ["package"],
-      "cache": false
-    },
-    "deploy:production": {
-      "env": [
-        "AWS_PROFILE",
-        "AWS_ACCESS_KEY_ID",
-        "AWS_SECRET_ACCESS_KEY",
-        "AWS_SESSION_TOKEN",
-        "AWS_REGION",
-        "AWS_DEFAULT_REGION",
-        "DATABASE_URL",
-        "BASIC_TOKEN_EU",
-        "BASIC_TOKEN_EL",
-        "BASIC_TOKEN_US",
-        "BASIC_TOKEN_AP",
-        "KEY",
-        "EXPORT_BUCKET",
-        "MCALL_DEPLOYMENT_BUCKET",
-        "MCAU_DEPLOYMENT_BUCKET",
-        "MCUS_DEPLOYMENT_BUCKET",
-        "SENTRY_DSN",
-        "SENTRY_ENVIRONMENT",
-        "SLS_STAGE"
+        "SENTRY_ENVIRONMENT"
       ],
       "dependsOn": ["package"],
       "cache": false
