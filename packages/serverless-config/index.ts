@@ -74,7 +74,9 @@ export const baseServerlessConfiguration: Partial<AWS> = {
 
   package: {
     individually: true,
-    patterns: [],
+    patterns: [
+      "generated/prisma/**",
+    ],
   },
 
   provider: {
