@@ -4,17 +4,17 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "prepare:prisma": "rm -rf generated/prisma && mkdir -p generated && cp -R ../../packages/database/generated/prisma generated/",
-    "dev": "pnpm prepare:prisma && serverless offline start",
+    "dev": "serverless offline start",
     "check:updates": "npx npm-check-updates",
     "check:updates:u": "npx npm-check-updates -u && pnpm i",
-    "deploy:staging": "pnpm prepare:prisma && SLS_STAGE=staging serverless deploy --stage staging",
-    "deploy:production": "pnpm prepare:prisma && SLS_STAGE=production serverless deploy --stage production --force",
+    "predeploy": "mkdir -p node_modules/.prisma/client && cp -r ../../packages/database/generated/prisma/* node_modules/.prisma/client/",
+    "deploy:staging": "SLS_STAGE=staging pnpm predeploy && serverless deploy --stage staging",
+    "deploy:production": "SLS_STAGE=production pnpm predeploy && serverless deploy --stage production --force",
     "check-types": "tsc --noEmit",
     "lint": "eslint '**/*.ts'",
     "lint:fix": "eslint '**/*.ts' --fix",
-    "invoke": "pnpm prepare:prisma && serverless invoke local --function",
-    "package": "pnpm prepare:prisma && serverless package"
+    "invoke": "serverless invoke local --function",
+    "package": "serverless package"
   },
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",

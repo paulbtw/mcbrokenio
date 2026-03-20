@@ -4,7 +4,7 @@ import axios from "axios";
 import { type McStats } from "@/lib/stats";
 
 const fetchMcStats: QueryFunction<McStats[]> = async ({ signal }) => {
-  const { data } = await axios.get<McStats[]>("/api/stats", {
+  const { data } = await axios.get<McStats[]>("/stats.json", {
     signal,
   });
 

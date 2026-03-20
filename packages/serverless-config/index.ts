@@ -75,7 +75,10 @@ export const baseServerlessConfiguration: Partial<AWS> = {
   package: {
     individually: true,
     patterns: [
-      "generated/prisma/**",
+      "node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
+      "node_modules/.prisma/client/schema.prisma",
+      "!node_modules/prisma/libquery_engine-*",
+      "!node_modules/@prisma/engines/**",
     ],
   },
 
@@ -90,6 +93,8 @@ export const baseServerlessConfiguration: Partial<AWS> = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       LOG_LEVEL: "NONE",
+      PRISMA_QUERY_ENGINE_LIBRARY:
+        "/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
       SENTRY_ENVIRONMENT:
         getOptionalEnv("SENTRY_ENVIRONMENT") ?? getDeploymentStage(),
       ...(getOptionalEnv("SENTRY_DSN")
