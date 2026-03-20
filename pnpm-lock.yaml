@@ -50,9 +50,6 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@mcbroken/db':
-        specifier: workspace:*
-        version: link:../../packages/database
       '@mcbroken/mclogik':
         specifier: workspace:*
         version: link:../../packages/mclogik
