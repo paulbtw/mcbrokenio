@@ -1,12 +1,9 @@
 import {
   baseServerlessConfiguration,
-  getDeploymentStage,
   getRequiredEnv,
   getServiceDeploymentBucket,
 } from "@mcbroken/serverless-config";
 import type { AWS } from "@serverless/typescript";
-
-const stage = getDeploymentStage();
 
 const serverlessConfiguration: AWS = {
   ...baseServerlessConfiguration,
@@ -16,11 +13,7 @@ const serverlessConfiguration: AWS = {
     ...baseServerlessConfiguration.provider!,
     region: "us-east-2",
     deploymentBucket: {
-      name: getServiceDeploymentBucket(
-        "mcus",
-        stage,
-        process.env.MCUS_DEPLOYMENT_BUCKET,
-      ),
+      name: getServiceDeploymentBucket("mcus", process.env.MCUS_DEPLOYMENT_BUCKET),
     },
     iam: {
       role: {

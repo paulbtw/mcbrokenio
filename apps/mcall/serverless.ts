@@ -1,13 +1,11 @@
 import {
   baseServerlessConfiguration,
-  getDeploymentStage,
   getExportBucket,
   getRequiredEnv,
   getServiceDeploymentBucket,
 } from "@mcbroken/serverless-config";
 import type { AWS } from "@serverless/typescript";
 
-const stage = getDeploymentStage();
 const exportBucket = getExportBucket(process.env.EXPORT_BUCKET);
 
 const serverlessConfiguration: AWS = {
@@ -18,11 +16,7 @@ const serverlessConfiguration: AWS = {
     ...baseServerlessConfiguration.provider!,
     region: "eu-central-1",
     deploymentBucket: {
-      name: getServiceDeploymentBucket(
-        "mcall",
-        stage,
-        process.env.MCALL_DEPLOYMENT_BUCKET,
-      ),
+      name: getServiceDeploymentBucket("mcall", process.env.MCALL_DEPLOYMENT_BUCKET),
     },
     environment: {
       ...baseServerlessConfiguration.provider!.environment,

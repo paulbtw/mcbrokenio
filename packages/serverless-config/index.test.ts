@@ -9,78 +9,41 @@ import {
   getStageBucketName,
 } from "./index";
 
-const ORIGINAL_SLS_STAGE = process.env.SLS_STAGE;
-const ORIGINAL_STAGE = process.env.STAGE;
 const ORIGINAL_DATABASE_URL = process.env.DATABASE_URL;
 const ORIGINAL_SENTRY_DSN = process.env.SENTRY_DSN;
 
 afterEach(() => {
-  process.env.SLS_STAGE = ORIGINAL_SLS_STAGE;
-  process.env.STAGE = ORIGINAL_STAGE;
   process.env.DATABASE_URL = ORIGINAL_DATABASE_URL;
   process.env.SENTRY_DSN = ORIGINAL_SENTRY_DSN;
 });
 
 describe("getDeploymentStage", () => {
-  it("prefers SLS_STAGE when present", () => {
+  it("always returns dev", () => {
+    // These env vars are intentionally ignored by getDeploymentStage.
+    // eslint-disable-next-line turbo/no-undeclared-env-vars
     process.env.SLS_STAGE = "production";
+    // eslint-disable-next-line turbo/no-undeclared-env-vars
     process.env.STAGE = "staging";
 
-    expect(getDeploymentStage(["serverless", "deploy", "--stage", "dev"])).toBe(
-      "production",
-    );
-  });
-
-  it("falls back to STAGE before CLI args", () => {
-    delete process.env.SLS_STAGE;
-    process.env.STAGE = "staging";
-
-    expect(
-      getDeploymentStage(["serverless", "deploy", "--stage", "production"]),
-    ).toBe("staging");
-  });
-
-  it("reads the stage from a separated CLI flag", () => {
-    delete process.env.SLS_STAGE;
-    delete process.env.STAGE;
-
-    expect(
-      getDeploymentStage(["serverless", "deploy", "--stage", "production"]),
-    ).toBe("production");
-  });
-
-  it("reads the stage from an inline CLI flag", () => {
-    delete process.env.SLS_STAGE;
-    delete process.env.STAGE;
-
-    expect(
-      getDeploymentStage(["serverless", "deploy", "--stage=staging"]),
-    ).toBe("staging");
-  });
-
-  it("defaults to dev when no stage is provided", () => {
-    delete process.env.SLS_STAGE;
-    delete process.env.STAGE;
-
-    expect(getDeploymentStage(["serverless", "deploy"])).toBe("dev");
+    expect(getDeploymentStage()).toBe("dev");
   });
 });
 
 describe("bucket helpers", () => {
-  it("builds stage-based bucket names", () => {
-    expect(getStageBucketName("mcbrokenio-assets", "staging")).toBe(
-      "mcbrokenio-assets-staging",
+  it("builds dev bucket names", () => {
+    expect(getStageBucketName("mcbrokenio-assets")).toBe(
+      "mcbrokenio-assets-dev",
     );
-    expect(getServiceDeploymentBucket("mcus", "production")).toBe(
-      "mcbrokenio-mcus-bucket-production",
+    expect(getServiceDeploymentBucket("mcus")).toBe(
+      "mcbrokenio-mcus-bucket-dev",
     );
     expect(getExportBucket()).toBe("mcbrokenio-export-geojson-dev");
   });
 
   it("uses explicit overrides when provided", () => {
-    expect(
-      getServiceDeploymentBucket("mcall", "production", "custom-bucket"),
-    ).toBe("custom-bucket");
+    expect(getServiceDeploymentBucket("mcall", "custom-bucket")).toBe(
+      "custom-bucket",
+    );
     expect(getExportBucket("exports-bucket")).toBe("exports-bucket");
   });
 });

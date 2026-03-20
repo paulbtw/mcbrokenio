@@ -22,12 +22,13 @@
     "check-api:europe": "ts-node --transpile-only scripts/check-api-health.ts europe",
     "check-api:australia": "ts-node --transpile-only scripts/check-api-health.ts australia",
     "invoke": "./scripts/invoke-local.sh",
-    "deploy": "pnpm deploy:production",
-    "deploy:staging": "turbo run deploy:staging --filter=./apps/mc*",
-    "deploy:production": "turbo run deploy:production --filter=./apps/mc*",
-    "deploy:mcall": "turbo run deploy:production --filter=@mcbroken/mcall",
-    "deploy:mcus": "turbo run deploy:production --filter=@mcbroken/mcus",
-    "deploy:mcau": "turbo run deploy:production --filter=@mcbroken/mcau"
+    "deploy": "pnpm deploy:dev",
+    "deploy:dev": "turbo run deploy:dev --filter=./apps/mc*",
+    "deploy:staging": "pnpm deploy:dev",
+    "deploy:production": "pnpm deploy:dev",
+    "deploy:mcall": "turbo run deploy:dev --filter=@mcbroken/mcall",
+    "deploy:mcus": "turbo run deploy:dev --filter=@mcbroken/mcus",
+    "deploy:mcau": "turbo run deploy:dev --filter=@mcbroken/mcau"
   },
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",
