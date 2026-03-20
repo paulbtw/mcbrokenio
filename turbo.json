@@ -3,7 +3,9 @@
   "globalEnv": [
     "ANALYZE",
     "MCBROKEN_ASSETS_ORIGIN",
-    "AWS_LAMBDA_FUNCTION_NAME"
+    "AWS_LAMBDA_FUNCTION_NAME",
+    "SLS_STAGE",
+    "STAGE"
   ],
   "tasks": {
     "build": {
@@ -75,6 +77,8 @@
         "MCALL_DEPLOYMENT_BUCKET",
         "MCAU_DEPLOYMENT_BUCKET",
         "MCUS_DEPLOYMENT_BUCKET",
+        "SLS_STAGE",
+        "STAGE",
         "SENTRY_DSN",
         "SENTRY_ENVIRONMENT"
       ],
