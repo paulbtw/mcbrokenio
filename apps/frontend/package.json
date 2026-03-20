@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "pnpm --filter @mcbroken/db db:generate",
-    "dev": "next dev --turbopack",
+    "prepare:prisma": "rm -rf generated/prisma && mkdir -p generated && cp -R ../../packages/database/generated/prisma generated/",
+    "prebuild": "pnpm --filter @mcbroken/db db:generate && pnpm prepare:prisma",
+    "dev": "pnpm --filter @mcbroken/db db:generate && pnpm prepare:prisma && next dev --turbopack",
     "build": "next build",
     "build:analyze": "ANALYZE=true pnpm build",
     "start": "next start",
