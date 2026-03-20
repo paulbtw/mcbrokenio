@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "prepare:prisma": "rm -rf generated/prisma && mkdir -p generated && cp -R ../../packages/database/generated/prisma generated/",
-    "prebuild": "pnpm --filter @mcbroken/db db:generate && pnpm prepare:prisma",
     "dev": "pnpm --filter @mcbroken/db db:generate && pnpm prepare:prisma && next dev --turbopack",
-    "build": "next build",
+    "build": "pnpm --filter @mcbroken/db db:generate && pnpm prepare:prisma && next build",
     "build:analyze": "ANALYZE=true pnpm build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
