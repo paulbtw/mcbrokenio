@@ -3,9 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prepare:prisma": "rm -rf generated/prisma && mkdir -p generated && cp -R ../../packages/database/generated/prisma generated/",
-    "dev": "pnpm --filter @mcbroken/db db:generate && pnpm prepare:prisma && next dev --turbopack",
-    "build": "pnpm --filter @mcbroken/db db:generate && pnpm prepare:prisma && next build",
+    "dev": "next dev --turbopack",
+    "build": "next build",
     "build:analyze": "ANALYZE=true pnpm build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
@@ -15,7 +14,6 @@
     "test:watch": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@mcbroken/db": "workspace:*",
     "@mcbroken/mclogik": "workspace:*",
     "@next/bundle-analyzer": "15.3.2",
     "@vercel/analytics": "^1.0.2",
