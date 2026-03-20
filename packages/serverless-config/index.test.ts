@@ -74,14 +74,14 @@ describe("bucket helpers", () => {
     expect(getServiceDeploymentBucket("mcus", "production")).toBe(
       "mcbrokenio-mcus-bucket-production",
     );
-    expect(getExportBucket("dev")).toBe("mcbrokenio-export-geojson-dev");
+    expect(getExportBucket()).toBe("mcbrokenio-export-geojson-dev");
   });
 
   it("uses explicit overrides when provided", () => {
     expect(
       getServiceDeploymentBucket("mcall", "production", "custom-bucket"),
     ).toBe("custom-bucket");
-    expect(getExportBucket("staging", "exports-bucket")).toBe("exports-bucket");
+    expect(getExportBucket("exports-bucket")).toBe("exports-bucket");
   });
 });
 

@@ -60,11 +60,8 @@ export function getServiceDeploymentBucket(
   return getStageBucketName(`mcbrokenio-${service}-bucket`, stage, override);
 }
 
-export function getExportBucket(
-  stage: string = getDeploymentStage(),
-  override?: string,
-): string {
-  return getStageBucketName("mcbrokenio-export-geojson", stage, override);
+export function getExportBucket(override?: string): string {
+  return getTrimmedValue(override) ?? "mcbrokenio-export-geojson-dev";
 }
 
 export const baseServerlessConfiguration: Partial<AWS> = {

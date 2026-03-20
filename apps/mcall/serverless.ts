@@ -8,7 +8,7 @@ import {
 import type { AWS } from "@serverless/typescript";
 
 const stage = getDeploymentStage();
-const exportBucket = getExportBucket(stage, process.env.EXPORT_BUCKET);
+const exportBucket = getExportBucket(process.env.EXPORT_BUCKET);
 
 const serverlessConfiguration: AWS = {
   ...baseServerlessConfiguration,
