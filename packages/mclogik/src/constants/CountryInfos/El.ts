@@ -664,7 +664,7 @@ export const El: Record<ElLocations, ICountryInfos> = {
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/es/es-es',
-      mobileString: 'Pedido móvil para recoger en restaurante'
+      mobileString: 'MyMcDonald\'s Pide y Paga'
     },
     productCodes: {
       [IceType.MILCHSHAKE]: ['UNAVAILABLE'],
