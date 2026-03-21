@@ -52,7 +52,7 @@
 | Slovenia             | SI   | false           |                                 |
 | South Africa         | SAR  | false           |                                 |
 | South Korea          | KR   | false           |                                 |
-| Spain                | ES   | true            | Pedido móvil para recoger en restaurante |
+| Spain                | ES   | true            | MyMcDonald's Pide y Paga |
 | Sweden               | SE   | true            | Mobil beställning och betalning |
 | Swiss                | CH   | true            | Mobil bestellen und bezahlen    |
 | Thailand             | TH   | false           |                                 |
