@@ -1,4 +1,5 @@
-import { APIType, EuLocations,IceType, type ICountryInfos } from '../../types'
+import { APIType, EuLocations, IceType, type ICountryInfos } from '../../types'
+import { unavailableProduct } from '../../utils/productCodeConfig'
 
 export const Eu: Record<EuLocations, ICountryInfos> = {
   // EU-PROD API
@@ -50,7 +51,7 @@ export const Eu: Record<EuLocations, ICountryInfos> = {
     productCodes: {
       [IceType.MILCHSHAKE]: ['4300', '4310', '4330', '4320'],
       [IceType.MCFLURRY]: ['4467', '4694', '4397', '6554'],
-      [IceType.MCSUNDAE]: ['UNAVAILABLE']
+      [IceType.MCSUNDAE]: unavailableProduct()
     },
     locationLimits: {
       minLatitude: 49.674,

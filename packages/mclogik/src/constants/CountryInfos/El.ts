@@ -1,4 +1,5 @@
-import { APIType, ElLocations,IceType, type ICountryInfos } from '../../types'
+import { APIType, ElLocations, IceType, type ICountryInfos } from '../../types'
+import { unavailableProduct } from '../../utils/productCodeConfig'
 
 export const El: Record<ElLocations, ICountryInfos> = {
   // EL-PROD API
@@ -13,6 +14,73 @@ export const El: Record<ElLocations, ICountryInfos> = {
       [IceType.MILCHSHAKE]: ['5020', '5030', '5010'],
       [IceType.MCFLURRY]: ['4238', '4214', '4181', '4778'],
       [IceType.MCSUNDAE]: ['5076', '4010', '4020', '4030', '4040']
+    }
+  },
+  [ElLocations.AZ]: {
+    country: ElLocations.AZ,
+    getStores: {
+      api: APIType.EL,
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/az/az-az',
+      mobileString: 'Mobil sifariş və ödəmə'
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: [
+        '4000',
+        '4001',
+        '4002',
+        '4003',
+        '4004',
+        '4005',
+        '4006',
+        '4007',
+        '4008',
+        '4009',
+        '4010',
+        '4014',
+        '4015',
+        '4016',
+        '4023',
+        '4024',
+        '4025',
+        '4029',
+        '7068',
+        '7069',
+        '7070',
+        '7112',
+        '7180'
+      ],
+      [IceType.MCFLURRY]: [
+        '5013',
+        '5014',
+        '5015',
+        '5032',
+        '5043',
+        '5044',
+        '5045',
+        '5074',
+        '8626'
+      ],
+      [IceType.MCSUNDAE]: [
+        '5009',
+        '5010',
+        '5011',
+        '5020',
+        '5025',
+        '5026',
+        '5027',
+        '5040',
+        '5041',
+        '7064',
+        '7065',
+        '7066',
+        '7113',
+        '7179',
+        '7229',
+        '7230',
+        '7231',
+        '8624',
+        '8625'
+      ]
     }
   },
   [ElLocations.BH]: {
@@ -480,12 +548,98 @@ export const El: Record<ElLocations, ICountryInfos> = {
       [IceType.MCSUNDAE]: ['3110', '3111', '3112', '6698', '6699', '6700']
     }
   },
+  [ElLocations.OM]: {
+    country: ElLocations.OM,
+    getStores: {
+      api: APIType.EL,
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/om/en-gb',
+      mobileString: 'Mobile order and pay'
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: unavailableProduct(),
+      [IceType.MCFLURRY]: [
+        '235',
+        '237',
+        '1221',
+        '1222',
+        '4065',
+        '4066',
+        '4256',
+        '4363',
+        '7055',
+        '7056',
+        '7521',
+        '7522',
+        '7569',
+        '7570',
+        '7586',
+        '7587',
+        '7592',
+        '7593',
+        '7854'
+      ],
+      [IceType.MCSUNDAE]: [
+        '221',
+        '222',
+        '1201',
+        '1202',
+        '1203',
+        '1206',
+        '1211',
+        '2140',
+        '2141',
+        '2142',
+        '2143',
+        '3210',
+        '3211',
+        '3212',
+        '3232',
+        '3233',
+        '3234',
+        '4061',
+        '4062',
+        '4063',
+        '4064',
+        '7053',
+        '7054',
+        '7070',
+        '7071',
+        '7072',
+        '7073',
+        '7074',
+        '7513',
+        '7514',
+        '7515',
+        '7516',
+        '7578',
+        '7579',
+        '7580',
+        '7660',
+        '7661',
+        '7662',
+        '9074'
+      ]
+    }
+  },
   [ElLocations.PK]: {
     // Has no mobile ordering
     country: ElLocations.PK,
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/pk/en-gb'
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: [],
+      [IceType.MCFLURRY]: [],
+      [IceType.MCSUNDAE]: []
+    }
+  },
+  [ElLocations.PH]: {
+    // Location-only: status/menu endpoints return 404.
+    country: ElLocations.PH,
+    getStores: {
+      api: APIType.EL,
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/ph/en-ph'
     },
     productCodes: {
       [IceType.MILCHSHAKE]: [],
@@ -554,7 +708,7 @@ export const El: Record<ElLocations, ICountryInfos> = {
       mobileString: 'Pedidos Mobile'
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: ['UNAVAILABLE'],
+      [IceType.MILCHSHAKE]: unavailableProduct(),
       [IceType.MCFLURRY]: [
         '8643',
         '5099',
@@ -566,6 +720,78 @@ export const El: Record<ElLocations, ICountryInfos> = {
         '5175'
       ],
       [IceType.MCSUNDAE]: ['4030', '4020', '4010']
+    }
+  },
+  [ElLocations.QA]: {
+    country: ElLocations.QA,
+    getStores: {
+      api: APIType.EL,
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/qa/en-gb',
+      mobileString: 'Mobile order and pay'
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: unavailableProduct(),
+      [IceType.MCFLURRY]: [
+        '1218',
+        '1219',
+        '1220',
+        '1221',
+        '1222',
+        '1228',
+        '7249',
+        '7257',
+        '81158'
+      ],
+      [IceType.MCSUNDAE]: [
+        '174',
+        '177',
+        '178',
+        '179',
+        '180',
+        '181',
+        '182',
+        '188',
+        '189',
+        '190',
+        '191',
+        '192',
+        '1201',
+        '1202',
+        '1203',
+        '1204',
+        '1205',
+        '1206',
+        '1207',
+        '1208',
+        '1209',
+        '1212',
+        '1213',
+        '1214',
+        '1215',
+        '1216',
+        '1217',
+        '1250',
+        '1296',
+        '1297',
+        '1298',
+        '1901',
+        '1902',
+        '1903',
+        '1904',
+        '1905',
+        '1906',
+        '7251',
+        '7601',
+        '7602',
+        '7603',
+        '7604',
+        '81150',
+        '81151',
+        '81152',
+        '81153',
+        '81154',
+        '81155'
+      ]
     }
   },
   [ElLocations.RE]: {
@@ -615,7 +841,7 @@ export const El: Record<ElLocations, ICountryInfos> = {
       mobileString: 'Mobile order and pay'
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: ['UNAVAILABLE'],
+      [IceType.MILCHSHAKE]: unavailableProduct(),
       [IceType.MCFLURRY]: ['504121', '505327', '505341', '505342'],
       [IceType.MCSUNDAE]: ['505325', '505326']
     }
@@ -664,10 +890,10 @@ export const El: Record<ElLocations, ICountryInfos> = {
     getStores: {
       api: APIType.EL,
       url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/es/es-es',
-      mobileString: 'MyMcDonald\'s Pide y Paga'
+      mobileString: "MyMcDonald's Pide y Paga"
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: ['UNAVAILABLE'],
+      [IceType.MILCHSHAKE]: unavailableProduct(),
       [IceType.MCFLURRY]: [
         '4579',
         '4580',
@@ -729,6 +955,19 @@ export const El: Record<ElLocations, ICountryInfos> = {
       [IceType.MCSUNDAE]: []
     }
   },
+  [ElLocations.TR]: {
+    // Location-only: status/menu endpoints return 404.
+    country: ElLocations.TR,
+    getStores: {
+      api: APIType.EL,
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/tr/tr-tr'
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: [],
+      [IceType.MCFLURRY]: [],
+      [IceType.MCSUNDAE]: []
+    }
+  },
   [ElLocations.AE]: {
     country: ElLocations.AE,
     getStores: {
@@ -737,7 +976,7 @@ export const El: Record<ElLocations, ICountryInfos> = {
       mobileString: 'Mobile order and pay'
     },
     productCodes: {
-      [IceType.MILCHSHAKE]: ['UNAVAILABLE'],
+      [IceType.MILCHSHAKE]: unavailableProduct(),
       [IceType.MCFLURRY]: ['1221', '1222'],
       [IceType.MCSUNDAE]: ['1201', '1202', '1203']
     }
@@ -766,6 +1005,55 @@ export const El: Record<ElLocations, ICountryInfos> = {
       [IceType.MILCHSHAKE]: [],
       [IceType.MCFLURRY]: [],
       [IceType.MCSUNDAE]: []
+    }
+  },
+  [ElLocations.ZA]: {
+    country: ElLocations.ZA,
+    getStores: {
+      api: APIType.EL,
+      url: 'https://api.me2-prd.gmal.app/api/locationfinder/v1/restaurants/za/en-za',
+      mobileString: 'Mobile order and pay'
+    },
+    productCodes: {
+      [IceType.MILCHSHAKE]: [
+        '3518',
+        '3519',
+        '3520',
+        '3523',
+        '3524',
+        '3525',
+        '3526',
+        '3527',
+        '3528',
+        '3529',
+        '3530',
+        '3531',
+        '10199',
+        '10200',
+        '10201',
+        '10202',
+        '10249',
+        '20176'
+      ],
+      [IceType.MCFLURRY]: [
+        '4008',
+        '10165',
+        '10215',
+        '10216',
+        '10250',
+        '10268',
+        '10283',
+        '20145',
+        '20146'
+      ],
+      [IceType.MCSUNDAE]: [
+        '4003',
+        '4004',
+        '4005',
+        '4006',
+        '15002',
+        '20173'
+      ]
     }
   }
 }

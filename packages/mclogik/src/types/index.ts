@@ -8,6 +8,7 @@ export enum ApLocations {
 
 export enum ElLocations {
   AT = 'AT', // Austria
+  AZ = 'AZ', // Azerbaijan
   BH = 'BH', // Bahrain
   BY = 'BY', // Belarus
   BE = 'BE', // Belgium
@@ -43,10 +44,13 @@ export enum ElLocations {
   NZ = 'NZ', // New Zealand
   NI = 'NI', // Nicaragua
   NO = 'NO', // Norway
+  OM = 'OM', // Oman
   PK = 'PK', // Pakistan
+  PH = 'PH', // Philippines
   PY = 'PY', // Paraguay
   PL = 'PL', // Poland
   PT = 'PT', // Portugal
+  QA = 'QA', // Qatar
   RE = 'RE', // Reunion
   RO = 'RO', // Romania
   RS = 'RS', // Serbia
@@ -58,9 +62,11 @@ export enum ElLocations {
   SE = 'SE', // Sweden
   CH = 'CH', // Switzerland
   TH = 'TH', // Thailand
+  TR = 'TR', // Turkey
   AE = 'AE', // United Arab Emirates
   UA = 'UA', // Ukraine
   VN = 'VN', // Vietnam
+  ZA = 'ZA', // South Africa
 }
 
 export enum UsLocations {
