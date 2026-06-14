@@ -25,7 +25,12 @@ export function normalizeProductCodeConfig(
   config: ProductCodeConfig
 ): NormalizedProductCodeConfig {
   if (!Array.isArray(config)) {
-    return { kind: 'unavailable' }
+    if (config.kind === 'unavailable') {
+      return { kind: 'unavailable' }
+    }
+
+    const exhaustive: never = config
+    return exhaustive
   }
 
   if (config.some((code): code is ProductMarker => legacyUnavailableMarkers.has(code as ProductMarker))) {
