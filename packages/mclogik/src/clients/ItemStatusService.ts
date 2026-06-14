@@ -1,22 +1,12 @@
 import { ItemStatus, type Pos } from '@mcbroken/db'
 
-import { type ICountryInfos } from '../types'
+import { type ICountryInfos, type ProductCodeConfig } from '../types'
+import { normalizeProductCodeConfig } from '../utils/productCodeConfig'
 
 import {
   type McdonaldsApiClient,
   type McdonaldsRequestHeaders
 } from './McdonaldsApiClient'
-
-/**
- * Special marker used in country configurations to indicate that a product
- * category is not applicable for a particular market (e.g., sundaes in UK).
- *
- * When this marker is present in the product codes array, the product
- * category will be marked as NOT_APPLICABLE instead of checking availability.
- *
- * Note: This uses a distinct value to avoid confusion with the ItemStatus enum.
- */
-export const NOT_APPLICABLE_MARKER = '__NOT_APPLICABLE__'
 
 /**
  * Status result for a single product category
@@ -48,13 +38,23 @@ export interface StoreItemStatus {
  */
 export function checkProductAvailability(
   outageProductCodes: string[],
-  productCodes: string[]
+  productCodes: ProductCodeConfig
 ): Omit<ProductStatus, 'name'> {
-  const count = productCodes.length
+  const normalizedProductCodes = normalizeProductCodeConfig(productCodes)
+
+  if (normalizedProductCodes.kind === 'unavailable') {
+    return {
+      status: ItemStatus.NOT_APPLICABLE,
+      count: 0,
+      unavailable: 0
+    }
+  }
+
+  const count = normalizedProductCodes.codes.length
   let unavailable = 0
 
   // No products defined for this category
-  if (productCodes.length === 0) {
+  if (normalizedProductCodes.codes.length === 0) {
     return {
       status: ItemStatus.UNAVAILABLE,
       count,
@@ -62,17 +62,8 @@ export function checkProductAvailability(
     }
   }
 
-  // Special marker indicating product is not applicable for this market
-  if (productCodes.includes(NOT_APPLICABLE_MARKER)) {
-    return {
-      status: ItemStatus.NOT_APPLICABLE,
-      count,
-      unavailable
-    }
-  }
-
   // Count how many products are in the outage list
-  for (const code of productCodes) {
+  for (const code of normalizedProductCodes.codes) {
     if (outageProductCodes.includes(code)) {
       unavailable++
     }
