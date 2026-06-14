@@ -112,6 +112,24 @@ export enum IceType {
   MILCHSHAKE = 'MILCHSHAKE',
 }
 
+export const UNAVAILABLE_PRODUCT_MARKER = 'UNAVAILABLE' as const
+export const NOT_APPLICABLE_PRODUCT_MARKER = '__NOT_APPLICABLE__' as const
+
+export type ProductMarker =
+  | typeof UNAVAILABLE_PRODUCT_MARKER
+  | typeof NOT_APPLICABLE_PRODUCT_MARKER
+
+export interface UnavailableProductConfig {
+  kind: 'unavailable'
+  marker?: ProductMarker
+}
+
+export type ProductCodeConfig = string[] | UnavailableProductConfig
+
+export type NormalizedProductCodeConfig =
+  | { kind: 'tracked'; codes: string[] }
+  | { kind: 'unavailable' }
+
 export interface ICountryInfos {
   country: Locations
   getStores: {
@@ -119,8 +137,8 @@ export interface ICountryInfos {
     mobileString?: string
     url: string
   }
-  productCodes: Record<IceType, string[]>
-  customItems?: Record<string, string[]>
+  productCodes: Record<IceType, ProductCodeConfig>
+  customItems?: Record<string, ProductCodeConfig>
   locationLimits?: LocationLimits
 }
 
