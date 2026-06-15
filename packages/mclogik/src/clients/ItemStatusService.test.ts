@@ -1,14 +1,19 @@
 import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
-import { APIType, IceType, type ICountryInfos, UsLocations } from '../types'
+import {
+  APIType,
+  IceType,
+  type ICountryInfos,
+  type ProductCodeConfig,
+  UsLocations
+} from '../types'
 
 import {
   calculateStoreItemStatus,
   checkProductAvailability,
   createItemStatusService,
-  ItemStatusService,
-  NOT_APPLICABLE_MARKER
+  ItemStatusService
 } from './ItemStatusService'
 import { type McdonaldsApiClient } from './McdonaldsApiClient'
 
@@ -25,16 +30,53 @@ describe('checkProductAvailability', () => {
     })
   })
 
-  describe('when product codes include NOT_APPLICABLE_MARKER', () => {
-    it('should return NOT_APPLICABLE status', () => {
+  describe('when product config is explicitly unavailable', () => {
+    it('should return NOT_APPLICABLE with count 0', () => {
       const result = checkProductAvailability(
         ['CODE1', 'CODE2'],
-        [NOT_APPLICABLE_MARKER, 'CODE3']
+        { kind: 'unavailable' } satisfies ProductCodeConfig
       )
 
       expect(result).toEqual({
         status: 'NOT_APPLICABLE',
-        count: 2,
+        count: 0,
+        unavailable: 0
+      })
+    })
+  })
+
+  describe('when product codes include legacy unavailable markers', () => {
+    it('should support the UNAVAILABLE marker', () => {
+      const result = checkProductAvailability(['CODE1'], ['UNAVAILABLE'])
+
+      expect(result).toEqual({
+        status: 'NOT_APPLICABLE',
+        count: 0,
+        unavailable: 0
+      })
+    })
+
+    it('should support the __NOT_APPLICABLE__ marker', () => {
+      const result = checkProductAvailability(['CODE1'], ['__NOT_APPLICABLE__'])
+
+      expect(result).toEqual({
+        status: 'NOT_APPLICABLE',
+        count: 0,
+        unavailable: 0
+      })
+    })
+  })
+
+  describe('when product codes include the legacy not applicable marker', () => {
+    it('should return NOT_APPLICABLE status', () => {
+      const result = checkProductAvailability(
+        ['CODE1', 'CODE2'],
+        ['__NOT_APPLICABLE__', 'CODE3']
+      )
+
+      expect(result).toEqual({
+        status: 'NOT_APPLICABLE',
+        count: 0,
         unavailable: 0
       })
     })
@@ -205,6 +247,34 @@ describe('calculateStoreItemStatus', () => {
     const result = calculateStoreItemStatus(outageProductCodes, countryInfo)
 
     expect(result.custom).toEqual([])
+  })
+
+  it('should handle unavailable products separately from tracked partial availability', () => {
+    const countryInfo = createCountryInfo({
+      productCodes: {
+        [IceType.MILCHSHAKE]: { kind: 'unavailable' },
+        [IceType.MCFLURRY]: ['FLURRY1', 'FLURRY2'],
+        [IceType.MCSUNDAE]: ['SUNDAE1']
+      }
+    })
+
+    const result = calculateStoreItemStatus(['FLURRY1'], countryInfo)
+
+    expect(result.milkshake).toEqual({
+      status: 'NOT_APPLICABLE',
+      count: 0,
+      unavailable: 0
+    })
+    expect(result.mcFlurry).toEqual({
+      status: 'PARTIAL_AVAILABLE',
+      count: 2,
+      unavailable: 1
+    })
+    expect(result.mcSundae).toEqual({
+      status: 'AVAILABLE',
+      count: 1,
+      unavailable: 0
+    })
   })
 })
 

@@ -3,7 +3,6 @@ export {
   checkProductAvailability,
   createItemStatusService,
   ItemStatusService,
-  NOT_APPLICABLE_MARKER,
   type ProductStatus,
   type StoreItemStatus
 } from './ItemStatusService'

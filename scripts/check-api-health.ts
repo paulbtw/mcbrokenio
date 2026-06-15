@@ -23,29 +23,33 @@ import {
   ApLocations,
   ElLocations,
   EuLocations,
+  type ICountryInfos,
+  type ILocation,
   type Locations,
-  UsLocations
+  UsLocations,
 } from '../packages/mclogik/src/types'
+import { KEY } from '../packages/mclogik/src/constants'
 import { CountryInfos } from '../packages/mclogik/src/constants/CountryInfos'
 import { getBearerToken } from '../packages/mclogik/src/services/token/getBearerToken'
+import { getClientId } from '../packages/mclogik/src/services/token/getClientId'
 
 // VPN region groupings
 const VPN_REGIONS = {
   us: {
     name: 'US (requires US VPN)',
-    locations: Object.values(UsLocations) as Locations[]
+    locations: Object.values(UsLocations) as Locations[],
   },
   europe: {
     name: 'Europe (requires Europe VPN)',
     locations: [
       ...Object.values(EuLocations),
-      ...Object.values(ElLocations)
-    ] as Locations[]
+      ...Object.values(ElLocations),
+    ] as Locations[],
   },
   australia: {
     name: 'Australia (requires Australia VPN)',
-    locations: Object.values(ApLocations) as Locations[]
-  }
+    locations: Object.values(ApLocations) as Locations[],
+  },
 } as const
 
 type VpnRegion = keyof typeof VPN_REGIONS
@@ -58,13 +62,39 @@ interface CheckResult {
   responseTime?: number
 }
 
+function getElStoreListHealthCheckUrl(url: string): string {
+  const healthCheckUrl = new URL(url)
+
+  healthCheckUrl.searchParams.set('acceptOffers', 'all')
+  healthCheckUrl.searchParams.set('lab', 'false')
+  healthCheckUrl.searchParams.set('key', KEY ?? '')
+
+  return healthCheckUrl.toString()
+}
+
+function getHealthCheckLocation(countryInfo: ICountryInfos): ILocation {
+  const { locationLimits } = countryInfo
+
+  if (!locationLimits) {
+    return {
+      latitude: 0,
+      longitude: 0,
+    }
+  }
+
+  return {
+    latitude: (locationLimits.minLatitude + locationLimits.maxLatitude) / 2,
+    longitude: (locationLimits.minLongitude + locationLimits.maxLongitude) / 2,
+  }
+}
+
 /**
  * Test if a country's store listing API is responding
  */
 async function checkCountryApi(
   country: Locations,
   token: string | undefined,
-  clientId: string
+  clientId: string,
 ): Promise<CheckResult> {
   const countryInfo = CountryInfos[country]
 
@@ -73,7 +103,7 @@ async function checkCountryApi(
       country,
       apiType: APIType.UNKNOWN,
       success: false,
-      error: 'No API configured'
+      error: 'No API configured',
     }
   }
 
@@ -84,7 +114,7 @@ async function checkCountryApi(
       country,
       apiType: api,
       success: false,
-      error: 'No URL configured'
+      error: 'No URL configured',
     }
   }
 
@@ -93,9 +123,18 @@ async function checkCountryApi(
   try {
     // For EL API, use a different endpoint structure
     if (api === APIType.EL) {
-      const response = await axios.get(url, {
+      if (!KEY) {
+        return {
+          country,
+          apiType: api,
+          success: false,
+          error: 'No KEY configured',
+        }
+      }
+
+      const response = await axios.get(getElStoreListHealthCheckUrl(url), {
         timeout: 10000,
-        validateStatus: (status) => status < 500
+        validateStatus: (status) => status < 500,
       })
 
       const responseTime = Date.now() - startTime
@@ -108,7 +147,7 @@ async function checkCountryApi(
           apiType: api,
           success: false,
           error: `HTTP ${response.status}`,
-          responseTime
+          responseTime,
         }
       }
     }
@@ -119,23 +158,24 @@ async function checkCountryApi(
         country,
         apiType: api,
         success: false,
-        error: 'No auth token available'
+        error: 'No auth token available',
       }
     }
 
-    // Test with a simple location query
-    const testUrl = `${url}latitude=0&longitude=0`
+    const { latitude, longitude } = getHealthCheckLocation(countryInfo)
+    const testUrl = `${url}latitude=${latitude}&longitude=${longitude}`
 
     const response = await axios.get(testUrl, {
       timeout: 10000,
       headers: {
         authorization: `Bearer ${token}`,
-        'mcd-clientId': clientId,
+        'mcd-clientid': clientId,
         'mcd-sourceapp': 'GMA',
         'mcd-marketid': country,
-        'mcd-uuid': '"'
+        'mcd-uuid': '"',
+        'accept-language': country === 'UK' ? 'en-GB' : 'de-DE',
       },
-      validateStatus: (status) => status < 500
+      validateStatus: (status) => status < 500,
     })
 
     const responseTime = Date.now() - startTime
@@ -148,7 +188,7 @@ async function checkCountryApi(
         apiType: api,
         success: false,
         error: 'Auth failed (401)',
-        responseTime
+        responseTime,
       }
     } else if (response.status === 403) {
       return {
@@ -156,7 +196,7 @@ async function checkCountryApi(
         apiType: api,
         success: false,
         error: 'Forbidden - VPN required? (403)',
-        responseTime
+        responseTime,
       }
     } else {
       return {
@@ -164,7 +204,7 @@ async function checkCountryApi(
         apiType: api,
         success: false,
         error: `HTTP ${response.status}`,
-        responseTime
+        responseTime,
       }
     }
   } catch (error) {
@@ -177,7 +217,7 @@ async function checkCountryApi(
           apiType: api,
           success: false,
           error: 'Timeout',
-          responseTime
+          responseTime,
         }
       }
       if (error.code === 'ECONNREFUSED') {
@@ -186,7 +226,7 @@ async function checkCountryApi(
           apiType: api,
           success: false,
           error: 'Connection refused',
-          responseTime
+          responseTime,
         }
       }
       return {
@@ -194,7 +234,7 @@ async function checkCountryApi(
         apiType: api,
         success: false,
         error: error.message,
-        responseTime
+        responseTime,
       }
     }
 
@@ -203,7 +243,7 @@ async function checkCountryApi(
       apiType: api,
       success: false,
       error: String(error),
-      responseTime
+      responseTime,
     }
   }
 }
@@ -211,14 +251,18 @@ async function checkCountryApi(
 /**
  * Get bearer tokens for all API types
  */
-async function getTokens(): Promise<Map<APIType, string | undefined>> {
+async function getTokens(
+  apiTypes: APIType[],
+): Promise<Map<APIType, string | undefined>> {
   const tokens = new Map<APIType, string | undefined>()
 
-  for (const apiType of [APIType.EU, APIType.US, APIType.AP, APIType.EL]) {
+  for (const apiType of apiTypes) {
     try {
       const token = await getBearerToken(apiType)
       tokens.set(apiType, token)
-      console.log(`  ${apiType}: Token obtained`)
+      console.log(
+        `  ${apiType}: ${token ? 'Token obtained' : 'Failed to get token'}`,
+      )
     } catch (error) {
       console.log(`  ${apiType}: Failed to get token`)
       tokens.set(apiType, undefined)
@@ -228,18 +272,41 @@ async function getTokens(): Promise<Map<APIType, string | undefined>> {
   return tokens
 }
 
+function getApiTypesForRegions(regions: VpnRegion[]): APIType[] {
+  const apiTypes = regions.flatMap((region) =>
+    VPN_REGIONS[region].locations
+      .map((location) => CountryInfos[location]?.getStores.api)
+      .filter(
+        (apiType): apiType is APIType =>
+          apiType != null && ![APIType.HK, APIType.UNKNOWN].includes(apiType),
+      ),
+  )
+
+  return Array.from(new Set(apiTypes))
+}
+
 /**
  * Get client ID from environment variables for the given API type
  */
 function getClientIdFromEnv(apiType: APIType): string {
-  // Default client IDs per region
-  const clientIds: Record<string, string> = {
-    EU: process.env.CLIENT_ID_EU ?? 'unknown',
-    US: process.env.CLIENT_ID_US ?? 'unknown',
-    AP: process.env.CLIENT_ID_AP ?? 'unknown',
-    EL: process.env.CLIENT_ID_EL ?? 'unknown'
+  const clientIds: Partial<Record<APIType, string | undefined>> = {
+    [APIType.EU]: process.env.CLIENT_ID_EU,
+    [APIType.US]: process.env.CLIENT_ID_US,
+    [APIType.AP]: process.env.CLIENT_ID_AP,
+    [APIType.EL]: process.env.CLIENT_ID_EL,
   }
-  return clientIds[apiType] ?? 'unknown'
+
+  const envClientId = clientIds[apiType]
+
+  if (envClientId) {
+    return envClientId
+  }
+
+  try {
+    return getClientId(apiType)
+  } catch {
+    return 'unknown'
+  }
 }
 
 /**
@@ -268,7 +335,7 @@ function printResults(regionName: string, results: CheckResult[]) {
     for (const result of failed) {
       const time = result.responseTime ? ` (${result.responseTime}ms)` : ''
       console.log(
-        `    ${result.country} [${result.apiType}]: ${result.error}${time}`
+        `    ${result.country} [${result.apiType}]: ${result.error}${time}`,
       )
     }
   }
@@ -284,7 +351,7 @@ async function main() {
   const args = process.argv.slice(2)
   const regionArg = (args[0]?.toLowerCase() ?? 'all') as VpnRegion | 'all'
 
-  console.log('McDonald\'s API Health Check')
+  console.log("McDonald's API Health Check")
   console.log('============================\n')
 
   // Validate region argument before doing any work
@@ -301,7 +368,7 @@ async function main() {
       : [regionArg as VpnRegion]
 
   console.log('Getting authentication tokens...')
-  const tokens = await getTokens()
+  const tokens = await getTokens(getApiTypesForRegions(regionsToTest))
 
   for (const region of regionsToTest) {
     const regionConfig = VPN_REGIONS[region]

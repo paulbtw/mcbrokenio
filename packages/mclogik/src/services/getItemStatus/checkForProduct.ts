@@ -1,6 +1,7 @@
 import { ItemStatus } from '@mcbroken/db'
 
-import { NOT_APPLICABLE_MARKER } from '../../clients'
+import { type ProductCodeConfig } from '../../types'
+import { normalizeProductCodeConfig } from '../../utils/productCodeConfig'
 
 /**
  * Check product availability based on outage codes.
@@ -19,16 +20,26 @@ import { NOT_APPLICABLE_MARKER } from '../../clients'
  */
 export function checkForProduct(
   outrageProductList: string[],
-  items: string[]
+  items: ProductCodeConfig
 ): {
     status: ItemStatus
     count: number
     unavailable: number
   } {
-  const count = items.length
+  const normalizedItems = normalizeProductCodeConfig(items)
+
+  if (normalizedItems.kind === 'unavailable') {
+    return {
+      status: ItemStatus.NOT_APPLICABLE,
+      count: 0,
+      unavailable: 0
+    }
+  }
+
+  const count = normalizedItems.codes.length
   let unavailable = 0
 
-  if (items.length === 0) {
+  if (normalizedItems.codes.length === 0) {
     return {
       status: ItemStatus.UNAVAILABLE,
       count,
@@ -36,15 +47,7 @@ export function checkForProduct(
     }
   }
 
-  if (items.includes(NOT_APPLICABLE_MARKER)) {
-    return {
-      status: ItemStatus.NOT_APPLICABLE,
-      count,
-      unavailable
-    }
-  }
-
-  items.forEach((item) => {
+  normalizedItems.codes.forEach((item) => {
     if (outrageProductList.includes(item)) {
       unavailable++
     }
