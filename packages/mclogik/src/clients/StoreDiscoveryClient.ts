@@ -87,6 +87,12 @@ export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
   }
 }
 
+/**
+ * Creates a client for discovering stores through location or URL endpoints.
+ *
+ * @param httpClient - Optional HTTP client override
+ * @returns A Store Catalog discovery client
+ */
 export function createStoreDiscoveryClient(
   httpClient?: AxiosInstance
 ): StoreDiscoveryClient {

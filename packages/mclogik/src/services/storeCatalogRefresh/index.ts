@@ -23,6 +23,8 @@ const URL_DISCOVERY_LIMITER: RequestLimiter = {
   maxRequestsPerSecond: 4,
   requestsPerLog: 100
 }
+const EU_DISCOVERY_SPACING_KILOMETERS = 50
+const AP_US_DISCOVERY_SPACING_KILOMETERS = 30
 
 function assertSupportedApiType(apiType: APIType): void {
   if (apiType === APIType.HK || apiType === APIType.UNKNOWN) {
@@ -49,10 +51,10 @@ function getRequestLimiter(apiType: APIType): RequestLimiter {
 function getLocationIntervalKilometers(apiType: APIType): number {
   switch (apiType) {
     case APIType.EU:
-      return 50
+      return EU_DISCOVERY_SPACING_KILOMETERS
     case APIType.AP:
     case APIType.US:
-      return 30
+      return AP_US_DISCOVERY_SPACING_KILOMETERS
     case APIType.EL:
     case APIType.HK:
     case APIType.UNKNOWN:
@@ -103,6 +105,12 @@ const storeCatalogRefreshModule = new StoreCatalogRefreshModule({
   now: Date.now
 })
 
+/**
+ * Refreshes the persisted Store Catalog for a regional API.
+ *
+ * @param request - Regional API and optional market slices to refresh
+ * @returns A summary of discovery requests and persisted stores
+ */
 export async function refreshStoreCatalog(
   request: StoreCatalogRefreshRequest
 ): Promise<StoreCatalogRefreshResult> {

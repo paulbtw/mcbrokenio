@@ -50,36 +50,37 @@ function isTrackedStatus(status: ItemStatus): boolean {
 function addStoreToStatistics(
   statistics: PublishedAvailabilityStatistics,
   store: PublishedAvailabilityStore
-): void {
-  statistics.total++
-
-  if (store.hasMobileOrdering && store.isResponsive) {
-    statistics.trackable++
-  }
-
-  if (!store.isResponsive) {
-    return
-  }
-
-  if (store.milkshakeStatus === ItemStatus.AVAILABLE) {
-    statistics.availablemilkshakes++
-  }
-  if (isTrackedStatus(store.milkshakeStatus)) {
-    statistics.totalmilkshakes++
-  }
-
-  if (store.mcFlurryStatus === ItemStatus.AVAILABLE) {
-    statistics.availablemcflurry++
-  }
-  if (isTrackedStatus(store.mcFlurryStatus)) {
-    statistics.totalmcflurry++
-  }
-
-  if (store.mcSundaeStatus === ItemStatus.AVAILABLE) {
-    statistics.availablemcsundae++
-  }
-  if (isTrackedStatus(store.mcSundaeStatus)) {
-    statistics.totalmcsundae++
+): PublishedAvailabilityStatistics {
+  return {
+    ...statistics,
+    total: statistics.total + 1,
+    trackable:
+      statistics.trackable +
+      (store.hasMobileOrdering && store.isResponsive ? 1 : 0),
+    availablemilkshakes:
+      statistics.availablemilkshakes +
+      (store.isResponsive && store.milkshakeStatus === ItemStatus.AVAILABLE
+        ? 1
+        : 0),
+    totalmilkshakes:
+      statistics.totalmilkshakes +
+      (store.isResponsive && isTrackedStatus(store.milkshakeStatus) ? 1 : 0),
+    availablemcflurry:
+      statistics.availablemcflurry +
+      (store.isResponsive && store.mcFlurryStatus === ItemStatus.AVAILABLE
+        ? 1
+        : 0),
+    totalmcflurry:
+      statistics.totalmcflurry +
+      (store.isResponsive && isTrackedStatus(store.mcFlurryStatus) ? 1 : 0),
+    availablemcsundae:
+      statistics.availablemcsundae +
+      (store.isResponsive && store.mcSundaeStatus === ItemStatus.AVAILABLE
+        ? 1
+        : 0),
+    totalmcsundae:
+      statistics.totalmcsundae +
+      (store.isResponsive && isTrackedStatus(store.mcSundaeStatus) ? 1 : 0)
   }
 }
 
@@ -90,15 +91,16 @@ function createPublishedStatistics(
     string,
     PublishedAvailabilityStatistics
   >()
-  const aggregate = createStatisticsRow('UNKNOWN')
+  let aggregate = createStatisticsRow('UNKNOWN')
 
   for (const store of stores) {
-    const countryStatistics =
+    const countryStatistics = addStoreToStatistics(
       statisticsByCountry.get(store.country) ??
-      createStatisticsRow(store.country)
+        createStatisticsRow(store.country),
+      store
+    )
     statisticsByCountry.set(store.country, countryStatistics)
-    addStoreToStatistics(countryStatistics, store)
-    addStoreToStatistics(aggregate, store)
+    aggregate = addStoreToStatistics(aggregate, store)
   }
 
   return [...statisticsByCountry.values(), aggregate]

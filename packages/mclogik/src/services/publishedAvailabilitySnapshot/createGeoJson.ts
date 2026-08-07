@@ -74,6 +74,12 @@ function getColorDot(
   return 'YELLOW'
 }
 
+/**
+ * Converts Store Catalog records into the public availability GeoJSON format.
+ *
+ * @param allPos - Stores to include in the published marker collection
+ * @returns The public GeoJSON feature collection
+ */
 export function createGeoJson(allPos: GeoJsonSourcePos[]): GeoJson {
   const features = allPos.map<GeoJsonPos>((pos) => ({
     geometry: {

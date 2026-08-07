@@ -135,6 +135,27 @@ describe('StoreCatalogRefreshModule', () => {
     })
   })
 
+  it('combines request outcomes for geographic slices sharing a country code', async () => {
+    const countryInfos = [createCountryInfo(), createCountryInfo()]
+    const { dependencies, discoverFromLocation } =
+      createDependencies(countryInfos)
+    discoverFromLocation
+      .mockResolvedValueOnce([createStore('US-1')])
+      .mockResolvedValueOnce([createStore('US-2')])
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    const result = await module.refresh({ apiType: APIType.US })
+
+    expect(result).toMatchObject({
+      totalRequests: 2,
+      successfulRequests: 2,
+      failedRequests: 0,
+      countryBreakdown: {
+        US: { requests: 2, successful: 2, failed: 0, stores: 2 }
+      }
+    })
+  })
+
   it('continues after partial discovery failures and reports them', async () => {
     const { dependencies, discoverFromLocation } = createDependencies()
     vi.mocked(dependencies.generateLocationMesh).mockReturnValue([

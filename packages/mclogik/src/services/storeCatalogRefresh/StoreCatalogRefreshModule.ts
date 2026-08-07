@@ -103,8 +103,9 @@ export class StoreCatalogRefreshModule {
 
     if (apiType === APIType.EL) {
       for (const countryInfo of countryInfos) {
-        const countryResult = createCountryResult()
-        countryResult.requests = 1
+        const countryResult =
+          countryBreakdown[countryInfo.country] ?? createCountryResult()
+        countryResult.requests += 1
         countryBreakdown[countryInfo.country] = countryResult
         discoveryRequests.push({
           index: discoveryRequests.length,
@@ -130,8 +131,9 @@ export class StoreCatalogRefreshModule {
           countryInfo,
           intervalKilometers
         )
-        const countryResult = createCountryResult()
-        countryResult.requests = locations.length
+        const countryResult =
+          countryBreakdown[countryInfo.country] ?? createCountryResult()
+        countryResult.requests += locations.length
         countryBreakdown[countryInfo.country] = countryResult
 
         for (const location of locations) {

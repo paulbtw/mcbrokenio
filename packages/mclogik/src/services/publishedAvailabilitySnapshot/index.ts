@@ -38,6 +38,11 @@ function getPublishedAvailabilitySnapshotModule(): PublishedAvailabilitySnapshot
   return publishedAvailabilitySnapshotModule
 }
 
+/**
+ * Publishes coherent marker and statistics files from one Store Catalog view.
+ *
+ * @returns A summary of the published snapshot
+ */
 export async function publishAvailabilitySnapshot(): Promise<PublishAvailabilitySnapshotResult> {
   return getPublishedAvailabilitySnapshotModule().publish()
 }

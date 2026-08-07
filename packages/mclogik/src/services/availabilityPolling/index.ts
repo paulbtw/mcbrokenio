@@ -103,6 +103,12 @@ const availabilityPollingModule = new AvailabilityPollingModule({
   now: Date.now
 })
 
+/**
+ * Polls eligible stores and persists their latest product availability.
+ *
+ * @param request - Regional API and optional countries to poll
+ * @returns A summary of polling and persistence outcomes
+ */
 export async function pollAvailability(
   request: AvailabilityPollRequest
 ): Promise<AvailabilityPollResult> {
