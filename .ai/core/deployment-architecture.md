@@ -15,7 +15,7 @@ McBroken uses a multi-cloud deployment strategy:
 │                         VERCEL                                    │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │ apps/frontend                                               │  │
-│  │ • Edge Functions (middleware)                               │  │
+│  │ • Proxy-based geolocation cookie handling                   │  │
 │  │ • Serverless Functions (API routes)                         │  │
 │  │ • Static Assets (CDN)                                       │  │
 │  └────────────────────────────────────────────────────────────┘  │
@@ -85,7 +85,7 @@ McBroken uses a multi-cloud deployment strategy:
 ```typescript
 // From packages/serverless-config
 {
-  runtime: 'nodejs20.x',
+  runtime: 'nodejs24.x',
   architecture: 'x86_64',
   memorySize: 368,  // Default, varies by function
   timeout: 60,      // Default, varies by function
@@ -99,17 +99,17 @@ McBroken uses a multi-cloud deployment strategy:
   bundle: true,
   minify: false,
   sourcemap: true,
-  target: 'node20',
+  target: 'node24',
   platform: 'node',
-  external: ['@prisma/client'],
+  external: ['aws-sdk'],
 }
 ```
 
 ### Prisma Lambda Handling
 
-Prisma requires special handling for Lambda:
-- Binary: `rhel-openssl-3.0.x` (for Amazon Linux 2)
-- Client copied to `node_modules/.prisma/` during packaging
+Prisma 7 uses `PrismaPg` and the Rust-free generated client. Serverless v4's
+built-in esbuild bundles the client, adapter, and `pg` implementation; no native
+query engine is copied into Lambda packages.
 
 ## Deployment Commands
 
@@ -146,6 +146,14 @@ git push origin main
 
 ## CI/CD Pipeline
 
+AWS deployments are manual through `workflow_dispatch`; CI does not deploy on
+its own. The three production services stay in Frankfurt, Ohio, and Sydney so
+their outbound IP regions satisfy the corresponding McDonald's API requirements.
+
+As of 2026-08-07, production remains on managed Node.js 24. Move to Node.js 26
+only after it is LTS and both AWS Lambda and Vercel expose managed support, then
+update Node types, build targets, Lambda runtime, and Vercel settings together.
+
 ### GitHub Actions Workflow
 
 ```yaml
@@ -164,10 +172,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11.20.0
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
           cache: 'pnpm'
       - run: pnpm install
       - run: pnpm turbo run db:generate

@@ -2,15 +2,16 @@
   "name": "@mcbroken/db",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "devDependencies": {
-    "@types/pg": "^8.16.0",
-    "prisma": "^6.19.1"
+    "@types/pg": "8.20.4",
+    "prisma": "7.9.1"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^6.19.1",
-    "@prisma/client": "6.19.1",
-    "dotenv": "^17.2.3",
-    "pg": "^8.16.3"
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
+    "dotenv": "17.4.2",
+    "pg": "8.22.0"
   },
   "scripts": {
     "db:generate": "prisma generate",

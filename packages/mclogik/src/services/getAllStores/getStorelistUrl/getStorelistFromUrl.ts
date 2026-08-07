@@ -10,7 +10,7 @@ const logger = new Logger('getStorelistFromUrl')
 export async function getStorelistFromUrl({
   country,
   getStores: { url, mobileString }
-}: ICountryInfos) {
+}: ICountryInfos): Promise<CreatePos[] | undefined> {
   try {
     const {
       data: { restaurants }
@@ -35,7 +35,7 @@ export async function getStorelistFromUrl({
     })
 
     return posArray
-  } catch (error) {
+  } catch {
     logger.error('Error while getting storelist from url')
   }
 }

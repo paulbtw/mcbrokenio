@@ -11,10 +11,10 @@
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",
     "@mcbroken/typescript-config": "workspace:*",
-    "@serverless/typescript": "^3.38.0",
-    "eslint": "^9.39.1",
-    "typescript": "^5.9.2",
-    "vitest": "^4.1.0"
+    "@serverless/typescript": "4.30.0",
+    "eslint": "9.39.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   },
   "exports": {
     ".": "./index.ts"

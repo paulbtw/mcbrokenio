@@ -7,7 +7,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { type MapRef } from 'react-map-gl'
+import { type MapRef } from 'react-map-gl/mapbox'
 
 // Corrected import
 import { type McDataGeometry, useMcData } from '@/hooks/queries/useMcData'
@@ -48,6 +48,8 @@ export function useMapInteractions({
 
   useEffect(() => {
     if (geo.lat != null && geo.lon != null) {
+      // Geolocation arrives after hydration and must update the controlled map.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setViewState((prevViewState) => ({
         ...prevViewState,
         latitude:

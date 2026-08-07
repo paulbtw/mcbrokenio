@@ -6,8 +6,8 @@
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| Node.js | 22.11.0+ | See `.nvmrc` |
-| pnpm | 10.x (9+ minimum) | Package manager |
+| Node.js | 26.7.0 local/CI; 24 managed production | See `.nvmrc`; AWS Lambda and Vercel remain on managed Node.js 24 |
+| pnpm | 11.20.0 | Install explicitly; Node.js 26 does not bundle Corepack |
 | Docker | 20.10+ | For local PostgreSQL |
 | Docker Compose | 2.0+ | For local development |
 
@@ -17,35 +17,33 @@
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Next.js | 15.5.9 | React framework (App Router) |
-| React | 19.1.0 | UI library |
-| TypeScript | 5.2.2 - 5.9.2 | Type safety (varies by package) |
+| Next.js | 16.3.0 | React framework (App Router) |
+| React | 19.2.8 | UI library |
+| TypeScript | 6.0.3 | Type safety |
 
 ### UI & Styling
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| TailwindCSS | 3.3.3 | Utility-first CSS |
-| tailwindcss-animate | 1.0.7 | Animation utilities |
-| Radix UI | various | Accessible primitives |
+| TailwindCSS | 4.3.3 | Utility-first CSS |
+| Radix UI | 1.6.7 | Accessible primitives |
 | shadcn/ui | - | Component library (not versioned) |
-| Lucide React | 0.508.0 | Icon library |
+| Lucide React | 1.30.0 | Icon library |
 
 ### Data & Maps
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| React Query | 3.39.3 | Data fetching & caching |
-| Mapbox GL | 2.15.0 | Map rendering |
-| react-map-gl | 7.1.6 | React Mapbox wrapper |
-| Axios | 1.5.0+ | HTTP client |
+| TanStack React Query | 5.101.4 | Data fetching & caching |
+| Mapbox GL | 3.28.1 | Map rendering |
+| react-map-gl | 8.1.2 | React Mapbox wrapper |
+| Axios | 1.19.0 | HTTP client |
 
 ### Analytics
 
 | Technology | Purpose |
 |------------|---------|
-| @vercel/analytics | Vercel Analytics |
-| next-plausible | Plausible (self-hosted) |
+| @vercel/analytics 2.0.1 | Vercel Analytics |
 
 ## Backend Stack
 
@@ -53,16 +51,14 @@
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Serverless Framework | 3.40.0 | Lambda deployment |
-| serverless-esbuild | 1.54.8 | TypeScript bundling |
-| serverless-offline | 14.4.0 | Local development |
-| esbuild | 0.25.0 | Fast bundler |
+| Serverless Framework | 4.40.0 | Lambda deployment and built-in esbuild |
+| serverless-offline | 14.8.0 | Local development |
 
 ### AWS Lambda Runtime
 
 | Setting | Value |
 |---------|-------|
-| Runtime | Node.js 20.x |
+| Runtime | Node.js 24.x |
 | Architecture | x86_64 |
 | Default Memory | 368MB |
 | Default Timeout | 60s (varies by function) |
@@ -71,19 +67,20 @@
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| @sailplane/logger | 4.2.0 | Structured logging |
-| p-queue | 7.4.1 | Rate limiting |
-| Axios | 1.13.2 | HTTP requests |
-| AWS SDK S3 | 3.x | S3 uploads |
+| @sailplane/logger | 6.0.0 | Structured logging |
+| @sentry/aws-serverless | 10.69.0 | Error reporting |
+| p-queue | 9.3.3 | Rate limiting |
+| Axios | 1.19.0 | HTTP requests |
+| AWS SDK S3 | 3.1105.0 | S3 uploads |
 
 ## Database Stack
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | PostgreSQL | 17 | Primary database |
-| Prisma | 6.19.1 | ORM |
-| @prisma/adapter-pg | 6.19.1 | Postgres adapter |
-| pg | 8.x | Node.js PostgreSQL driver |
+| Prisma | 7.9.1 | ORM |
+| @prisma/adapter-pg | 7.9.1 | Postgres adapter |
+| pg | 8.22.0 | Node.js PostgreSQL driver |
 
 ## Development Tools
 
@@ -91,24 +88,23 @@
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Turborepo | latest | Monorepo orchestration |
-| pnpm | 10.x | Package manager |
+| Turborepo | 2.10.8 | Monorepo orchestration |
+| pnpm | 11.20.0 | Package manager |
 
 ### Code Quality
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| ESLint | 9.x | Linting |
-| typescript-eslint | 8.x | TS linting |
-| Prettier | 3.7.4 | Code formatting |
-| Husky | - | Git hooks |
+| ESLint | 9.39.2 | Linting; held below v10 for React plugin peer compatibility |
+| typescript-eslint | 8.66.0 | TS linting |
+| Prettier | 3.9.6 | Code formatting |
+| Husky | 9.1.7 | Git hooks |
 
 ### Testing
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Vitest | 4.0.16 | Unit testing (mclogik) |
-| Jest | - | Legacy tests |
+| Vitest | 4.1.10 | Unit testing |
 
 ## Key Dependencies by Package
 
@@ -116,13 +112,13 @@
 
 ```json
 {
-  "next": "15.5.9",
-  "react": "19.1.0",
-  "react-dom": "19.1.0",
-  "tailwindcss": "3.3.3",
-  "mapbox-gl": "2.15.0",
-  "react-map-gl": "7.1.6",
-  "react-query": "3.39.3"
+  "next": "16.3.0",
+  "react": "19.2.8",
+  "react-dom": "19.2.8",
+  "tailwindcss": "4.3.3",
+  "mapbox-gl": "3.28.1",
+  "react-map-gl": "8.1.2",
+  "@tanstack/react-query": "5.101.4"
 }
 ```
 
@@ -130,10 +126,10 @@
 
 ```json
 {
-  "@aws-sdk/client-s3": "^3.962.0",
-  "@sailplane/logger": "^4.2.0",
-  "axios": "^1.13.2",
-  "p-queue": "^7.4.1"
+  "@aws-sdk/client-s3": "3.1105.0",
+  "@sailplane/logger": "6.0.0",
+  "axios": "1.19.0",
+  "p-queue": "9.3.3"
 }
 ```
 
@@ -141,10 +137,10 @@
 
 ```json
 {
-  "@prisma/client": "6.19.1",
-  "@prisma/adapter-pg": "6.19.1",
-  "prisma": "6.19.1",
-  "pg": "^8.16.3"
+  "@prisma/client": "7.9.1",
+  "@prisma/adapter-pg": "7.9.1",
+  "prisma": "7.9.1",
+  "pg": "8.22.0"
 }
 ```
 

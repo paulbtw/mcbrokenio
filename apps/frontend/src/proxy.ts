@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from '@/lib/constants'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const geo = geolocation(request)
 
   const response = NextResponse.next()

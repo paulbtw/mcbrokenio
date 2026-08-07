@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  baseServerlessConfiguration,
   getDeploymentStage,
   getExportBucket,
   getOptionalEnv,
@@ -8,6 +9,30 @@ import {
   getServiceDeploymentBucket,
   getStageBucketName,
 } from "./index";
+
+describe("baseServerlessConfiguration", () => {
+  it("uses Serverless v4 with the managed Node 24 runtime", () => {
+    expect(baseServerlessConfiguration.frameworkVersion).toBe("4");
+    expect(baseServerlessConfiguration.plugins).toEqual(["serverless-offline"]);
+    expect(baseServerlessConfiguration.provider?.runtime).toBe("nodejs24.x");
+  });
+
+  it("uses native esbuild without legacy Prisma engine packaging", () => {
+    expect(baseServerlessConfiguration.build?.esbuild).toMatchObject({
+      bundle: true,
+      minify: false,
+      sourcemap: true,
+      external: ["aws-sdk"],
+      target: "node24",
+      platform: "node",
+      buildConcurrency: 10,
+    });
+    expect(baseServerlessConfiguration.package?.patterns ?? []).toEqual([]);
+    expect(baseServerlessConfiguration.provider?.environment).not.toHaveProperty(
+      "PRISMA_QUERY_ENGINE_LIBRARY",
+    );
+  });
+});
 
 const ORIGINAL_DATABASE_URL = process.env.DATABASE_URL;
 const ORIGINAL_SENTRY_DSN = process.env.SENTRY_DSN;

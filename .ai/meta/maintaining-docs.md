@@ -36,7 +36,7 @@ Do not duplicate version numbers in other files. Reference the technology stack 
 **Wrong**:
 ```markdown
 <!-- In some-other-file.md -->
-We use Next.js 15.5.9 and React 19.1.0...
+We use Next.js `<exact version>` and React `<exact version>`...
 ```
 
 **Correct**:

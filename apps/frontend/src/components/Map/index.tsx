@@ -12,11 +12,11 @@ import {
   GeolocateControl,
   Layer,
   Map as MapGl,
-  type MapLayerMouseEvent,
+  type MapMouseEvent,
   type MapRef,
   Popup,
   Source,
-} from "react-map-gl";
+} from "react-map-gl/mapbox";
 
 import { Popover } from "@/components/Map/Popover";
 import { type ViewState } from "@/components/MapComponent";
@@ -70,7 +70,7 @@ export function Map({
 }: MapProps) {
   const [selected, setSelected] = useState<PopupMarker | null>(null);
 
-  const onClick = useCallback((event: MapLayerMouseEvent) => {
+  const onClick = useCallback((event: MapMouseEvent) => {
     const feature = event?.features?.[0];
 
     if (feature == null) {

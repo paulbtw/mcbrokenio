@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env tsx
 /**
  * API Health Check Script
  *
@@ -6,7 +6,7 @@
  * Groups results by VPN requirement for easier testing.
  *
  * Usage:
- *   pnpm ts-node scripts/check-api-health.ts [region]
+ *   pnpm exec tsx scripts/check-api-health.ts [region]
  *
  * Regions:
  *   us       - Test US region APIs (requires US VPN)

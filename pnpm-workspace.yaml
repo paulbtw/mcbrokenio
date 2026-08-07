@@ -4,14 +4,28 @@ packages:
 
 autoInstallPeers: true
 
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - '@prisma/client'
-  - '@prisma/engines'
-  - aws-sdk
-  - es5-ext
-  - esbuild
-  - prisma
-  - serverless
-  - sharp
-  - unrs-resolver
+# Pin audited transitive build tools to compatible patched releases.
+overrides:
+  vite: 7.3.6
+  rollup: 4.62.4
+
+allowBuilds:
+  '@parcel/watcher': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  aws-sdk: true
+  es5-ext: true
+  esbuild: true
+  prisma: true
+  serverless: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - tsx@4.23.11
+  - '@aws-sdk/client-s3@3.1105.0'
+  - serverless-offline@14.8.0
+  - lucide-react@1.30.0
+  - mapbox-gl@3.28.1
+  # Security-patched transitive build dependencies released inside the age window.
+  - rollup@4.62.4

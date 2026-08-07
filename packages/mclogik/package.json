@@ -11,20 +11,20 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.962.0",
+    "@aws-sdk/client-s3": "3.1105.0",
     "@mcbroken/db": "workspace:*",
-    "@sailplane/logger": "^4.2.0",
-    "@sentry/aws-serverless": "^9.17.0",
-    "axios": "^1.13.2",
-    "p-queue": "^7.4.1"
+    "@sailplane/logger": "6.0.0",
+    "@sentry/aws-serverless": "10.69.0",
+    "axios": "1.19.0",
+    "p-queue": "9.3.3"
   },
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",
     "@mcbroken/typescript-config": "workspace:*",
-    "@vitest/coverage-v8": "^4.0.16",
-    "eslint": "^9.32.0",
-    "typescript": "^5.9.2",
-    "vitest": "^4.0.16"
+    "@vitest/coverage-v8": "4.1.10",
+    "eslint": "9.39.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   },
   "exports": {
     "./constants": "./src/constants/index.ts",

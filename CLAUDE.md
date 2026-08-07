@@ -6,7 +6,7 @@ This file provides context for Claude Code and AI assistants working with this c
 
 **What is it?** McDonald's ice cream machine availability tracker (Turborepo monorepo)
 
-**Tech Stack**: Next.js 15 (App Router) + AWS Lambda + PostgreSQL + Prisma
+**Tech Stack**: Next.js 16 (App Router) + AWS Lambda + PostgreSQL + Prisma 7
 
 **Full docs**: See `.ai/README.md` for navigation hub
 
@@ -28,7 +28,7 @@ What do you need?
 
 1. **Always run `pnpm turbo run db:generate` after Prisma schema changes**
 2. **Use pnpm only** (not npm or yarn)
-3. **Node.js 22+ required** (see `.nvmrc`)
+3. **Node.js 26.7.0 is the local/CI target** (see `.nvmrc`); managed production runtimes use Node.js 24
 4. **Use `@mcbroken/*` imports** across packages, not relative paths
 
 ## Quick Commands
@@ -46,7 +46,7 @@ pnpm turbo run test              # Run tests
 
 ```
 apps/
-├── frontend/      # Next.js 15 (App Router) - @mcbroken/frosty
+├── frontend/      # Next.js 16 (App Router) - @mcbroken/frosty
 ├── mcall/         # Serverless: EU region - @mcbroken/mcall
 ├── mcus/          # Serverless: US region - @mcbroken/mcus
 └── mcau/          # Serverless: AU region - @mcbroken/mcau
@@ -78,7 +78,7 @@ packages/
 
 | Mistake | Fix |
 |---------|-----|
-| Using Pages Router patterns | Use App Router (Next.js 15) |
+| Using Pages Router patterns | Use App Router (Next.js 16) |
 | Forgetting Prisma generate | Run `db:generate` after schema changes |
 | Using npm/yarn | Use pnpm |
 | Relative imports across packages | Use `@mcbroken/*` |

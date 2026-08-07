@@ -183,7 +183,7 @@ describe('MyComponent', () => {
 ### React Query Testing
 
 ```typescript
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useMcData } from './useMcData';
 

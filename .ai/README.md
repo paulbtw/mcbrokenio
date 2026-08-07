@@ -60,14 +60,14 @@ Maintaining docs?
 
 1. **Monorepo structure**: Use `pnpm --filter <package>` for package-specific commands
 2. **Prisma client**: Always run `pnpm turbo run db:generate` after schema changes
-3. **Node version**: Requires Node.js 22+ (see `.nvmrc`)
+3. **Node version**: Node.js 26.7.0 locally/in CI (see `.nvmrc`), Node.js 24 in managed production
 4. **Package manager**: pnpm only (not npm or yarn)
 
 ### Common Mistakes to Avoid
 
 | Mistake | Correction |
 |---------|------------|
-| Using Pages Router patterns | This is App Router (Next.js 15) |
+| Using Pages Router patterns | This is App Router (Next.js 16) |
 | Forgetting Prisma generate | Run `db:generate` after schema changes |
 | Using npm/yarn | Use pnpm exclusively |
 | Hardcoding env values | Use `process.env.VAR_NAME` |

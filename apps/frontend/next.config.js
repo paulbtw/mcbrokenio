@@ -3,6 +3,7 @@ const DEFAULT_ASSETS_ORIGIN =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  agentRules: false,
   async rewrites() {
     const assetsOrigin =
       process.env.MCBROKEN_ASSETS_ORIGIN?.replace(/\/$/, "") ??

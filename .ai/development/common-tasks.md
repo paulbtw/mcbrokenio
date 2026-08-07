@@ -137,14 +137,14 @@ export const NewComponent: FC<NewComponentProps> = ({ title }) => {
 
 ```bash
 cd apps/frontend
-npx shadcn@latest add dialog
+pnpm dlx shadcn@latest add dialog
 ```
 
 ### 3. Create Data Hook (if needed)
 
 ```typescript
 // apps/frontend/src/hooks/queries/useNewData.ts
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 export const useNewData = () => {
@@ -208,7 +208,7 @@ functions: {
 
 ```bash
 cd apps/mcall
-pnpm serverless invoke local -f newFunction
+pnpm exec serverless invoke local -f newFunction
 ```
 
 ---
@@ -217,7 +217,7 @@ pnpm serverless invoke local -f newFunction
 
 ```typescript
 // apps/frontend/src/hooks/queries/useNewQuery.ts
-import { useQuery, UseQueryOptions } from 'react-query';
+import { type UseQueryOptions, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import type { NewDataType } from '@/types';
 

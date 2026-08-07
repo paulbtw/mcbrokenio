@@ -8,10 +8,11 @@ Check `core/technology-stack.md` for exact versions.
 
 ```bash
 # Verify Node.js version
-node --version  # Should be 22.11.0+
+node --version  # Should be 26.7.0
 
-# Verify pnpm
-pnpm --version  # Should be 10.x
+# Install and verify pnpm (Node.js 26 does not bundle Corepack)
+npm install --global pnpm@11.20.0
+pnpm --version  # Should be 11.20.0
 ```
 
 ### Installation
