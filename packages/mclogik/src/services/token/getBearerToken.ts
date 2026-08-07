@@ -52,7 +52,7 @@ export async function getBearerToken(apiType: APIType) {
     const { data } = await axios.post(url, null, getHeaders(basicToken))
 
     return data.response.token
-  } catch (error) {
+  } catch {
     logger.error(`error getting new bearer token for ${apiType}`)
   }
 }

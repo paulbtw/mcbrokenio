@@ -2,7 +2,7 @@
 
 ## Architecture
 
-**Framework**: Next.js 15 with App Router
+**Framework**: Next.js 16 with App Router
 **Rendering**: Server-first approach with client components where needed
 
 ## Component Patterns
@@ -90,7 +90,7 @@ export const MyComponent: FC<MyComponentProps> = ({
 
 ```typescript
 // hooks/queries/useMcData.ts
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import type { StoreData } from '@/types';
 
@@ -227,7 +227,7 @@ export function MyCard() {
 ```typescript
 'use client';
 
-import Map, { Marker, Popup } from 'react-map-gl';
+import Map, { Marker, Popup } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 export function MapComponent() {

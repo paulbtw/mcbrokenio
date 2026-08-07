@@ -2,8 +2,8 @@
   "name": "mcserverless",
   "version": "1.0.0",
   "engines": {
-    "node": ">=22",
-    "pnpm": ">=9",
+    "node": ">=24 <27",
+    "pnpm": ">=11 <12",
     "npm": "please-use-pnpm",
     "yarn": "please-use-pnpm"
   },
@@ -12,7 +12,7 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "husky install",
+    "prepare": "husky",
     "check-types": "turbo run check-types",
     "lint": "turbo run lint",
     "test": "turbo run test",
@@ -33,18 +33,17 @@
   "devDependencies": {
     "@mcbroken/eslint-config": "workspace:*",
     "@mcbroken/typescript-config": "workspace:*",
-    "@types/aws-lambda": "^8.10.161",
-    "@types/node": "22",
-    "esbuild": "0.25.0",
-    "husky": "^8.0.3",
-    "prettier": "^3.8.1",
-    "serverless": "3.40.0",
-    "serverless-esbuild": "1.57.0",
-    "serverless-offline": "14.4.0",
-    "ts-node": "10.9.2",
-    "tsx": "4.21.0",
-    "turbo": "^2.8.16",
-    "typescript": "^5.9.3"
+    "@types/aws-lambda": "8.10.162",
+    "@types/node": "24.13.3",
+    "eslint": "9.39.2",
+    "husky": "9.1.7",
+    "lint-staged": "17.3.0",
+    "prettier": "3.9.6",
+    "serverless": "4.40.0",
+    "serverless-offline": "14.8.0",
+    "tsx": "4.23.11",
+    "turbo": "2.10.8",
+    "typescript": "6.0.3"
   },
   "license": "MIT",
   "lint-staged": {
@@ -56,5 +55,5 @@
       "prettier --write"
     ]
   },
-  "packageManager": "pnpm@10.25.0"
+  "packageManager": "pnpm@11.20.0"
 }

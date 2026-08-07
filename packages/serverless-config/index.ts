@@ -45,23 +45,29 @@ export function getExportBucket(override?: string): string {
 }
 
 export const baseServerlessConfiguration: Partial<AWS> = {
-  frameworkVersion: "3",
-  plugins: ["serverless-esbuild", "serverless-offline"],
+  frameworkVersion: "4",
+  plugins: ["serverless-offline"],
   useDotenv: true,
+
+  build: {
+    esbuild: {
+      bundle: true,
+      minify: false,
+      sourcemap: true,
+      external: ["aws-sdk"],
+      target: "node24",
+      platform: "node",
+      buildConcurrency: 10,
+    },
+  },
 
   package: {
     individually: true,
-    patterns: [
-      "node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
-      "node_modules/.prisma/client/schema.prisma",
-      "!node_modules/prisma/libquery_engine-*",
-      "!node_modules/@prisma/engines/**",
-    ],
   },
 
   provider: {
     name: "aws",
-    runtime: "nodejs20.x",
+    runtime: "nodejs24.x",
     memorySize: 128,
     apiGateway: {
       minimumCompressionSize: 1024,
@@ -70,8 +76,6 @@ export const baseServerlessConfiguration: Partial<AWS> = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       LOG_LEVEL: "NONE",
-      PRISMA_QUERY_ENGINE_LIBRARY:
-        "/var/task/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
       SENTRY_ENVIRONMENT:
         getOptionalEnv("SENTRY_ENVIRONMENT") ?? getDeploymentStage(),
       ...(getOptionalEnv("SENTRY_DSN")
@@ -79,18 +83,5 @@ export const baseServerlessConfiguration: Partial<AWS> = {
         : {}),
     },
     architecture: "x86_64",
-  },
-
-  custom: {
-    esbuild: {
-      bundle: true,
-      minify: false,
-      sourcemap: true,
-      exclude: ["aws-sdk"],
-      target: "node20",
-      define: { "require.resolve": undefined },
-      platform: "node",
-      concurrency: 10,
-    },
   },
 };

@@ -1,9 +1,12 @@
-import { type PrismaClient } from '@mcbroken/db'
+import { type Pos, type PrismaClient } from '@mcbroken/db'
 import { Logger } from '@sailplane/logger'
 
 const logger = new Logger('getPosByCountries')
 
-export async function getPosByCountries(prisma: PrismaClient, countries?: string[]) {
+export async function getPosByCountries(
+  prisma: PrismaClient,
+  countries?: string[],
+): Promise<Pos[]> {
   try {
     return await prisma.pos.findMany({
       where: {

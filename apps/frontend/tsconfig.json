@@ -1,7 +1,10 @@
 {
   "extends": "@mcbroken/typescript-config/nextjs.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "types": [
+      "node",
+      "geojson"
+    ],
     "paths": {
       "@/*": [
         "./src/*"

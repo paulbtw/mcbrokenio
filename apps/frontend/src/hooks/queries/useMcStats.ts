@@ -1,4 +1,4 @@
-import { type QueryFunction, useQuery } from "react-query";
+import { type QueryFunction, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 import { type McStats } from "@/lib/stats";
@@ -13,7 +13,7 @@ const fetchMcStats: QueryFunction<McStats[]> = async ({ signal }) => {
 
 export const useMcStats = () => {
   return useQuery({
-    queryKey: "mcStats",
+    queryKey: ["mcStats"],
     queryFn: fetchMcStats,
   });
 };

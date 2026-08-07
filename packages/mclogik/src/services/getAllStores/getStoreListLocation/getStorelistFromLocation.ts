@@ -9,7 +9,7 @@ export async function getStorelistFromLocation(
   { country, getStores: { url, mobileString } }: ICountryInfos,
   token: string,
   clientId: string
-) {
+): Promise<CreatePos[]> {
   const {
     data: { response }
   } = await axios.get<IRestaurantLocationResponse>(

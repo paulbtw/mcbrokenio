@@ -20,7 +20,7 @@ export function MobileView({ geo }: { geo: { lat: number, lon: number } }) {
     panToLocation
   } = useMapInteractions({ geo })
   return (
-    <div className="rounded-xl bg-white shadow-sm dark:bg-slate-800">
+    <div className="rounded-xl bg-white shadow-xs dark:bg-slate-800">
       <Tabs defaultValue="map" className="w-full" onValueChange={setActiveTab}>
         <div className="border-b px-4 dark:border-slate-700">
           <TabsList className="grid w-full grid-cols-2">

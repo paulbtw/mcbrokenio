@@ -1,7 +1,7 @@
 'use client'
 
 import { type Dispatch, type RefObject, type SetStateAction } from 'react'
-import { type MapRef } from 'react-map-gl'
+import { type MapRef } from 'react-map-gl/mapbox'
 
 import { Map } from '@/components/Map'
 import { type McDataGeometry,type McDataProperties } from '@/hooks/queries/useMcData'
@@ -34,7 +34,7 @@ export function MapComponent({
   return (
     <div className="flex h-full gap-4">
       <div
-        className="grow rounded-xl shadow bg-white overflow-hidden"
+        className="grow rounded-xl shadow-sm bg-white overflow-hidden"
         style={{ height: `${height}px` }}
       >
         {isLoading && <div className="w-full h-full bg-slate-300" />}

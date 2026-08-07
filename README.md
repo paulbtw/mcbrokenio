@@ -9,14 +9,14 @@ The project idea is inspired by [McBroken.com](https://mcbroken.com/) made by [r
 ## Built With
 
 - [Turborepo](https://turbo.build/repo) - Monorepo build system
-- [Serverless Framework](https://www.serverless.com/) 3.x - AWS Lambda deployment
-- [Prisma](https://www.prisma.io/) 6.x - ORM with PostgreSQL 17
-- [Next.js](https://nextjs.org/) 15 - Frontend framework (App Router + Turbopack)
+- [Serverless Framework](https://www.serverless.com/) 4.x - AWS Lambda deployment
+- [Prisma](https://www.prisma.io/) 7.x - ORM with PostgreSQL 17
+- [Next.js](https://nextjs.org/) 16 - Frontend framework (App Router + Turbopack)
 - [React](https://react.dev/) 19 - UI library
-- [TailwindCSS](https://tailwindcss.com/) 3.x - Styling
+- [TailwindCSS](https://tailwindcss.com/) 4.x - Styling
 - [Radix UI](https://www.radix-ui.com/) & [shadcn/ui](https://ui.shadcn.com/) - UI Components
 - [Mapbox GL](https://www.mapbox.com/) - Map rendering
-- [pnpm](https://pnpm.io/) 10.x - Package manager
+- [pnpm](https://pnpm.io/) 11.x - Package manager
 
 ## Project Structure
 
@@ -24,7 +24,7 @@ This project uses a monorepo structure managed by Turborepo:
 
 ```text
 apps/
-├── frontend/      # Next.js 15 application - @mcbroken/frosty
+├── frontend/      # Next.js 16 application - @mcbroken/frosty
 ├── mcall/         # Serverless: EU region - @mcbroken/mcall
 ├── mcus/          # Serverless: US region - @mcbroken/mcus
 └── mcau/          # Serverless: AU region - @mcbroken/mcau
@@ -38,8 +38,8 @@ packages/
 
 ## Prerequisites
 
-- **Node.js** 22+ (see `.nvmrc`)
-- **pnpm** 10.x (9+ minimum)
+- **Node.js** 26.7.0 for local development (see `.nvmrc`); managed production runtimes remain on Node.js 24
+- **pnpm** 11.20.0, installed explicitly (`npm install --global pnpm@11.20.0`; Node.js 26 does not bundle Corepack)
 - **Docker** and **Docker Compose** for local PostgreSQL
 
 ## Setup
@@ -100,12 +100,17 @@ Configure the `staging` and `production` GitHub environments with these secrets:
 - `MCUS_DEPLOYMENT_BUCKET`
 - `MCAU_DEPLOYMENT_BUCKET`
 - `SENTRY_DSN`
+- `SERVERLESS_ACCESS_KEY`
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 - `NEXT_PUBLIC_MAPBOX_KEY`
 
-If the deployment bucket secrets are omitted, the serverless apps fall back to stage-based names like `mcbrokenio-mcall-bucket-production`.
+If deployment bucket secrets are omitted, the serverless apps use their existing shared bucket names, such as `mcbrokenio-mcall-bucket-dev`.
+
+Deployments are manual. The workflow never deploys automatically, and the three production Lambda services must remain deployed in their separate AWS regions because the McDonald's APIs have region-specific IP requirements.
+
+> **Runtime follow-up (2026-08-07):** Move managed production from Node.js 24 to Node.js 26 only after Node.js 26 is LTS and both AWS Lambda and Vercel provide managed support. Update runtime declarations, Node types, build targets, and provider settings together.
 
 ## Documentation
 
