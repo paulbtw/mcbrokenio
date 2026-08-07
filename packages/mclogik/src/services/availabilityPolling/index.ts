@@ -14,6 +14,7 @@ import {
   captureBatchSummary
 } from '../../sentry'
 import { APIType, type UpdatePos } from '../../types'
+import { chunkArray } from '../../utils/chunkArray'
 import { getMetaForApi } from '../../utils/getMetaForApi'
 import { getPosByCountries } from '../../utils/getPosByCountries'
 
@@ -22,6 +23,8 @@ import {
   type AvailabilityPollRequest,
   type AvailabilityPollResult
 } from './AvailabilityPollingModule'
+
+const PERSISTENCE_TRANSACTION_BATCH_SIZE = 100
 
 function getRequestLimiter(apiType: APIType): RequestLimiter {
   switch (apiType) {
@@ -41,33 +44,44 @@ function getRequestLimiter(apiType: APIType): RequestLimiter {
 async function persistUpdates(updates: UpdatePos[]): Promise<void> {
   const now = new Date()
 
-  await prisma.$transaction(
-    updates.map((update) => {
-      if (typeof update.id !== 'string') {
-        throw new Error('Availability update is missing a store id')
-      }
+  const validatedUpdates = updates.map((update) => {
+    if (typeof update.id !== 'string') {
+      throw new Error('Availability update is missing a store id')
+    }
 
-      return prisma.pos.update({
-        where: { id: update.id },
-        data: {
-          mcFlurryCount: update.mcFlurryCount,
-          mcFlurryError: update.mcFlurryError,
-          mcFlurryStatus: update.mcFlurryStatus,
-          mcSundaeCount: update.mcSundaeCount,
-          mcSundaeError: update.mcSundaeError,
-          mcSundaeStatus: update.mcSundaeStatus,
-          milkshakeCount: update.milkshakeCount,
-          milkshakeError: update.milkshakeError,
-          milkshakeStatus: update.milkshakeStatus,
-          customItems: update.customItems,
-          errorCounter: update.errorCounter,
-          isResponsive: update.isResponsive,
-          lastChecked: now,
-          updatedAt: now
-        }
-      })
-    })
+    return { ...update, id: update.id }
+  })
+
+  const updateBatches = chunkArray(
+    validatedUpdates,
+    PERSISTENCE_TRANSACTION_BATCH_SIZE
   )
+
+  for (const batch of updateBatches) {
+    await prisma.$transaction(
+      batch.map((update) =>
+        prisma.pos.update({
+          where: { id: update.id },
+          data: {
+            mcFlurryCount: update.mcFlurryCount,
+            mcFlurryError: update.mcFlurryError,
+            mcFlurryStatus: update.mcFlurryStatus,
+            mcSundaeCount: update.mcSundaeCount,
+            mcSundaeError: update.mcSundaeError,
+            mcSundaeStatus: update.mcSundaeStatus,
+            milkshakeCount: update.milkshakeCount,
+            milkshakeError: update.milkshakeError,
+            milkshakeStatus: update.milkshakeStatus,
+            customItems: update.customItems,
+            errorCounter: update.errorCounter,
+            isResponsive: update.isResponsive,
+            lastChecked: now,
+            updatedAt: now
+          }
+        })
+      )
+    )
+  }
 }
 
 function logStoreFailure(sample: BatchFailureSample): void {
