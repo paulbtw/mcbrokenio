@@ -77,20 +77,23 @@ apps/frontend/src/
 ├── hooks/
 │   ├── queries/                 # React Query hooks
 │   │   ├── useMcData.ts         # Store data fetching
-│   │   ├── useMcStats.ts        # Statistics fetching
-│   │   └── useLocation.ts       # User location
+│   │   └── useMcStats.ts        # Statistics fetching
 │   ├── useMapInteractions.ts
 │   ├── useDebounce.ts
 │   └── useSettings.ts
 ├── lib/
-│   ├── utils.ts                 # Utility functions (cn, etc.)
-│   └── constants.ts             # App constants
+│   ├── constants.ts             # App constants
+│   ├── geo.ts                   # GeoJSON helpers
+│   ├── stats.ts                 # Statistics helpers
+│   └── utils.ts                 # Utility functions (cn, etc.)
 ├── provider/
 │   └── ReactQueryProvider.tsx   # React Query setup
-├── types/
-│   └── index.ts                 # TypeScript types
 └── middleware.ts                # Geolocation middleware
 ```
+
+Published availability contracts are imported from
+`@mcbroken/mclogik/publishedAvailabilitySnapshot` so the frontend does not
+maintain a parallel types directory.
 
 ### Data Flow (Frontend)
 

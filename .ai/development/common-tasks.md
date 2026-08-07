@@ -45,7 +45,7 @@ export const handler = async () => {
 // apps/mcxx/serverless.ts
 functions: {
   getItemStatus: {
-    handler: 'src/handlers/getItemStatus.handler',
+    handler: 'src/getItemStatus/index.handler',
     events: [{ schedule: 'cron(0 * * * ? *)' }],
   },
 }

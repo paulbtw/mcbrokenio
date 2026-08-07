@@ -78,7 +78,7 @@ const serverlessConfiguration: AWS = {
 
   functions: {
     getItemStatus: {
-      handler: 'src/handlers/getItemStatus.handler',
+      handler: 'src/getItemStatus/index.handler',
       memorySize: 368,
       timeout: 900,
       events: [
