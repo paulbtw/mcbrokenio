@@ -28,9 +28,9 @@ describe("baseServerlessConfiguration", () => {
       buildConcurrency: 10,
     });
     expect(baseServerlessConfiguration.package?.patterns ?? []).toEqual([]);
-    expect(baseServerlessConfiguration.provider?.environment).not.toHaveProperty(
-      "PRISMA_QUERY_ENGINE_LIBRARY",
-    );
+    expect(
+      baseServerlessConfiguration.provider?.environment,
+    ).not.toHaveProperty("PRISMA_QUERY_ENGINE_LIBRARY");
   });
 });
 
@@ -70,13 +70,18 @@ describe("getDeploymentStage", () => {
 });
 
 describe("bucket helpers", () => {
-  it("builds stage-specific non-deployment bucket names", () => {
+  it("builds stage-specific asset bucket names", () => {
     process.env.SLS_STAGE = "production";
 
     expect(getStageBucketName("mcbrokenio-assets")).toBe(
       "mcbrokenio-assets-production",
     );
-    expect(getExportBucket()).toBe("mcbrokenio-export-geojson-production");
+  });
+
+  it("keeps the shared export bucket when deploying production", () => {
+    process.env.SLS_STAGE = "production";
+
+    expect(getExportBucket()).toBe("mcbrokenio-export-geojson-dev");
   });
 
   it("keeps deployment buckets on the shared dev bucket name", () => {
