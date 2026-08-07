@@ -47,6 +47,24 @@ vi.mock('../../sentry', () => ({
   captureBatchSummary: mocks.captureBatchSummary
 }))
 
+vi.mock('../../utils/RateLimitedExecutor', () => ({
+  createRateLimitedExecutor: () => ({
+    async executeAll(
+      items: unknown[],
+      executor: (item: unknown) => Promise<unknown | null>
+    ) {
+      const values = await Promise.all(items.map(executor))
+      const results = values.filter((value) => value !== null)
+
+      return {
+        results,
+        totalProcessed: items.length,
+        failures: values.length - results.length
+      }
+    }
+  })
+}))
+
 function createStore(overrides: Partial<Pos> = {}): Pos {
   return {
     id: 'US-12345',
@@ -244,5 +262,39 @@ describe('pollAvailability', () => {
     )
 
     expect(mocks.transaction).not.toHaveBeenCalled()
+  })
+
+  it('persists large polls without exceeding the transaction write limit', async () => {
+    mocks.findMany.mockResolvedValue(
+      Array.from({ length: 101 }, (_, index) =>
+        createStore({
+          id: `US-${index}`,
+          nationalStoreNumber: String(index)
+        })
+      )
+    )
+    mocks.transaction.mockImplementation(
+      async (updates: Promise<unknown>[]) => {
+        if (updates.length > 100) {
+          throw new Error(
+            'Transaction API error: A rollback cannot be executed on an expired transaction'
+          )
+        }
+
+        return Promise.all(updates)
+      }
+    )
+
+    await expect(
+      pollAvailability({ apiType: APIType.US })
+    ).resolves.toMatchObject({
+      totalStores: 101,
+      successCount: 101
+    })
+
+    expect(mocks.transaction).toHaveBeenCalledTimes(2)
+    expect(
+      mocks.transaction.mock.calls.map(([updates]) => updates.length)
+    ).toEqual([100, 1])
   })
 })
