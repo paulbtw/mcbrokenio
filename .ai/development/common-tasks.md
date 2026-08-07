@@ -5,7 +5,7 @@
 ### 1. Add Country Configuration
 
 ```typescript
-// packages/mclogik/src/constants/index.ts
+// packages/mclogik/src/constants/CountryInfos/El.ts
 
 export const NEW_COUNTRY_INFO = {
   code: 'XX',
@@ -15,20 +15,13 @@ export const NEW_COUNTRY_INFO = {
 };
 ```
 
-### 2. Create Item Status Handler
+### 2. Add Regional Network Behavior When Needed
 
 ```typescript
-// packages/mclogik/src/services/getItemStatus/getItemStatusXx.ts
+// packages/mclogik/src/clients/{McdonaldsApiClient,StoreDiscoveryClient}.ts
 
-import type { PrismaClient } from '@prisma/client';
-import { getUpdatedPos } from './getUpdatedPos';
-import { updatePos } from './updatePos';
-
-export async function getItemStatusXx(prisma: PrismaClient) {
-  const stores = await getUpdatedPos(prisma, 'XX');
-  // Implement country-specific logic
-  await updatePos(prisma, stores);
-}
+// Reuse the existing availability and discovery adapters when formats match.
+// Add regional behavior only when endpoint or response behavior differs.
 ```
 
 ### 3. Add Serverless Function
@@ -36,12 +29,12 @@ export async function getItemStatusXx(prisma: PrismaClient) {
 Create new app or add to existing:
 
 ```typescript
-// apps/mcxx/src/handlers/getItemStatus.ts
-import { getItemStatusXx } from '@mcbroken/mclogik';
-import { prisma } from '@mcbroken/db';
+// apps/mcxx/src/getItemStatus/index.ts
+import { pollAvailability } from '@mcbroken/mclogik/availabilityPolling';
+import { APIType } from '@mcbroken/mclogik/types';
 
 export const handler = async () => {
-  await getItemStatusXx(prisma);
+  await pollAvailability({ apiType: APIType.EL });
   return { statusCode: 200 };
 };
 ```
@@ -89,12 +82,12 @@ pnpm prisma migrate dev --name add_new_product
 pnpm turbo run db:generate
 ```
 
-### 3. Update mclogik Services
+### 3. Update Product Availability
 
 ```typescript
-// packages/mclogik/src/services/getItemStatus/checkForProduct.ts
+// packages/mclogik/src/clients/ProductAvailability.ts
 
-export async function checkForProduct(store, products) {
+export function checkProductAvailability(outages, products) {
   // Add new product check logic
   const newProductAvailable = products.some(p => p.id === 'NEW_PRODUCT_ID');
   return {

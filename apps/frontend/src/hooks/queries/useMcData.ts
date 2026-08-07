@@ -1,38 +1,12 @@
+import type {
+  GeoJson,
+  GeoJsonPos,
+} from "@mcbroken/mclogik/publishedAvailabilitySnapshot";
 import { type QueryFunction, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-import { type ItemStatus } from "@/types";
-
-export interface McCustomItem {
-  name: string;
-  count: number;
-  error: number;
-  status: ItemStatus;
-}
-
-export interface McDataProperties {
-  hasMilchshake: ItemStatus;
-  milkshakeCount: number;
-  milkshakeErrorCount: number;
-  hasMcSundae: ItemStatus;
-  mcSundaeCount: number;
-  mcSundaeErrorCount: number;
-  hasMcFlurry: ItemStatus;
-  mcFlurryCount: number;
-  mcFlurryErrorCount: number;
-  customItems: McCustomItem[];
-  lastChecked: string | null;
-  name: string;
-  dot: string;
-  hasMobileOrdering: boolean;
-  isResponsive: boolean;
-  id: string;
-}
-
-export type McDataGeometry = GeoJSON.FeatureCollection<
-  GeoJSON.Point,
-  McDataProperties
->;
+export type McDataProperties = GeoJsonPos["properties"];
+export type McDataGeometry = GeoJson;
 
 const fetchMcData: QueryFunction<McDataGeometry> = async ({ signal }) => {
   const { data } = await axios.get<McDataGeometry>("/marker.json", {

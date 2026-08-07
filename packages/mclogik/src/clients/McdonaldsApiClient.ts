@@ -8,8 +8,6 @@ import { type APIType } from '../types'
 export interface OutageResponse {
   /** Product codes that are currently unavailable */
   outageProductCodes: string[]
-  /** Whether the API call was successful (false indicates an error occurred) */
-  success: boolean
 }
 
 /**
@@ -100,29 +98,25 @@ export class StandardApiClient implements McdonaldsApiClient {
     storeNumber: string,
     headers: McdonaldsRequestHeaders
   ): Promise<OutageResponse> {
-    try {
-      const url = `${this.config.baseUrl}/exp/v1/restaurant/${storeNumber}?filter=full&storeUniqueIdType=${this.config.storeIdType}`
+    const url = `${this.config.baseUrl}/exp/v1/restaurant/${storeNumber}?filter=full&storeUniqueIdType=${this.config.storeIdType}`
 
-      const { data } = await this.httpClient.get<RestaurantInfoResponse>(url, {
-        headers: {
-          authorization: headers.authorization,
-          'mcd-clientId': headers.clientId,
-          'mcd-sourceapp': this.config.sourceApp,
-          'mcd-marketid': headers.marketId,
-          'mcd-uuid': '"',
-          ...(this.config.acceptLanguage && {
-            'accept-language': this.config.acceptLanguage
-          })
-        }
-      })
+    const { data } = await this.httpClient.get<RestaurantInfoResponse>(url, {
+      headers: {
+        authorization: headers.authorization,
+        'mcd-clientId': headers.clientId,
+        'mcd-sourceapp': this.config.sourceApp,
+        'mcd-marketid': headers.marketId,
+        'mcd-uuid': '"',
+        ...(this.config.acceptLanguage && {
+          'accept-language': this.config.acceptLanguage
+        })
+      }
+    })
 
-      const outageProductCodes =
-        data.response?.restaurant?.catalog?.outageProductCodes ?? []
+    const outageProductCodes =
+      data.response?.restaurant?.catalog?.outageProductCodes ?? []
 
-      return { outageProductCodes, success: true }
-    } catch {
-      return { outageProductCodes: [], success: false }
-    }
+    return { outageProductCodes }
   }
 }
 
@@ -142,29 +136,25 @@ export class ElApiClient implements McdonaldsApiClient {
     storeNumber: string,
     headers: McdonaldsRequestHeaders
   ): Promise<OutageResponse> {
-    try {
-      const url = `${this.baseUrl}/exp/v1/menu/gmal/restaurants/${storeNumber}/status`
+    const url = `${this.baseUrl}/exp/v1/menu/gmal/restaurants/${storeNumber}/status`
 
-      const { data } = await this.httpClient.get<RestaurantStatusResponse>(
-        url,
-        {
-          headers: {
-            authorization: headers.authorization,
-            'mcd-clientid': headers.clientId,
-            'mcd-sourceapp': 'GMAL'
-          }
+    const { data } = await this.httpClient.get<RestaurantStatusResponse>(
+      url,
+      {
+        headers: {
+          authorization: headers.authorization,
+          'mcd-clientid': headers.clientId,
+          'mcd-sourceapp': 'GMAL'
         }
-      )
+      }
+    )
 
-      // EL API returns numbers, convert to strings for consistency
-      const outageProductCodes = (data.productOutages?.productIDs ?? []).map(
-        (code) => code.toString()
-      )
+    // EL responses use numbers; normalize to product-code strings.
+    const outageProductCodes = (data.productOutages?.productIDs ?? []).map(
+      (code) => code.toString()
+    )
 
-      return { outageProductCodes, success: true }
-    } catch {
-      return { outageProductCodes: [], success: false }
-    }
+    return { outageProductCodes }
   }
 }
 

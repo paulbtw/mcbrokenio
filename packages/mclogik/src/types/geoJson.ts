@@ -23,7 +23,7 @@ export interface GeoJsonPos {
     mcFlurryCount: number
     mcFlurryErrorCount: number
     lastChecked: number | null
-    customItems?: CustomItemType[]
+    customItems: CustomItemType[]
     name: string
     dot: 'RED' | 'YELLOW' | 'GREEN' | 'GREY'
     hasMobileOrdering: boolean

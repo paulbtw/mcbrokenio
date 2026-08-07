@@ -1,12 +1,4 @@
 export {
-  calculateStoreItemStatus,
-  checkProductAvailability,
-  createItemStatusService,
-  ItemStatusService,
-  type ProductStatus,
-  type StoreItemStatus
-} from './ItemStatusService'
-export {
   API_CLIENT_CONFIGS,
   type ApiClientConfig,
   createAllApiClients,
@@ -17,6 +9,14 @@ export {
   type OutageResponse,
   StandardApiClient
 } from './McdonaldsApiClient'
+export {
+  calculateStoreProductAvailability,
+  checkProductAvailability,
+  createStoreProductAvailabilityFetcher,
+  type ProductAvailability,
+  type StoreProductAvailability,
+  StoreProductAvailabilityFetcher
+} from './ProductAvailability'
 export {
   createS3StorageClient,
   InMemoryStorageClient,

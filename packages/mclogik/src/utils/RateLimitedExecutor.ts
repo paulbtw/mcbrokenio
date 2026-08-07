@@ -29,7 +29,7 @@ export interface BatchExecutionResult<T> {
 
 /**
  * Executes async operations with rate limiting
- * Extracted from getItemStatus to be reusable and testable
+ * Used by availability polling to keep rate policy inside the deep module.
  *
  * Uses p-queue's built-in rate limiting (intervalCap/interval) to ensure
  * thread-safe rate limiting across concurrent tasks.

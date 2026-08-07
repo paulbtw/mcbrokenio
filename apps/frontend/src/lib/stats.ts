@@ -1,14 +1,4 @@
-export interface McStats {
-  total: number;
-  trackable: number;
-  availablemilkshakes: number;
-  totalmilkshakes: number;
-  availablemcflurry: number;
-  totalmcflurry: number;
-  availablemcsundae: number;
-  totalmcsundae: number;
-  country: string;
-}
+import type { PublishedAvailabilityStatistics } from "@mcbroken/mclogik/publishedAvailabilitySnapshot";
 
 export interface StatsSummary {
   trackablePercentage: number;
@@ -32,7 +22,9 @@ function toPercentage(available: number, total: number): number {
   return (available / total) * 100;
 }
 
-export function getStatsSummary(data?: McStats[]): StatsSummary {
+export function getStatsSummary(
+  data?: PublishedAvailabilityStatistics[],
+): StatsSummary {
   const totalStats = data?.find((item) => item.country === "UNKNOWN");
 
   if (!totalStats) {

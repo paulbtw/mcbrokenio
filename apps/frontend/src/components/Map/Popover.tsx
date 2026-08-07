@@ -3,14 +3,15 @@ import { formatDistance } from "date-fns";
 
 import { type McDataProperties } from "@/hooks/queries/useMcData";
 import { useSettings } from "@/hooks/useSettings";
-import { ItemStatus } from "@/types";
 
-const colorMap = {
-  [ItemStatus.AVAILABLE]: "bg-green-500",
-  [ItemStatus.UNAVAILABLE]: "bg-red-500",
-  [ItemStatus.NOT_APPLICABLE]: "bg-gray-500",
-  [ItemStatus.PARTIAL_AVAILABLE]: "bg-yellow-500",
-  [ItemStatus.UNKNOWN]: "bg-gray-500",
+type ItemStatus = McDataProperties["hasMcFlurry"];
+
+const colorMap: Record<ItemStatus, string> = {
+  AVAILABLE: "bg-green-500",
+  UNAVAILABLE: "bg-red-500",
+  NOT_APPLICABLE: "bg-gray-500",
+  PARTIAL_AVAILABLE: "bg-yellow-500",
+  UNKNOWN: "bg-gray-500",
 };
 
 function Item({

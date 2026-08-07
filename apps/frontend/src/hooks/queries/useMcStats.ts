@@ -1,10 +1,11 @@
+import type { PublishedAvailabilityStatistics } from "@mcbroken/mclogik/publishedAvailabilitySnapshot";
 import { type QueryFunction, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-import { type McStats } from "@/lib/stats";
-
-const fetchMcStats: QueryFunction<McStats[]> = async ({ signal }) => {
-  const { data } = await axios.get<McStats[]>("/stats.json", {
+const fetchMcStats: QueryFunction<PublishedAvailabilityStatistics[]> = async ({
+  signal,
+}) => {
+  const { data } = await axios.get<PublishedAvailabilityStatistics[]>("/stats.json", {
     signal,
   });
 

@@ -1,10 +1,10 @@
-import { createJson } from '@mcbroken/mclogik/createJson'
+import { publishAvailabilitySnapshot } from '@mcbroken/mclogik/publishedAvailabilitySnapshot'
 import { initSentry, wrapHandler } from '@mcbroken/mclogik/sentry'
 
 initSentry({ region: 'eu' })
 
 export const handler = wrapHandler(async () => {
-  await createJson()
+  await publishAvailabilitySnapshot()
 
   return {
     statusCode: 200,

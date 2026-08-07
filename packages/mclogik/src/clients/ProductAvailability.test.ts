@@ -9,13 +9,13 @@ import {
   UsLocations
 } from '../types'
 
-import {
-  calculateStoreItemStatus,
-  checkProductAvailability,
-  createItemStatusService,
-  ItemStatusService
-} from './ItemStatusService'
 import { type McdonaldsApiClient } from './McdonaldsApiClient'
+import {
+  calculateStoreProductAvailability,
+  checkProductAvailability,
+  createStoreProductAvailabilityFetcher,
+  StoreProductAvailabilityFetcher
+} from './ProductAvailability'
 
 describe('checkProductAvailability', () => {
   describe('when no product codes are defined', () => {
@@ -32,10 +32,9 @@ describe('checkProductAvailability', () => {
 
   describe('when product config is explicitly unavailable', () => {
     it('should return NOT_APPLICABLE with count 0', () => {
-      const result = checkProductAvailability(
-        ['CODE1', 'CODE2'],
-        { kind: 'unavailable' } satisfies ProductCodeConfig
-      )
+      const result = checkProductAvailability(['CODE1', 'CODE2'], {
+        kind: 'unavailable'
+      } satisfies ProductCodeConfig)
 
       expect(result).toEqual({
         status: 'NOT_APPLICABLE',
@@ -161,7 +160,7 @@ describe('checkProductAvailability', () => {
   })
 })
 
-describe('calculateStoreItemStatus', () => {
+describe('calculateStoreProductAvailability', () => {
   const createCountryInfo = (
     overrides: Partial<ICountryInfos> = {}
   ): ICountryInfos => ({
@@ -182,7 +181,10 @@ describe('calculateStoreItemStatus', () => {
     const countryInfo = createCountryInfo()
     const outageProductCodes = ['SHAKE1', 'FLURRY1', 'FLURRY2']
 
-    const result = calculateStoreItemStatus(outageProductCodes, countryInfo)
+    const result = calculateStoreProductAvailability(
+      outageProductCodes,
+      countryInfo
+    )
 
     expect(result.milkshake).toEqual({
       status: 'PARTIAL_AVAILABLE',
@@ -205,7 +207,10 @@ describe('calculateStoreItemStatus', () => {
     const countryInfo = createCountryInfo()
     const outageProductCodes: string[] = []
 
-    const result = calculateStoreItemStatus(outageProductCodes, countryInfo)
+    const result = calculateStoreProductAvailability(
+      outageProductCodes,
+      countryInfo
+    )
 
     expect(result.milkshake.status).toBe('AVAILABLE')
     expect(result.mcFlurry.status).toBe('AVAILABLE')
@@ -216,12 +221,15 @@ describe('calculateStoreItemStatus', () => {
     const countryInfo = createCountryInfo({
       customItems: {
         'Apple Pie': ['PIE1', 'PIE2'],
-        'McRib': ['RIB1']
+        McRib: ['RIB1']
       }
     })
     const outageProductCodes = ['PIE1']
 
-    const result = calculateStoreItemStatus(outageProductCodes, countryInfo)
+    const result = calculateStoreProductAvailability(
+      outageProductCodes,
+      countryInfo
+    )
 
     expect(result.custom).toHaveLength(2)
     expect(result.custom).toContainEqual({
@@ -244,7 +252,10 @@ describe('calculateStoreItemStatus', () => {
     })
     const outageProductCodes: string[] = []
 
-    const result = calculateStoreItemStatus(outageProductCodes, countryInfo)
+    const result = calculateStoreProductAvailability(
+      outageProductCodes,
+      countryInfo
+    )
 
     expect(result.custom).toEqual([])
   })
@@ -258,7 +269,7 @@ describe('calculateStoreItemStatus', () => {
       }
     })
 
-    const result = calculateStoreItemStatus(['FLURRY1'], countryInfo)
+    const result = calculateStoreProductAvailability(['FLURRY1'], countryInfo)
 
     expect(result.milkshake).toEqual({
       status: 'NOT_APPLICABLE',
@@ -278,7 +289,7 @@ describe('calculateStoreItemStatus', () => {
   })
 })
 
-describe('ItemStatusService', () => {
+describe('StoreProductAvailabilityFetcher', () => {
   const createMockApiClient = (): McdonaldsApiClient => ({
     apiType: APIType.US,
     fetchRestaurantOutages: vi.fn()
@@ -323,19 +334,18 @@ describe('ItemStatusService', () => {
     }
   })
 
-  describe('getStoreItemStatus', () => {
+  describe('fetchStoreProductAvailability', () => {
     it('should fetch outages and calculate status', async () => {
       const mockApiClient = createMockApiClient()
       vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: ['SHAKE1', 'FLURRY1'],
-        success: true
+        outageProductCodes: ['SHAKE1', 'FLURRY1']
       })
 
-      const service = new ItemStatusService(mockApiClient)
+      const fetcher = new StoreProductAvailabilityFetcher(mockApiClient)
       const pos = createMockPos()
       const countryInfo = createCountryInfo()
 
-      const result = await service.getStoreItemStatus(
+      const result = await fetcher.fetchStoreProductAvailability(
         pos,
         countryInfo,
         'test-token',
@@ -360,15 +370,14 @@ describe('ItemStatusService', () => {
     it('should return all available when no outages', async () => {
       const mockApiClient = createMockApiClient()
       vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: [],
-        success: true
+        outageProductCodes: []
       })
 
-      const service = new ItemStatusService(mockApiClient)
+      const fetcher = new StoreProductAvailabilityFetcher(mockApiClient)
       const pos = createMockPos()
       const countryInfo = createCountryInfo()
 
-      const result = await service.getStoreItemStatus(
+      const result = await fetcher.fetchStoreProductAvailability(
         pos,
         countryInfo,
         'test-token',
@@ -380,34 +389,33 @@ describe('ItemStatusService', () => {
       expect(result!.mcSundae.status).toBe('AVAILABLE')
     })
 
-    it('should return null when API call fails', async () => {
+    it('should propagate network errors to availability polling', async () => {
       const mockApiClient = createMockApiClient()
-      vi.mocked(mockApiClient.fetchRestaurantOutages).mockResolvedValue({
-        outageProductCodes: [],
-        success: false
-      })
+      vi.mocked(mockApiClient.fetchRestaurantOutages).mockRejectedValue(
+        new Error('Network error')
+      )
 
-      const service = new ItemStatusService(mockApiClient)
+      const fetcher = new StoreProductAvailabilityFetcher(mockApiClient)
       const pos = createMockPos()
       const countryInfo = createCountryInfo()
 
-      const result = await service.getStoreItemStatus(
-        pos,
-        countryInfo,
-        'test-token',
-        'test-client-id'
-      )
-
-      expect(result).toBeNull()
+      await expect(
+        fetcher.fetchStoreProductAvailability(
+          pos,
+          countryInfo,
+          'test-token',
+          'test-client-id'
+        )
+      ).rejects.toThrow('Network error')
     })
   })
 
-  describe('createItemStatusService', () => {
-    it('should create an ItemStatusService instance', () => {
+  describe('createStoreProductAvailabilityFetcher', () => {
+    it('should create a StoreProductAvailabilityFetcher instance', () => {
       const mockApiClient = createMockApiClient()
-      const service = createItemStatusService(mockApiClient)
+      const fetcher = createStoreProductAvailabilityFetcher(mockApiClient)
 
-      expect(service).toBeInstanceOf(ItemStatusService)
+      expect(fetcher).toBeInstanceOf(StoreProductAvailabilityFetcher)
     })
   })
 })

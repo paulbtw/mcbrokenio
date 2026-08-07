@@ -6,7 +6,7 @@ McBroken uses a multi-cloud deployment strategy:
 - **Frontend**: Vercel (Next.js hosting)
 - **Serverless**: AWS Lambda (3 regional deployments)
 - **Database**: AWS RDS or self-hosted PostgreSQL
-- **Storage**: Amazon S3 (GeoJSON exports)
+- **Storage**: Amazon S3 (Published Availability Snapshot)
 
 ## Infrastructure Diagram
 

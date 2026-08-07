@@ -54,5 +54,6 @@ export async function getBearerToken(apiType: APIType) {
     return data.response.token
   } catch {
     logger.error(`error getting new bearer token for ${apiType}`)
+    throw error
   }
 }
