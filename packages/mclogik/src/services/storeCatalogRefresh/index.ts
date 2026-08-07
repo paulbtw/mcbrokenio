@@ -1,4 +1,5 @@
 import { prisma } from '@mcbroken/db/client'
+import axios from 'axios'
 
 import { createStoreDiscoveryClient } from '../../clients/StoreDiscoveryClient'
 import {
@@ -25,6 +26,26 @@ const URL_DISCOVERY_LIMITER: RequestLimiter = {
 }
 const EU_DISCOVERY_SPACING_KILOMETERS = 50
 const AP_US_DISCOVERY_SPACING_KILOMETERS = 30
+
+interface SanitizedDiscoveryError {
+  name: 'AxiosError' | 'Error' | 'UnknownError'
+  code?: string
+  status?: number
+}
+
+function sanitizeDiscoveryError(error: unknown): SanitizedDiscoveryError {
+  if (axios.isAxiosError(error)) {
+    return {
+      name: 'AxiosError',
+      ...(typeof error.code === 'string' ? { code: error.code } : {}),
+      ...(typeof error.response?.status === 'number'
+        ? { status: error.response.status }
+        : {})
+    }
+  }
+
+  return { name: error instanceof Error ? 'Error' : 'UnknownError' }
+}
 
 function assertSupportedApiType(apiType: APIType): void {
   if (apiType === APIType.HK || apiType === APIType.UNKNOWN) {
@@ -100,7 +121,11 @@ const storeCatalogRefreshModule = new StoreCatalogRefreshModule({
   getRequestLimiter,
   getLocationIntervalKilometers,
   logDiscoveryFailure(error, context) {
-    console.error('Store Catalog discovery request failed', context, error)
+    console.error(
+      'Store Catalog discovery request failed',
+      context,
+      sanitizeDiscoveryError(error)
+    )
   },
   now: Date.now
 })

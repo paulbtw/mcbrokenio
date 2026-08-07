@@ -13,6 +13,7 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint '**/*.ts'",
     "lint:fix": "eslint '**/*.ts' --fix",
+    "test": "vitest run --passWithNoTests",
     "invoke": "serverless invoke local --function",
     "package": "serverless package"
   },
@@ -22,7 +23,8 @@
     "@mcbroken/typescript-config": "workspace:*",
     "@serverless/typescript": "4.30.0",
     "typescript": "6.0.3",
-    "eslint": "9.39.2"
+    "eslint": "9.39.2",
+    "vitest": "4.1.10"
   },
   "dependencies": {
     "@mcbroken/mclogik": "workspace:*"

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   APIType,
@@ -79,6 +79,10 @@ describe('refreshStoreCatalog', () => {
     ])
     mocks.discoverFromUrl.mockResolvedValue([])
     mocks.upsertMany.mockImplementation(async (stores) => stores.length)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('owns credentials, location spacing, discovery, and persistence for US', async () => {
@@ -179,5 +183,53 @@ describe('refreshStoreCatalog', () => {
       refreshStoreCatalog({ apiType: APIType.HK })
     ).rejects.toThrow('Store Catalog refresh is not supported for HK')
     expect(mocks.getMetaForApi).not.toHaveBeenCalled()
+  })
+
+  it('logs only allowlisted Axios failure fields', async () => {
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
+    const countryInfo = createCountryInfo(UsLocations.US, APIType.US)
+    mocks.getMetaForApi.mockResolvedValue({
+      token: 'bearer-secret',
+      clientId: 'client-secret',
+      countryInfos: [countryInfo]
+    })
+    mocks.discoverFromLocation.mockRejectedValue(
+      Object.assign(
+        new Error('Request to https://example.com?key=url-secret failed'),
+        {
+          name: 'AxiosError',
+          isAxiosError: true,
+          code: 'ERR_BAD_RESPONSE',
+          config: {
+            headers: {
+              authorization: 'Bearer bearer-secret',
+              'mcd-clientid': 'client-secret'
+            },
+            url: 'https://example.com?key=url-secret'
+          },
+          response: { status: 503 }
+        }
+      )
+    )
+
+    await expect(
+      refreshStoreCatalog({ apiType: APIType.US })
+    ).rejects.toThrow('All store discovery requests failed')
+
+    expect(consoleError).toHaveBeenCalledWith(
+      'Store Catalog discovery request failed',
+      { apiType: APIType.US, country: UsLocations.US },
+      {
+        name: 'AxiosError',
+        code: 'ERR_BAD_RESPONSE',
+        status: 503
+      }
+    )
+    const serializedLog = JSON.stringify(consoleError.mock.calls)
+    expect(serializedLog).not.toContain('bearer-secret')
+    expect(serializedLog).not.toContain('client-secret')
+    expect(serializedLog).not.toContain('url-secret')
   })
 })
