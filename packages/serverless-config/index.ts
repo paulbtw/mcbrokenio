@@ -23,10 +23,7 @@ export function getOptionalEnv(name: string): string | undefined {
   return getTrimmedValue(process.env[name]);
 }
 
-export function getStageBucketName(
-  prefix: string,
-  override?: string,
-): string {
+export function getStageBucketName(prefix: string, override?: string): string {
   return getTrimmedValue(override) ?? `${prefix}-${getDeploymentStage()}`;
 }
 
@@ -34,14 +31,13 @@ export function getServiceDeploymentBucket(
   service: string,
   override?: string,
 ): string {
-  return getTrimmedValue(override) ?? `mcbrokenio-${service}-bucket-${DEFAULT_STAGE}`;
+  return (
+    getTrimmedValue(override) ?? `mcbrokenio-${service}-bucket-${DEFAULT_STAGE}`
+  );
 }
 
 export function getExportBucket(override?: string): string {
-  return (
-    getTrimmedValue(override) ??
-    `mcbrokenio-export-geojson-${getDeploymentStage()}`
-  );
+  return getTrimmedValue(override) ?? "mcbrokenio-export-geojson-dev";
 }
 
 export const baseServerlessConfiguration: Partial<AWS> = {
