@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { type RequestLimiter } from '../constants/RateLimit'
 
@@ -7,7 +7,25 @@ import {
   RateLimitedExecutor
 } from './RateLimitedExecutor'
 
+const loggerMocks = vi.hoisted(() => ({
+  debug: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn()
+}))
+
+vi.mock('@sailplane/logger', () => ({
+  Logger: class {
+    debug = loggerMocks.debug
+    error = loggerMocks.error
+    info = loggerMocks.info
+  }
+}))
+
 describe('RateLimitedExecutor', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   const createLimiter = (
     overrides: Partial<RequestLimiter> = {}
   ): RequestLimiter => ({
@@ -63,6 +81,16 @@ describe('RateLimitedExecutor', () => {
       expect(result.failures).toBe(3) // 1, 3, 5 return null
       expect(result.results).toHaveLength(2)
       expect(result.results.sort()).toEqual([2, 4])
+    })
+
+    it('reports execution completion without classifying domain outcomes', async () => {
+      const executor = new RateLimitedExecutor({ limiter: createLimiter() })
+
+      await executor.executeAll([1], async () => ({ status: 'failed' }))
+
+      expect(loggerMocks.info).toHaveBeenCalledWith(
+        'Execution complete: 1/1 items; 0 executor failures'
+      )
     })
 
     it('should count thrown errors as failures', async () => {

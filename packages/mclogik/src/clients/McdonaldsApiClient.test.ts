@@ -46,7 +46,6 @@ describe('StandardApiClient', () => {
       const result = await client.fetchRestaurantOutages('12345', createHeaders())
 
       expect(result.outageProductCodes).toEqual(['CODE1', 'CODE2', 'CODE3'])
-      expect(result.success).toBe(true)
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         'https://us-prod.api.mcd.com/exp/v1/restaurant/12345?filter=full&storeUniqueIdType=NatlStrNumber',
         expect.objectContaining({
@@ -80,7 +79,6 @@ describe('StandardApiClient', () => {
       const result = await client.fetchRestaurantOutages('12345', createHeaders())
 
       expect(result.outageProductCodes).toEqual([])
-      expect(result.success).toBe(true)
     })
 
     it('should return empty array when response structure is missing', async () => {
@@ -96,10 +94,9 @@ describe('StandardApiClient', () => {
       const result = await client.fetchRestaurantOutages('12345', createHeaders())
 
       expect(result.outageProductCodes).toEqual([])
-      expect(result.success).toBe(true)
     })
 
-    it('should return empty array and success false on API error', async () => {
+    it('should propagate network errors for availability health and diagnostics', async () => {
       const mockHttpClient = createMockHttpClient()
       vi.mocked(mockHttpClient.get).mockRejectedValue(new Error('Network error'))
 
@@ -107,10 +104,10 @@ describe('StandardApiClient', () => {
         API_CLIENT_CONFIGS.US,
         mockHttpClient
       )
-      const result = await client.fetchRestaurantOutages('12345', createHeaders())
 
-      expect(result.outageProductCodes).toEqual([])
-      expect(result.success).toBe(false)
+      await expect(
+        client.fetchRestaurantOutages('12345', createHeaders())
+      ).rejects.toThrow('Network error')
     })
 
     it('should use correct config for EU region', async () => {
@@ -205,7 +202,6 @@ describe('ElApiClient', () => {
       const result = await client.fetchRestaurantOutages('12345', createHeaders())
 
       expect(result.outageProductCodes).toEqual(['123', '456', '789'])
-      expect(result.success).toBe(true)
     })
 
     it('should use correct endpoint format', async () => {
@@ -245,10 +241,9 @@ describe('ElApiClient', () => {
       const result = await client.fetchRestaurantOutages('12345', createHeaders())
 
       expect(result.outageProductCodes).toEqual([])
-      expect(result.success).toBe(true)
     })
 
-    it('should return empty array and success false on API error', async () => {
+    it('should propagate network errors for availability health and diagnostics', async () => {
       const mockHttpClient = createMockHttpClient()
       vi.mocked(mockHttpClient.get).mockRejectedValue(new Error('Network error'))
 
@@ -256,10 +251,10 @@ describe('ElApiClient', () => {
         'https://el-prod.api.mcd.com',
         mockHttpClient
       )
-      const result = await client.fetchRestaurantOutages('12345', createHeaders())
 
-      expect(result.outageProductCodes).toEqual([])
-      expect(result.success).toBe(false)
+      await expect(
+        client.fetchRestaurantOutages('12345', createHeaders())
+      ).rejects.toThrow('Network error')
     })
   })
 

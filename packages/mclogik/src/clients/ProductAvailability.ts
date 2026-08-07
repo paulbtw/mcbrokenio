@@ -9,9 +9,9 @@ import {
 } from './McdonaldsApiClient'
 
 /**
- * Status result for a single product category
+ * Availability result for a single product category.
  */
-export interface ProductStatus {
+export interface ProductAvailability {
   status: ItemStatus
   count: number
   unavailable: number
@@ -19,13 +19,13 @@ export interface ProductStatus {
 }
 
 /**
- * Complete item status for a store
+ * Complete product availability for a store.
  */
-export interface StoreItemStatus {
-  milkshake: ProductStatus
-  mcFlurry: ProductStatus
-  mcSundae: ProductStatus
-  custom: ProductStatus[]
+export interface StoreProductAvailability {
+  milkshake: ProductAvailability
+  mcFlurry: ProductAvailability
+  mcSundae: ProductAvailability
+  custom: ProductAvailability[]
 }
 
 /**
@@ -39,7 +39,7 @@ export interface StoreItemStatus {
 export function checkProductAvailability(
   outageProductCodes: string[],
   productCodes: ProductCodeConfig
-): Omit<ProductStatus, 'name'> {
+): Omit<ProductAvailability, 'name'> {
   const normalizedProductCodes = normalizeProductCodeConfig(productCodes)
 
   if (normalizedProductCodes.kind === 'unavailable') {
@@ -87,17 +87,17 @@ export function checkProductAvailability(
 }
 
 /**
- * Pure function to calculate item status from outage codes and country config
+ * Calculate store product availability from outage codes and country config.
  * This is the core transformation logic, completely independent of I/O
  *
  * @param outageProductCodes - Product codes that are currently unavailable
  * @param countryInfo - Country-specific product code configuration
- * @returns Complete item status for the store
+ * @returns Complete product availability for the store
  */
-export function calculateStoreItemStatus(
+export function calculateStoreProductAvailability(
   outageProductCodes: string[],
   countryInfo: ICountryInfos
-): StoreItemStatus {
+): StoreProductAvailability {
   const { productCodes, customItems = {} } = countryInfo
 
   const milkshake = checkProductAvailability(
@@ -127,27 +127,26 @@ export function calculateStoreItemStatus(
 }
 
 /**
- * Service class for fetching and calculating item status
- * Combines API client with pure business logic
+ * Fetches outage data through a regional adapter and calculates product availability.
  */
-export class ItemStatusService {
+export class StoreProductAvailabilityFetcher {
   constructor(private readonly apiClient: McdonaldsApiClient) {}
 
   /**
-   * Fetch and calculate item status for a store
+   * Fetch and calculate product availability for a store.
    *
    * @param pos - Store to check
    * @param countryInfo - Country configuration with product codes
    * @param token - Bearer token for API authentication
    * @param clientId - Client ID for API authentication
-   * @returns Item status or null if unable to fetch
+   * @returns Product availability; network failures reject for polling health tracking
    */
-  async getStoreItemStatus(
+  async fetchStoreProductAvailability(
     pos: Pos,
     countryInfo: ICountryInfos,
     token: string,
     clientId: string
-  ): Promise<StoreItemStatus | null> {
+  ): Promise<StoreProductAvailability> {
     const headers: McdonaldsRequestHeaders = {
       authorization: `Bearer ${token}`,
       clientId,
@@ -159,21 +158,18 @@ export class ItemStatusService {
       headers
     )
 
-    // If the API call failed, return null to indicate we couldn't check
-    // This distinguishes "no outages" (success=true, empty array) from "couldn't check" (success=false)
-    if (!response.success) {
-      return null
-    }
-
-    return calculateStoreItemStatus(response.outageProductCodes, countryInfo)
+    return calculateStoreProductAvailability(
+      response.outageProductCodes,
+      countryInfo
+    )
   }
 }
 
 /**
- * Factory function to create an ItemStatusService
+ * Create a store product-availability fetcher.
  */
-export function createItemStatusService(
+export function createStoreProductAvailabilityFetcher(
   apiClient: McdonaldsApiClient
-): ItemStatusService {
-  return new ItemStatusService(apiClient)
+): StoreProductAvailabilityFetcher {
+  return new StoreProductAvailabilityFetcher(apiClient)
 }

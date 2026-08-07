@@ -77,20 +77,23 @@ apps/frontend/src/
 ├── hooks/
 │   ├── queries/                 # React Query hooks
 │   │   ├── useMcData.ts         # Store data fetching
-│   │   ├── useMcStats.ts        # Statistics fetching
-│   │   └── useLocation.ts       # User location
+│   │   └── useMcStats.ts        # Statistics fetching
 │   ├── useMapInteractions.ts
 │   ├── useDebounce.ts
 │   └── useSettings.ts
 ├── lib/
-│   ├── utils.ts                 # Utility functions (cn, etc.)
-│   └── constants.ts             # App constants
+│   ├── constants.ts             # App constants
+│   ├── geo.ts                   # GeoJSON helpers
+│   ├── stats.ts                 # Statistics helpers
+│   └── utils.ts                 # Utility functions (cn, etc.)
 ├── provider/
 │   └── ReactQueryProvider.tsx   # React Query setup
-├── types/
-│   └── index.ts                 # TypeScript types
 └── middleware.ts                # Geolocation middleware
 ```
+
+Published availability contracts are imported from
+`@mcbroken/mclogik/publishedAvailabilitySnapshot` so the frontend does not
+maintain a parallel types directory.
 
 ### Data Flow (Frontend)
 
@@ -123,10 +126,9 @@ User visits site
 ```
 apps/mc{all,us,au}/
 ├── src/
-│   └── handlers/
-│       ├── getAllStores.ts      # Fetch store locations
-│       ├── getItemStatus.ts     # Check product availability
-│       └── createJson.ts        # Generate exports (mcall only)
+│   ├── getAllStores/index.ts    # Store Catalog Refresh adapter
+│   ├── getItemStatus/index.ts   # Availability Poll adapter
+│   └── createJson/index.ts      # Snapshot publication adapter (mcall only)
 ├── serverless.ts                # Serverless Framework config
 └── package.json
 ```
@@ -135,32 +137,34 @@ apps/mc{all,us,au}/
 
 | Function | Purpose | Schedule |
 |----------|---------|----------|
-| `getAllStores` | Fetch McDonald's locations from API | Weekly |
-| `getItemStatus` | Check ice cream availability | Hourly/30min |
-| `createJson` | Generate GeoJSON + stats to S3 | Every 15 min |
+| `getAllStores` | Refresh the Store Catalog | Weekly |
+| `getItemStatus` | Run an Availability Poll | Hourly/30min |
+| `createJson` | Publish the Availability Snapshot | Every 15 min |
 
 ### Shared Logic (mclogik)
 
 ```
 packages/mclogik/src/
 ├── services/
-│   ├── getAllStores/            # Store collection
-│   │   ├── getStoreListLocation/
-│   │   ├── getStorelistUrl/
-│   │   └── savePos.ts
-│   ├── getItemStatus/           # Availability checking
-│   │   ├── checkForProduct.ts
-│   │   ├── getItemStatus{Eu,Us,El,Au}.ts
-│   │   ├── getUpdatedPos.ts
-│   │   └── updatePos.ts
-│   ├── createJson/              # Export generation
-│   │   ├── generateGeoJson.ts
-│   │   └── generateStats.ts
+│   ├── storeCatalogRefresh/     # Deep Store Catalog Refresh module
+│   │   ├── StoreCatalogRefreshModule.ts
+│   │   └── index.ts             # Production facade and composition
+│   ├── availabilityPolling/     # Deep Availability Poll module
+│   │   ├── AvailabilityPollingModule.ts
+│   │   └── index.ts             # Production facade and composition
+│   ├── publishedAvailabilitySnapshot/
+│   │   ├── PublishedAvailabilitySnapshotModule.ts
+│   │   ├── createGeoJson.ts
+│   │   └── index.ts             # Production facade and composition
 │   └── token/                   # Auth token management
 │       ├── getBearerToken.ts
 │       └── getClientId.ts
 ├── constants/
 │   └── index.ts                 # Regional configs
+├── clients/
+│   ├── McdonaldsApiClient.ts    # Regional network adapters
+│   ├── ProductAvailability.ts   # Product Availability calculation
+│   └── StoreDiscoveryClient.ts  # Store discovery adapter
 └── utils/
     ├── generateCoordinatesMesh.ts
     ├── chunkArray.ts
@@ -250,8 +254,8 @@ CloudWatch Cron (weekly)
        │                          │
        ▼                          ▼
 ┌──────────────────┐     ┌──────────────────┐
-│ mclogik          │◄────│ Store Data       │
-│ savePos()        │     │ Response         │
+│ Store Catalog    │◄────│ Store Data       │
+│ Refresh module   │     │ Response         │
 └──────────────────┘     └──────────────────┘
        │
        ▼
@@ -275,18 +279,18 @@ CloudWatch Cron (hourly)
        │
        ▼
 ┌──────────────────┐     ┌──────────────────┐
-│ mclogik          │────►│ McDonald's       │
-│ checkForProduct  │     │ Store API        │
+│ Availability     │────►│ McDonald's       │
+│ Poll module      │     │ regional network │
 └──────────────────┘     └──────────────────┘
        │                          │
        ▼                          ▼
 ┌──────────────────┐     ┌──────────────────┐
-│ Update Pos       │◄────│ Product          │
-│ status fields    │     │ availability     │
+│ Atomic store     │◄────│ Product          │
+│ health + status  │     │ availability     │
 └──────────────────┘     └──────────────────┘
 ```
 
-### Export Generation Flow
+### Published Availability Snapshot Flow
 
 ```
 CloudWatch Cron (every 15 min)
@@ -294,25 +298,25 @@ CloudWatch Cron (every 15 min)
        ▼
 ┌──────────────────┐
 │ createJson       │
-│ Lambda           │
+│ Lambda adapter   │
 └──────────────────┘
        │
        ▼
 ┌──────────────────┐
-│ Query all stores │
-│ from PostgreSQL  │
+│ Read Store       │
+│ Catalog once     │
 └──────────────────┘
        │
        ▼
 ┌──────────────────┐
-│ generateGeoJson  │
-│ generateStats    │
+│ Build markers +  │
+│ aggregate stats  │
 └──────────────────┘
        │
        ▼
 ┌──────────────────┐
-│ Upload to S3     │
-│ EXPORT_BUCKET    │
+│ Publish stable   │
+│ snapshot files   │
 └──────────────────┘
        │
        ▼

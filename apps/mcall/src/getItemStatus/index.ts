@@ -1,12 +1,11 @@
-import { defaultRequestLimiterEu } from '@mcbroken/mclogik/constants'
-import { getItemStatus } from '@mcbroken/mclogik/getItemStatus'
+import { pollAvailability } from '@mcbroken/mclogik/availabilityPolling'
 import { initSentry, wrapHandler } from '@mcbroken/mclogik/sentry'
 import { APIType } from '@mcbroken/mclogik/types'
 
 initSentry({ region: 'eu' })
 
 export const handlerEu = wrapHandler(async () => {
-  await getItemStatus(APIType.EU, defaultRequestLimiterEu)
+  await pollAvailability({ apiType: APIType.EU })
 
   return {
     statusCode: 200,
@@ -15,7 +14,7 @@ export const handlerEu = wrapHandler(async () => {
 })
 
 export const handlerEl = wrapHandler(async () => {
-  await getItemStatus(APIType.EL, defaultRequestLimiterEu)
+  await pollAvailability({ apiType: APIType.EL })
 
   return {
     statusCode: 200,

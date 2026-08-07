@@ -6,13 +6,13 @@
 |------|------------|---------|
 | React Components | PascalCase | `MapComponent.tsx` |
 | Hooks | camelCase with `use` prefix | `useMcData.ts` |
-| Services | camelCase | `getItemStatus.ts` |
+| Modules | camelCase | `availabilityPolling/` |
 | Utilities | camelCase | `chunkArray.ts` |
 | Constants | UPPER_SNAKE_CASE | `MAX_RETRIES` |
 | Types/Interfaces | PascalCase | `StoreData` |
 | Enums | PascalCase | `Status` |
 | Files (general) | camelCase | `generateGeoJson.ts` |
-| Folders | camelCase | `getAllStores/` |
+| Folders | camelCase | `storeCatalogRefresh/` |
 | CSS classes | kebab-case (via Tailwind) | `bg-blue-500` |
 
 ## File Organization
@@ -60,7 +60,7 @@ import type { Handler } from 'aws-lambda';
 
 // 2. Internal packages (monorepo)
 import { prisma } from '@mcbroken/db';
-import { getAllStoresService } from '@mcbroken/mclogik';
+import { refreshStoreCatalog } from '@mcbroken/mclogik/storeCatalogRefresh';
 
 // 3. Relative imports
 import { MyComponent } from './MyComponent';

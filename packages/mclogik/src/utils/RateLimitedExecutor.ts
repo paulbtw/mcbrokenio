@@ -19,7 +19,7 @@ export interface RateLimitedExecutorOptions {
  * Result of batch execution
  */
 export interface BatchExecutionResult<T> {
-  /** Successfully processed results */
+  /** Non-null results returned by the executor */
   results: T[]
   /** Total items processed (including failures) */
   totalProcessed: number
@@ -29,7 +29,7 @@ export interface BatchExecutionResult<T> {
 
 /**
  * Executes async operations with rate limiting
- * Extracted from getItemStatus to be reusable and testable
+ * Used by availability polling to keep rate policy inside the deep module.
  *
  * Uses p-queue's built-in rate limiting (intervalCap/interval) to ensure
  * thread-safe rate limiting across concurrent tasks.
@@ -50,7 +50,7 @@ export class RateLimitedExecutor {
    *
    * @param items - Items to process
    * @param executor - Async function to execute for each item
-   * @returns Results of successful executions
+   * @returns Non-null results and execution failure counts
    */
   async executeAll<TInput, TOutput>(
     items: TInput[],
@@ -94,7 +94,7 @@ export class RateLimitedExecutor {
     await Promise.all(tasks)
 
     this.executorLogger.info(
-      `Completed: ${results.length} successful, ${failures} failed out of ${totalCompleted} total`
+      `Execution complete: ${totalCompleted}/${items.length} items; ${failures} executor failures`
     )
 
     return {

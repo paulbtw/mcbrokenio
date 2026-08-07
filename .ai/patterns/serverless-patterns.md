@@ -34,14 +34,14 @@ export const handler: Handler = async (event) => {
 // src/handlers/getItemStatus.ts
 import type { Handler } from 'aws-lambda';
 import { logger } from '@sailplane/logger';
-import { getItemStatusUs } from '@mcbroken/mclogik';
-import { prisma } from '@mcbroken/db';
+import { pollAvailability } from '@mcbroken/mclogik/availabilityPolling';
+import { APIType } from '@mcbroken/mclogik/types';
 
 export const handler: Handler = async () => {
   logger.info('getItemStatus started');
 
   try {
-    await getItemStatusUs(prisma);
+    await pollAvailability({ apiType: APIType.US });
     logger.info('getItemStatus completed');
     return { statusCode: 200, body: 'OK' };
   } catch (error) {
@@ -78,7 +78,7 @@ const serverlessConfiguration: AWS = {
 
   functions: {
     getItemStatus: {
-      handler: 'src/handlers/getItemStatus.handler',
+      handler: 'src/getItemStatus/index.handler',
       memorySize: 368,
       timeout: 900,
       events: [
