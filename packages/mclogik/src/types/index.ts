@@ -138,6 +138,8 @@ export type NormalizedProductCodeConfig =
 
 export interface ICountryInfos {
   country: Locations
+  /** Stable scheduled discovery slice, such as US2, which may share a country. */
+  catalogScope?: Locations
   getStores: {
     api: APIType
     mobileString?: string
