@@ -57,6 +57,25 @@ function createPrismaMock() {
 const OBSERVED_AT = new Date('2026-08-08T10:00:00.000Z')
 
 describe('PrismaCatalogLifecycleRepository', () => {
+  it('allows catalog reconciliation to run beyond Prisma default transaction timeout', async () => {
+    const prisma = createPrismaMock()
+    const repository = new PrismaCatalogLifecycleRepository(prisma as never)
+
+    await repository.recordScopeRefresh({
+      cycleId: '2026-08-02',
+      country: 'US',
+      scope: 'US2',
+      expectedScopes: ['US', 'US2'],
+      complete: false,
+      stores: [createStore()],
+      observedAt: OBSERVED_AT
+    })
+
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      timeout: 120_000
+    })
+  })
+
   it('records observations but does not complete or reconcile a partial scope refresh', async () => {
     const prisma = createPrismaMock()
     prisma.pos.deleteMany.mockResolvedValue({ count: 1 })
@@ -142,7 +161,7 @@ describe('PrismaCatalogLifecycleRepository', () => {
       where: {
         cycleId: '2026-08-02',
         country: 'US',
-        finalizedAt: null
+        OR: [{ finalizedAt: null }, { reconciliationSkipped: true }]
       },
       data: { finalizedAt: OBSERVED_AT }
     })
@@ -254,6 +273,41 @@ describe('PrismaCatalogLifecycleRepository', () => {
       storesMarkedMissing: 0,
       storesClosed: 0,
       storesPurged: 1
+    })
+  })
+
+  it('reclaims a finalized skipped cycle when a healthy retry arrives', async () => {
+    const prisma = createPrismaMock()
+    prisma.catalogRefreshScope.count.mockResolvedValue(2)
+    prisma.catalogRefreshCycle.updateMany.mockImplementation(
+      async (args: { where: { OR?: unknown } }) => ({
+        count: args.where.OR == null ? 0 : 1
+      })
+    )
+    prisma.pos.count.mockResolvedValueOnce(100).mockResolvedValueOnce(95)
+    const repository = new PrismaCatalogLifecycleRepository(prisma as never)
+
+    const result = await repository.recordScopeRefresh({
+      cycleId: '2026-08-02',
+      country: 'US',
+      scope: 'US2',
+      expectedScopes: ['US', 'US2'],
+      complete: true,
+      stores: [createStore()],
+      observedAt: OBSERVED_AT
+    })
+
+    expect(prisma.catalogRefreshCycle.updateMany).toHaveBeenCalledWith({
+      where: {
+        cycleId: '2026-08-02',
+        country: 'US',
+        OR: [{ finalizedAt: null }, { reconciliationSkipped: true }]
+      },
+      data: { finalizedAt: OBSERVED_AT }
+    })
+    expect(result).toMatchObject({
+      cycleFinalized: true,
+      reconciliationSkipped: false
     })
   })
 

@@ -12,6 +12,7 @@ const OBSERVATION_VALUE_COUNT = 9
 const DEFAULT_MISSING_CYCLES_BEFORE_CLOSE = 3
 const DEFAULT_CLOSED_RETENTION_DAYS = 90
 const DEFAULT_MINIMUM_COVERAGE_RATIO = 0.8
+const CATALOG_REFRESH_TRANSACTION_TIMEOUT_MS = 120_000
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
 export interface CatalogScopeRefreshInput {
@@ -212,7 +213,7 @@ export class PrismaCatalogLifecycleRepository implements CatalogLifecycleReposit
           where: {
             cycleId: input.cycleId,
             country: input.country,
-            finalizedAt: null
+            OR: [{ finalizedAt: null }, { reconciliationSkipped: true }]
           },
           data: { finalizedAt: input.observedAt }
         })
@@ -356,7 +357,7 @@ export class PrismaCatalogLifecycleRepository implements CatalogLifecycleReposit
           storesClosed: closed.count,
           storesPurged: purged.count
         })
-      })
+      }, { timeout: CATALOG_REFRESH_TRANSACTION_TIMEOUT_MS })
     } catch (error) {
       logger.error(error as Error)
       throw new Error(
