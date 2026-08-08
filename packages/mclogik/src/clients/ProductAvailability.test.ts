@@ -316,6 +316,11 @@ describe('StoreProductAvailabilityFetcher', () => {
     milkshakeStatus: 'UNKNOWN',
     customItems: [],
     lastChecked: null,
+    lastCatalogSeenAt: new Date(),
+    lastCatalogSeenCycle: null,
+    missingCatalogCycles: 0,
+    lastMissingCatalogCycle: null,
+    closedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides

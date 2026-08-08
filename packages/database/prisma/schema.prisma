@@ -12,31 +12,65 @@ datasource db {
 }
 
 model Pos {
-  id                  String     @id
-  nationalStoreNumber String
-  name                String
-  latitude            String
-  longitude           String
-  mcFlurryCount       Int        @default(0)
-  mcFlurryError       Int        @default(0)
-  mcFlurryStatus      ItemStatus @default(UNKNOWN)
-  mcSundaeCount       Int        @default(0)
-  mcSundaeError       Int        @default(0)
-  mcSundaeStatus      ItemStatus @default(UNKNOWN)
-  milkshakeCount      Int        @default(0)
-  milkshakeError      Int        @default(0)
-  milkshakeStatus     ItemStatus @default(UNKNOWN)
-  customItems         Json       @default("[]")
-  hasMobileOrdering   Boolean    @default(false)
-  errorCounter        Int        @default(0)
-  isResponsive        Boolean    @default(true)
-  lastChecked         DateTime?
-  country             String
-  updatedAt           DateTime   @updatedAt @default(now())
-  createdAt           DateTime   @default(now())
+  id                      String     @id
+  nationalStoreNumber     String
+  name                    String
+  latitude                String
+  longitude               String
+  mcFlurryCount           Int        @default(0)
+  mcFlurryError           Int        @default(0)
+  mcFlurryStatus          ItemStatus @default(UNKNOWN)
+  mcSundaeCount           Int        @default(0)
+  mcSundaeError           Int        @default(0)
+  mcSundaeStatus          ItemStatus @default(UNKNOWN)
+  milkshakeCount          Int        @default(0)
+  milkshakeError          Int        @default(0)
+  milkshakeStatus         ItemStatus @default(UNKNOWN)
+  customItems             Json       @default("[]")
+  hasMobileOrdering       Boolean    @default(false)
+  errorCounter            Int        @default(0)
+  isResponsive            Boolean    @default(true)
+  lastChecked             DateTime?
+  lastCatalogSeenAt       DateTime   @default(now())
+  lastCatalogSeenCycle    String?
+  missingCatalogCycles    Int        @default(0)
+  lastMissingCatalogCycle String?
+  closedAt                DateTime?
+  country                 String
+  updatedAt               DateTime   @default(now()) @updatedAt
+  createdAt               DateTime   @default(now())
 
   @@index([country], type: Hash)
   @@index([country, hasMobileOrdering])
+  @@index([country, closedAt])
+  @@index([lastCatalogSeenCycle])
+  @@index([closedAt])
+}
+
+model CatalogRefreshCycle {
+  cycleId               String
+  country               String
+  finalizedAt           DateTime?
+  reconciliationSkipped Boolean               @default(false)
+  knownStoreCount       Int?
+  observedStoreCount    Int?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  scopes                CatalogRefreshScope[]
+
+  @@id([cycleId, country])
+  @@index([country, finalizedAt])
+}
+
+model CatalogRefreshScope {
+  cycleId              String
+  country              String
+  scope                String
+  discoveredStoreCount Int
+  completedAt          DateTime
+  cycle                CatalogRefreshCycle @relation(fields: [cycleId, country], references: [cycleId, country], onDelete: Cascade)
+
+  @@id([cycleId, country, scope])
 }
 
 model Stats {

@@ -80,7 +80,20 @@ function createDependencies(
     generateLocationMesh: vi.fn().mockReturnValue([LOCATION]),
     discoverFromLocation,
     discoverFromUrl,
-    persistStores: vi.fn().mockImplementation(async (stores) => stores.length),
+    recordScopeRefresh: vi.fn().mockImplementation(async ({ stores }) => ({
+      storesPersisted: stores.length,
+      scopeCompleted: true,
+      cycleFinalized: false,
+      reconciliationSkipped: false,
+      storesMarkedMissing: 0,
+      storesClosed: 0,
+      storesPurged: 0
+    })),
+    getExpectedCatalogScopes: vi
+      .fn()
+      .mockImplementation((_apiType, country) => [country]),
+    getCatalogCycleId: vi.fn().mockReturnValue('2026-08-02'),
+    currentDate: vi.fn().mockReturnValue(new Date('2026-08-08T10:00:00.000Z')),
     getRequestLimiter: vi.fn().mockReturnValue(TEST_LIMITER),
     getLocationIntervalKilometers: vi.fn().mockReturnValue(30),
     logDiscoveryFailure: vi.fn(),
@@ -115,11 +128,7 @@ describe('StoreCatalogRefreshModule', () => {
     expect(dependencies.getLocationIntervalKilometers).toHaveBeenCalledWith(
       APIType.US
     )
-    expect(dependencies.persistStores).toHaveBeenCalledTimes(1)
-    expect(dependencies.persistStores).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 'US-123' }),
-      expect.objectContaining({ id: 'US2-123' })
-    ])
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledTimes(2)
     expect(result).toEqual({
       totalRequests: 2,
       successfulRequests: 2,
@@ -183,9 +192,12 @@ describe('StoreCatalogRefreshModule', () => {
       stores: 1
     })
     expect(dependencies.logDiscoveryFailure).toHaveBeenCalledTimes(1)
-    expect(dependencies.persistStores).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 'US-2' })
-    ])
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({
+        complete: false,
+        stores: [expect.objectContaining({ id: 'US-2' })]
+      })
+    )
   })
 
   it('rejects when every discovery request fails so Lambda can retry', async () => {
@@ -193,10 +205,12 @@ describe('StoreCatalogRefreshModule', () => {
     discoverFromLocation.mockRejectedValue(new Error('offline'))
     const module = new StoreCatalogRefreshModule(dependencies)
 
-    await expect(
-      module.refresh({ apiType: APIType.US })
-    ).rejects.toThrow('All store discovery requests failed')
-    expect(dependencies.persistStores).not.toHaveBeenCalled()
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      'All store discovery requests failed'
+    )
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ complete: false, stores: [] })
+    )
   })
 
   it('uses URL discovery internally for EL markets', async () => {
@@ -242,7 +256,7 @@ describe('StoreCatalogRefreshModule', () => {
       countryBreakdown: {},
       durationMs: 300
     })
-    expect(dependencies.persistStores).not.toHaveBeenCalled()
+    expect(dependencies.recordScopeRefresh).not.toHaveBeenCalled()
   })
 
   it('rejects invalid location configuration before discovery', async () => {
@@ -253,22 +267,80 @@ describe('StoreCatalogRefreshModule', () => {
     ])
     const module = new StoreCatalogRefreshModule(dependencies)
 
-    await expect(
-      module.refresh({ apiType: APIType.US })
-    ).rejects.toThrow('No locations found for US')
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      'No locations found for US'
+    )
     expect(discoverFromLocation).not.toHaveBeenCalled()
-    expect(dependencies.persistStores).not.toHaveBeenCalled()
+    expect(dependencies.recordScopeRefresh).not.toHaveBeenCalled()
   })
 
   it('rejects persistence failures', async () => {
     const { dependencies } = createDependencies()
-    vi.mocked(dependencies.persistStores).mockRejectedValue(
+    vi.mocked(dependencies.recordScopeRefresh).mockRejectedValue(
       new Error('transaction failed')
     )
     const module = new StoreCatalogRefreshModule(dependencies)
 
-    await expect(
-      module.refresh({ apiType: APIType.US })
-    ).rejects.toThrow('transaction failed')
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      'transaction failed'
+    )
+  })
+
+  it('records split geographic scopes separately while reconciling their shared country together', async () => {
+    const us = createCountryInfo(UsLocations.US)
+    us.catalogScope = UsLocations.US
+    const us2 = createCountryInfo(UsLocations.US)
+    us2.catalogScope = UsLocations.US2
+    const { dependencies, discoverFromLocation } = createDependencies([us, us2])
+    vi.mocked(dependencies.getExpectedCatalogScopes).mockReturnValue([
+      UsLocations.US,
+      UsLocations.US2
+    ])
+    discoverFromLocation
+      .mockResolvedValueOnce([createStore('US-1')])
+      .mockResolvedValueOnce([createStore('US-2')])
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    await module.refresh({ apiType: APIType.US })
+
+    expect(dependencies.recordScopeRefresh).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        cycleId: '2026-08-02',
+        country: 'US',
+        scope: UsLocations.US,
+        expectedScopes: [UsLocations.US, UsLocations.US2],
+        complete: true,
+        stores: [expect.objectContaining({ id: 'US-1' })]
+      })
+    )
+    expect(dependencies.recordScopeRefresh).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        country: 'US',
+        scope: UsLocations.US2,
+        stores: [expect.objectContaining({ id: 'US-2' })]
+      })
+    )
+  })
+
+  it('preserves globally deduplicated result counts for overlapping scopes', async () => {
+    const us = createCountryInfo(UsLocations.US)
+    us.catalogScope = UsLocations.US
+    const us2 = createCountryInfo(UsLocations.US)
+    us2.catalogScope = UsLocations.US2
+    const { dependencies, discoverFromLocation } = createDependencies([us, us2])
+    vi.mocked(dependencies.getExpectedCatalogScopes).mockReturnValue([
+      UsLocations.US,
+      UsLocations.US2
+    ])
+    discoverFromLocation.mockResolvedValue([createStore('US-1')])
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    const result = await module.refresh({ apiType: APIType.US })
+
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledTimes(2)
+    expect(result.storesDiscovered).toBe(1)
+    expect(result.storesPersisted).toBe(1)
   })
 })

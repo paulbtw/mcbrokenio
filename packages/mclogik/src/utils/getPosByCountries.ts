@@ -13,7 +13,8 @@ export async function getPosByCountries(
         country: {
           in: countries
         },
-        hasMobileOrdering: true
+        hasMobileOrdering: true,
+        closedAt: null
       },
       take: 2000,
       orderBy: {

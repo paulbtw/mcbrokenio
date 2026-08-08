@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   generateCoordinatesMesh: vi.fn(),
   discoverFromLocation: vi.fn(),
   discoverFromUrl: vi.fn(),
-  upsertMany: vi.fn()
+  recordScopeRefresh: vi.fn()
 }))
 
 vi.mock('@mcbroken/db/client', () => ({ prisma: {} }))
@@ -29,7 +29,9 @@ vi.mock('../../utils/generateCoordinatesMesh', () => ({
 }))
 
 vi.mock('../../repositories', () => ({
-  createPosRepository: () => ({ upsertMany: mocks.upsertMany })
+  createCatalogLifecycleRepository: () => ({
+    recordScopeRefresh: mocks.recordScopeRefresh
+  })
 }))
 
 vi.mock('../../clients/StoreDiscoveryClient', () => ({
@@ -78,7 +80,15 @@ describe('refreshStoreCatalog', () => {
       }
     ])
     mocks.discoverFromUrl.mockResolvedValue([])
-    mocks.upsertMany.mockImplementation(async (stores) => stores.length)
+    mocks.recordScopeRefresh.mockImplementation(async ({ stores }) => ({
+      storesPersisted: stores.length,
+      scopeCompleted: true,
+      cycleFinalized: false,
+      reconciliationSkipped: false,
+      storesMarkedMissing: 0,
+      storesClosed: 0,
+      storesPurged: 0
+    }))
   })
 
   afterEach(() => {
@@ -113,7 +123,7 @@ describe('refreshStoreCatalog', () => {
       'token',
       'client'
     )
-    expect(mocks.upsertMany).toHaveBeenCalledTimes(1)
+    expect(mocks.recordScopeRefresh).toHaveBeenCalledTimes(1)
     expect(result.storesPersisted).toBe(1)
   })
 
@@ -175,7 +185,7 @@ describe('refreshStoreCatalog', () => {
       refreshStoreCatalog({ apiType: APIType.US })
     ).rejects.toThrow('Bearer token is missing for US')
     expect(mocks.discoverFromLocation).not.toHaveBeenCalled()
-    expect(mocks.upsertMany).not.toHaveBeenCalled()
+    expect(mocks.recordScopeRefresh).not.toHaveBeenCalled()
   })
 
   it('rejects unsupported Store Catalog regions', async () => {

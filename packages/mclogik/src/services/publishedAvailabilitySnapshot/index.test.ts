@@ -4,13 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { publishAvailabilitySnapshot } from './index'
 
 const mocks = vi.hoisted(() => {
-  const findAll = vi.fn()
+  const findActive = vi.fn()
   const uploadJson = vi.fn()
 
   return {
-    findAll,
+    findActive,
     uploadJson,
-    createPosRepository: vi.fn(() => ({ findAll })),
+    createPosRepository: vi.fn(() => ({ findActive })),
     createS3StorageClient: vi.fn(() => ({ uploadJson }))
   }
 })
@@ -49,6 +49,11 @@ function createStore(): Pos {
     mcSundaeStatus: ItemStatus.AVAILABLE,
     customItems: [],
     lastChecked: null,
+    lastCatalogSeenAt: new Date('2026-01-01T00:00:00.000Z'),
+    lastCatalogSeenCycle: null,
+    missingCatalogCycles: 0,
+    lastMissingCatalogCycle: null,
+    closedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z')
   }
@@ -57,14 +62,14 @@ function createStore(): Pos {
 describe('publishAvailabilitySnapshot', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.findAll.mockResolvedValue([createStore()])
+    mocks.findActive.mockResolvedValue([createStore()])
     mocks.uploadJson.mockResolvedValue(undefined)
   })
 
   it('composes one Store Catalog read with the production storage adapter', async () => {
     const result = await publishAvailabilitySnapshot()
 
-    expect(mocks.findAll).toHaveBeenCalledTimes(1)
+    expect(mocks.findActive).toHaveBeenCalledTimes(1)
     expect(mocks.uploadJson).toHaveBeenCalledWith(
       'marker.json',
       expect.objectContaining({ type: 'FeatureCollection' })
