@@ -27,6 +27,10 @@ export interface BatchExecutionResult<T> {
   failures: number
 }
 
+export interface BatchExecutionOptions {
+  signal?: AbortSignal
+}
+
 /**
  * Executes async operations with rate limiting
  * Used by availability polling to keep rate policy inside the deep module.
@@ -50,11 +54,13 @@ export class RateLimitedExecutor {
    *
    * @param items - Items to process
    * @param executor - Async function to execute for each item
+   * @param options - Optional cancellation signal that stops queued work while active callbacks settle
    * @returns Non-null results and execution failure counts
    */
   async executeAll<TInput, TOutput>(
     items: TInput[],
-    executor: (item: TInput) => Promise<TOutput | null>
+    executor: (item: TInput) => Promise<TOutput | null>,
+    options: BatchExecutionOptions = {}
   ): Promise<BatchExecutionResult<TOutput>> {
     // Use p-queue's built-in rate limiting for thread-safe operation
     const queue = new PQueue({
@@ -64,34 +70,64 @@ export class RateLimitedExecutor {
     })
 
     const results: TOutput[] = []
+    const activeExecutions: Promise<void>[] = []
     let totalCompleted = 0
     let failures = 0
 
     const tasks = items.map((item) =>
-      queue.add(async () => {
-        try {
-          const result = await executor(item)
-          if (result !== null) {
-            results.push(result)
-          } else {
-            failures++
-          }
-        } catch (error) {
-          failures++
-          this.executorLogger.error(`Error processing item: ${error}`)
-        }
+      queue.add(
+        () => {
+          const activeExecution = (async () => {
+            try {
+              const result = await executor(item)
+              if (result !== null) {
+                results.push(result)
+              } else {
+                failures++
+              }
+            } catch (error) {
+              failures++
+              this.executorLogger.error(`Error processing item: ${error}`)
+            }
 
-        // Increment after async work completes for accurate progress
-        totalCompleted++
+            // Increment after async work completes for accurate progress
+            totalCompleted++
 
-        // Progress logging
-        if (totalCompleted % this.limiter.requestsPerLog === 0) {
-          this.executorLogger.debug(`Completed ${totalCompleted}/${items.length}`)
-        }
-      })
+            // Progress logging
+            if (totalCompleted % this.limiter.requestsPerLog === 0) {
+              this.executorLogger.debug(
+                `Completed ${totalCompleted}/${items.length}`
+              )
+            }
+          })()
+
+          activeExecutions.push(activeExecution)
+          return activeExecution
+        },
+        options.signal == null ? undefined : { signal: options.signal }
+      )
     )
 
-    await Promise.all(tasks)
+    const settledTasks = await Promise.allSettled(tasks)
+    const settledExecutions = await Promise.allSettled(activeExecutions)
+
+    const unexpectedExecutionFailure = settledExecutions.find(
+      (execution) => execution.status === 'rejected'
+    )
+
+    if (unexpectedExecutionFailure?.status === 'rejected') {
+      throw unexpectedExecutionFailure.reason
+    }
+
+    const unexpectedFailure = settledTasks.find(
+      (task) =>
+        task.status === 'rejected' &&
+        (!options.signal?.aborted || task.reason !== options.signal.reason)
+    )
+
+    if (unexpectedFailure?.status === 'rejected') {
+      throw unexpectedFailure.reason
+    }
 
     this.executorLogger.info(
       `Execution complete: ${totalCompleted}/${items.length} items; ${failures} executor failures`

@@ -8,6 +8,8 @@ import {
 } from '../types/responses'
 import { randomUserAgent } from '../utils/randomUserAgent'
 
+const STORE_DISCOVERY_TIMEOUT_MS = 10_000
+
 export interface StoreDiscoveryClient {
   discoverFromLocation(
     location: ILocation,
@@ -37,6 +39,7 @@ export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
     } = await this.httpClient.get<IRestaurantLocationResponse>(
       `${getStores.url}latitude=${latitude}&longitude=${longitude}`,
       {
+        timeout: STORE_DISCOVERY_TIMEOUT_MS,
         headers: {
           'User-Agent': this.createUserAgent(),
           authorization: `Bearer ${token}`,
@@ -62,14 +65,13 @@ export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
     }))
   }
 
-  async discoverFromUrl(
-    countryInfo: ICountryInfos
-  ): Promise<CreatePos[]> {
+  async discoverFromUrl(countryInfo: ICountryInfos): Promise<CreatePos[]> {
     const { country, getStores } = countryInfo
     const {
       data: { restaurants }
     } = await this.httpClient.get<IRestaurantsUrlResponse>(
-      `${getStores.url}?acceptOffers=all&lab=false&key=${this.apiKey}`
+      `${getStores.url}?acceptOffers=all&lab=false&key=${this.apiKey}`,
+      { timeout: STORE_DISCOVERY_TIMEOUT_MS }
     )
 
     return restaurants.map((restaurant) => ({

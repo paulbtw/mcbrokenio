@@ -12,6 +12,14 @@ import {
 } from '../../types'
 import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
 
+/**
+ * Three full failure waves at the production location-discovery concurrency of
+ * eight. Because requests complete concurrently, "consecutive" means observed
+ * completion order; any successful completion resets the count. Opening the
+ * breaker cancels queued work, while completed successes remain persistable.
+ */
+const MAX_CONSECUTIVE_DISCOVERY_FAILURES = 24
+
 export interface StoreCatalogRefreshRequest {
   apiType: APIType
   countryList?: Locations[]
@@ -176,10 +184,14 @@ export class StoreCatalogRefreshModule {
       )
     }
 
+    const requestLimiter = this.dependencies.getRequestLimiter(apiType)
     const executor = createRateLimitedExecutor(
-      this.dependencies.getRequestLimiter(apiType),
+      requestLimiter,
       'StoreCatalogRefreshModule'
     )
+    const abortController = new AbortController()
+    let consecutiveFailures = 0
+    let circuitBreakerError: Error | undefined
     const { results: outcomes } = await executor.executeAll(
       discoveryRequests,
       async (discoveryRequest): Promise<DiscoveryOutcome> => {
@@ -196,6 +208,8 @@ export class StoreCatalogRefreshModule {
                   clientId
                 )
 
+          consecutiveFailures = 0
+
           return {
             index: discoveryRequest.index,
             country: discoveryRequest.countryInfo.country,
@@ -205,10 +219,21 @@ export class StoreCatalogRefreshModule {
             stores
           }
         } catch (error) {
+          consecutiveFailures++
           this.dependencies.logDiscoveryFailure(error, {
             apiType,
             country: discoveryRequest.countryInfo.country
           })
+
+          if (
+            consecutiveFailures >= MAX_CONSECUTIVE_DISCOVERY_FAILURES &&
+            !abortController.signal.aborted
+          ) {
+            circuitBreakerError = new Error(
+              `Store discovery aborted after ${MAX_CONSECUTIVE_DISCOVERY_FAILURES} consecutive failures`
+            )
+            abortController.abort()
+          }
 
           return {
             index: discoveryRequest.index,
@@ -220,7 +245,8 @@ export class StoreCatalogRefreshModule {
             error
           }
         }
-      }
+      },
+      { signal: abortController.signal }
     )
 
     outcomes.sort((left, right) => left.index - right.index)
@@ -291,6 +317,10 @@ export class StoreCatalogRefreshModule {
           persistedStoreIds.add(store.id)
         }
       }
+    }
+
+    if (successfulRequests === 0 && circuitBreakerError != null) {
+      throw circuitBreakerError
     }
 
     if (allDiscoveryRequestsFailed) {

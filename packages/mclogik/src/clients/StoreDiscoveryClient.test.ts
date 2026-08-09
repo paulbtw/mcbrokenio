@@ -1,12 +1,7 @@
 import { type AxiosInstance } from 'axios'
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  APIType,
-  IceType,
-  type ICountryInfos,
-  UsLocations
-} from '../types'
+import { APIType, IceType, type ICountryInfos, UsLocations } from '../types'
 
 import { AxiosStoreDiscoveryClient } from './StoreDiscoveryClient'
 
@@ -62,7 +57,8 @@ describe('AxiosStoreDiscoveryClient', () => {
           'mcd-clientid': 'client-id',
           'mcd-marketid': 'US',
           'User-Agent': 'ua'
-        })
+        }),
+        timeout: 10_000
       }
     )
     expect(stores).toEqual([
@@ -100,7 +96,8 @@ describe('AxiosStoreDiscoveryClient', () => {
     const stores = await client.discoverFromUrl(countryInfo)
 
     expect(httpClient.get).toHaveBeenCalledWith(
-      'https://example.com/stores??acceptOffers=all&lab=false&key=secret-key'
+      'https://example.com/stores??acceptOffers=all&lab=false&key=secret-key',
+      { timeout: 10_000 }
     )
     expect(stores).toEqual([
       expect.objectContaining({
@@ -150,6 +147,8 @@ describe('AxiosStoreDiscoveryClient', () => {
     } as unknown as AxiosInstance
     const client = new AxiosStoreDiscoveryClient(httpClient)
 
-    await expect(client.discoverFromUrl(createCountryInfo())).rejects.toBe(error)
+    await expect(client.discoverFromUrl(createCountryInfo())).rejects.toBe(
+      error
+    )
   })
 })

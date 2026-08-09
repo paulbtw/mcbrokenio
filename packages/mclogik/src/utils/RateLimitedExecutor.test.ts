@@ -48,7 +48,9 @@ describe('RateLimitedExecutor', () => {
       expect(result.totalProcessed).toBe(5)
       expect(result.failures).toBe(0)
       expect(result.results).toHaveLength(5)
-      expect((result.results as number[]).sort((a, b) => a - b)).toEqual([2, 4, 6, 8, 10])
+      expect((result.results as number[]).sort((a, b) => a - b)).toEqual([
+        2, 4, 6, 8, 10
+      ])
     })
 
     it('should handle empty items array', async () => {
@@ -110,6 +112,48 @@ describe('RateLimitedExecutor', () => {
       expect(result.totalProcessed).toBe(3)
       expect(result.failures).toBe(1)
       expect(result.results).toHaveLength(2)
+    })
+
+    it('stops queued work and waits for active work after abort', async () => {
+      const executor = new RateLimitedExecutor({
+        limiter: createLimiter({ concurrentRequests: 1 })
+      })
+      const abortController = new AbortController()
+      let markActiveWorkStarted!: () => void
+      const activeWorkStarted = new Promise<void>((resolve) => {
+        markActiveWorkStarted = resolve
+      })
+      let finishActiveWork!: () => void
+      const activeWork = new Promise<void>((resolve) => {
+        finishActiveWork = resolve
+      })
+      const executorFn = vi.fn().mockImplementation(async (item: number) => {
+        markActiveWorkStarted()
+        await activeWork
+        return item
+      })
+
+      let executionSettled = false
+      const execution = executor
+        .executeAll([1, 2, 3], executorFn, {
+          signal: abortController.signal
+        })
+        .finally(() => {
+          executionSettled = true
+        })
+
+      await activeWorkStarted
+      abortController.abort()
+      await new Promise<void>((resolve) => setImmediate(resolve))
+
+      expect(executionSettled).toBe(false)
+
+      finishActiveWork()
+      const result = await execution
+
+      expect(executorFn).toHaveBeenCalledTimes(1)
+      expect(result.totalProcessed).toBe(1)
+      expect(result.results).toEqual([1])
     })
 
     it('should respect concurrency limit', async () => {
