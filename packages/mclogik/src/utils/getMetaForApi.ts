@@ -25,6 +25,9 @@ export async function getMetaForApi(
   return {
     token: bearerToken,
     clientId,
-    countryInfos: countryInfos_.map((country) => country[1])
+    countryInfos: countryInfos_.map(([scope, country]) => ({
+      ...country,
+      catalogScope: scope as Locations
+    }))
   }
 }

@@ -28,6 +28,11 @@ function createStore(overrides: Partial<Pos> = {}): Pos {
     mcSundaeStatus: ItemStatus.NOT_APPLICABLE,
     customItems: [],
     lastChecked: new Date('2026-08-01T00:00:00.000Z'),
+    lastCatalogSeenAt: new Date('2026-08-01T00:00:00.000Z'),
+    lastCatalogSeenCycle: '2026-07-26',
+    missingCatalogCycles: 0,
+    lastMissingCatalogCycle: null,
+    closedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-08-01T00:00:00.000Z'),
     ...overrides

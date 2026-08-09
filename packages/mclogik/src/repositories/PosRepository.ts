@@ -58,6 +58,11 @@ export interface PosRepository {
   findAll(): Promise<Pos[]>
 
   /**
+   * Find stores that have not been classified as closed by catalog refreshes.
+   */
+  findActive(): Promise<Pos[]>
+
+  /**
    * Update the item status for multiple stores
    * @returns The number of stores updated
    */
@@ -91,6 +96,7 @@ export class PrismaPosRepository implements PosRepository {
       return await this.prisma.pos.findMany({
         where: {
           country: { in: countries },
+          closedAt: null,
           ...(mobileOrderingOnly && { hasMobileOrdering: true })
         },
         take: limit,
@@ -108,6 +114,17 @@ export class PrismaPosRepository implements PosRepository {
     } catch (error) {
       logger.error(error as Error)
       throw new Error(`Failed to find all stores: ${error instanceof Error ? error.message : error}`)
+    }
+  }
+
+  async findActive(): Promise<Pos[]> {
+    try {
+      return await this.prisma.pos.findMany({ where: { closedAt: null } })
+    } catch (error) {
+      logger.error(error as Error)
+      throw new Error(
+        `Failed to find active stores: ${error instanceof Error ? error.message : error}`
+      )
     }
   }
 

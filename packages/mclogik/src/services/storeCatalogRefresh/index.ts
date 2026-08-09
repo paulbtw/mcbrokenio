@@ -2,14 +2,16 @@ import { prisma } from '@mcbroken/db/client'
 import axios from 'axios'
 
 import { createStoreDiscoveryClient } from '../../clients/StoreDiscoveryClient'
+import { CountryInfos } from '../../constants/CountryInfos'
 import {
   defaultRequestLimiterAu,
   defaultRequestLimiterEu,
   defaultRequestLimiterUs,
   type RequestLimiter
 } from '../../constants/RateLimit'
-import { createPosRepository } from '../../repositories'
-import { APIType } from '../../types'
+import { createCatalogLifecycleRepository } from '../../repositories'
+import { APIType, type Locations } from '../../types'
+import { getCatalogCycleId } from '../../utils/catalogCycle'
 import { generateCoordinatesMesh } from '../../utils/generateCoordinatesMesh'
 import { getMetaForApi } from '../../utils/getMetaForApi'
 
@@ -84,7 +86,16 @@ function getLocationIntervalKilometers(apiType: APIType): number {
 }
 
 const storeDiscoveryClient = createStoreDiscoveryClient()
-const posRepository = createPosRepository(prisma)
+const catalogLifecycleRepository = createCatalogLifecycleRepository(prisma)
+
+function getExpectedCatalogScopes(apiType: APIType, country: string): string[] {
+  return Object.entries(CountryInfos)
+    .filter(
+      ([, countryInfo]) =>
+        countryInfo.getStores.api === apiType && countryInfo.country === country
+    )
+    .map(([scope]) => scope as Locations)
+}
 
 const storeCatalogRefreshModule = new StoreCatalogRefreshModule({
   async loadRefreshContext(apiType, countryList) {
@@ -117,7 +128,11 @@ const storeCatalogRefreshModule = new StoreCatalogRefreshModule({
   discoverFromLocation: (...args) =>
     storeDiscoveryClient.discoverFromLocation(...args),
   discoverFromUrl: (...args) => storeDiscoveryClient.discoverFromUrl(...args),
-  persistStores: (stores) => posRepository.upsertMany(stores),
+  recordScopeRefresh: (input) =>
+    catalogLifecycleRepository.recordScopeRefresh(input),
+  getExpectedCatalogScopes,
+  getCatalogCycleId,
+  currentDate: () => new Date(),
   getRequestLimiter,
   getLocationIntervalKilometers,
   logDiscoveryFailure(error, context) {

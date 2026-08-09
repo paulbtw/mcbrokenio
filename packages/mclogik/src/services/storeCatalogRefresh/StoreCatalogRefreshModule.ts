@@ -1,5 +1,9 @@
 import { type RequestLimiter } from '../../constants/RateLimit'
 import {
+  type CatalogScopeRefreshInput,
+  type CatalogScopeRefreshResult
+} from '../../repositories'
+import {
   APIType,
   type CreatePos,
   type ICountryInfos,
@@ -53,7 +57,12 @@ export interface StoreCatalogRefreshDependencies {
     clientId: string
   ): Promise<CreatePos[]>
   discoverFromUrl(countryInfo: ICountryInfos): Promise<CreatePos[]>
-  persistStores(stores: CreatePos[]): Promise<number>
+  recordScopeRefresh(
+    input: CatalogScopeRefreshInput
+  ): Promise<CatalogScopeRefreshResult>
+  getExpectedCatalogScopes(apiType: APIType, country: string): string[]
+  getCatalogCycleId(date: Date): string
+  currentDate(): Date
   getRequestLimiter(apiType: APIType): RequestLimiter
   getLocationIntervalKilometers(apiType: APIType): number
   logDiscoveryFailure(
@@ -79,8 +88,18 @@ type DiscoveryRequest =
 interface DiscoveryOutcome {
   index: number
   country: string
+  scope: string
   stores: CreatePos[]
   error?: unknown
+}
+
+interface ScopeOutcome {
+  country: string
+  scope: string
+  requests: number
+  successful: number
+  failed: number
+  storesById: Map<string, CreatePos>
 }
 
 function createCountryResult(): StoreCatalogCountryResult {
@@ -180,6 +199,9 @@ export class StoreCatalogRefreshModule {
           return {
             index: discoveryRequest.index,
             country: discoveryRequest.countryInfo.country,
+            scope:
+              discoveryRequest.countryInfo.catalogScope ??
+              discoveryRequest.countryInfo.country,
             stores
           }
         } catch (error) {
@@ -191,6 +213,9 @@ export class StoreCatalogRefreshModule {
           return {
             index: discoveryRequest.index,
             country: discoveryRequest.countryInfo.country,
+            scope:
+              discoveryRequest.countryInfo.catalogScope ??
+              discoveryRequest.countryInfo.country,
             stores: [],
             error
           }
@@ -200,22 +225,36 @@ export class StoreCatalogRefreshModule {
 
     outcomes.sort((left, right) => left.index - right.index)
     const storesById = new Map<string, CreatePos>()
+    const scopeOutcomes = new Map<string, ScopeOutcome>()
     let successfulRequests = 0
     let failedRequests = 0
 
     for (const outcome of outcomes) {
       const countryResult = countryBreakdown[outcome.country]!
+      const scopeOutcome = scopeOutcomes.get(outcome.scope) ?? {
+        country: outcome.country,
+        scope: outcome.scope,
+        requests: 0,
+        successful: 0,
+        failed: 0,
+        storesById: new Map<string, CreatePos>()
+      }
+      scopeOutcome.requests++
+      scopeOutcomes.set(outcome.scope, scopeOutcome)
 
       if (outcome.error != null) {
         failedRequests++
         countryResult.failed++
+        scopeOutcome.failed++
         continue
       }
 
       successfulRequests++
       countryResult.successful++
+      scopeOutcome.successful++
 
       for (const store of outcome.stores) {
+        scopeOutcome.storesById.set(store.id, store)
         if (!storesById.has(store.id)) {
           storesById.set(store.id, store)
           countryResult.stores++
@@ -223,19 +262,52 @@ export class StoreCatalogRefreshModule {
       }
     }
 
-    if (successfulRequests === 0 && failedRequests > 0) {
+    const allDiscoveryRequestsFailed =
+      successfulRequests === 0 && failedRequests > 0
+
+    const observedAt = this.dependencies.currentDate()
+    const cycleId = this.dependencies.getCatalogCycleId(observedAt)
+    const persistedStoreIds = new Set<string>()
+
+    for (const scopeOutcome of scopeOutcomes.values()) {
+      const scopeStores = Array.from(scopeOutcome.storesById.values())
+      const persistenceResult = await this.dependencies.recordScopeRefresh({
+        cycleId,
+        country: scopeOutcome.country,
+        scope: scopeOutcome.scope,
+        expectedScopes: this.dependencies.getExpectedCatalogScopes(
+          apiType,
+          scopeOutcome.country
+        ),
+        complete:
+          scopeOutcome.failed === 0 &&
+          scopeOutcome.successful === scopeOutcome.requests,
+        stores: scopeStores,
+        observedAt
+      })
+
+      if (persistenceResult.storesPersisted > 0) {
+        for (const store of scopeStores) {
+          persistedStoreIds.add(store.id)
+        }
+      }
+    }
+
+    if (allDiscoveryRequestsFailed) {
       throw new Error('All store discovery requests failed')
     }
 
-    const stores = Array.from(storesById.values())
-    const storesPersisted =
-      stores.length > 0 ? await this.dependencies.persistStores(stores) : 0
+    if (failedRequests > 0) {
+      throw new Error(
+        `${failedRequests} of ${successfulRequests + failedRequests} store discovery requests failed`
+      )
+    }
 
     return this.createResult(
       countryBreakdown,
       skippedCountries,
-      stores.length,
-      storesPersisted,
+      storesById.size,
+      persistedStoreIds.size,
       startTime
     )
   }

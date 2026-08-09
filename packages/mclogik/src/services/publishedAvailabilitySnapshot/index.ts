@@ -30,7 +30,7 @@ function getPublishedAvailabilitySnapshotModule(): PublishedAvailabilitySnapshot
   })
 
   publishedAvailabilitySnapshotModule = new PublishedAvailabilitySnapshotModule({
-    loadStores: () => posRepository.findAll(),
+    loadStores: () => posRepository.findActive(),
     publishJson: (key, value) => storageClient.uploadJson(key, value),
     now: Date.now
   })

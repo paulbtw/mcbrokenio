@@ -87,6 +87,11 @@ function createStore(overrides: Partial<Pos> = {}): Pos {
     milkshakeStatus: 'UNKNOWN',
     customItems: [],
     lastChecked: null,
+    lastCatalogSeenAt: new Date('2026-01-01T00:00:00.000Z'),
+    lastCatalogSeenCycle: null,
+    missingCatalogCycles: 0,
+    lastMissingCatalogCycle: null,
+    closedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides
@@ -143,7 +148,8 @@ describe('pollAvailability', () => {
     expect(mocks.findMany).toHaveBeenCalledWith({
       where: {
         country: { in: ['US'] },
-        hasMobileOrdering: true
+        hasMobileOrdering: true,
+        closedAt: null
       },
       take: 2000,
       orderBy: { updatedAt: 'asc' }
