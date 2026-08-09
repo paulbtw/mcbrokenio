@@ -12,8 +12,19 @@ const OBSERVATION_VALUE_COUNT = 9
 const DEFAULT_MISSING_CYCLES_BEFORE_CLOSE = 3
 const DEFAULT_CLOSED_RETENTION_DAYS = 90
 const DEFAULT_MINIMUM_COVERAGE_RATIO = 0.8
+const MINIMUM_ALLOWED_MISSING_STORES = 1
 const CATALOG_REFRESH_TRANSACTION_TIMEOUT_MS = 120_000
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
+
+function getMinimumHealthyObservationCount(
+  coverageReference: number,
+  minimumCoverageRatio: number
+): number {
+  return Math.min(
+    Math.max(coverageReference - MINIMUM_ALLOWED_MISSING_STORES, 0),
+    Math.ceil(coverageReference * minimumCoverageRatio)
+  )
+}
 
 export interface CatalogScopeRefreshInput {
   cycleId: string
@@ -257,9 +268,16 @@ export class PrismaCatalogLifecycleRepository implements CatalogLifecycleReposit
               previousObservedStoreCount > 0
             ? previousObservedStoreCount
             : knownStoreCount
+        const minimumObservedStoreCount = getMinimumHealthyObservationCount(
+          coverageReference,
+          this.minimumCoverageRatio
+        )
         const reconciliationSkipped =
-          coverageReference > 0 &&
-          observedStoreCount / coverageReference < this.minimumCoverageRatio
+          (isInitialBaseline &&
+            knownStoreCount > 0 &&
+            observedStoreCount === 0) ||
+          (coverageReference > 0 &&
+            observedStoreCount < minimumObservedStoreCount)
 
         await tx.catalogRefreshCycle.update({
           where: {

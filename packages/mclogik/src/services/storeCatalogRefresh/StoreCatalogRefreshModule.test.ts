@@ -165,7 +165,7 @@ describe('StoreCatalogRefreshModule', () => {
     })
   })
 
-  it('continues after partial discovery failures and reports them', async () => {
+  it('records partial discovery progress and rejects so Lambda can retry', async () => {
     const { dependencies, discoverFromLocation } = createDependencies()
     vi.mocked(dependencies.generateLocationMesh).mockReturnValue([
       LOCATION,
@@ -176,21 +176,9 @@ describe('StoreCatalogRefreshModule', () => {
       .mockResolvedValueOnce([createStore('US-2')])
     const module = new StoreCatalogRefreshModule(dependencies)
 
-    const result = await module.refresh({ apiType: APIType.US })
-
-    expect(result).toMatchObject({
-      totalRequests: 2,
-      successfulRequests: 1,
-      failedRequests: 1,
-      storesDiscovered: 1,
-      storesPersisted: 1
-    })
-    expect(result.countryBreakdown.US).toEqual({
-      requests: 2,
-      successful: 1,
-      failed: 1,
-      stores: 1
-    })
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      '1 of 2 store discovery requests failed'
+    )
     expect(dependencies.logDiscoveryFailure).toHaveBeenCalledTimes(1)
     expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
       expect.objectContaining({

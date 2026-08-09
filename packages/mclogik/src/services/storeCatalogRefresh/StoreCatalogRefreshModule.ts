@@ -297,6 +297,12 @@ export class StoreCatalogRefreshModule {
       throw new Error('All store discovery requests failed')
     }
 
+    if (failedRequests > 0) {
+      throw new Error(
+        `${failedRequests} of ${successfulRequests + failedRequests} store discovery requests failed`
+      )
+    }
+
     return this.createResult(
       countryBreakdown,
       skippedCountries,

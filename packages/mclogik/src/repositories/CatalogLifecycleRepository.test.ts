@@ -276,6 +276,54 @@ describe('PrismaCatalogLifecycleRepository', () => {
     })
   })
 
+  it('allows one missing store in a small catalog to advance closure detection', async () => {
+    const prisma = createPrismaMock()
+    prisma.catalogRefreshCycle.findFirst
+      .mockReset()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        cycleId: '2026-07-26',
+        observedStoreCount: 4
+      })
+    prisma.catalogRefreshScope.count.mockResolvedValue(2)
+    prisma.pos.count.mockResolvedValueOnce(4).mockResolvedValueOnce(3)
+    const repository = new PrismaCatalogLifecycleRepository(prisma as never)
+
+    const result = await repository.recordScopeRefresh({
+      cycleId: '2026-08-02',
+      country: 'US',
+      scope: 'US2',
+      expectedScopes: ['US', 'US2'],
+      complete: true,
+      stores: [createStore()],
+      observedAt: OBSERVED_AT
+    })
+
+    expect(prisma.catalogRefreshCycle.update).toHaveBeenCalledWith({
+      where: {
+        cycleId_country: { cycleId: '2026-08-02', country: 'US' }
+      },
+      data: {
+        reconciliationSkipped: false,
+        knownStoreCount: 4,
+        observedStoreCount: 3
+      }
+    })
+    expect(prisma.pos.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          missingCatalogCycles: 1,
+          lastMissingCatalogCycle: '2026-08-02'
+        }
+      })
+    )
+    expect(result).toMatchObject({
+      cycleFinalized: true,
+      reconciliationSkipped: false
+    })
+  })
+
   it('reclaims a finalized skipped cycle when a healthy retry arrives', async () => {
     const prisma = createPrismaMock()
     prisma.catalogRefreshScope.count.mockResolvedValue(2)
