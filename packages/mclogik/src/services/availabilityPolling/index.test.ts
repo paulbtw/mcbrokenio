@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => ({
   captureBatchSummary: vi.fn()
 }))
 
+const PERSISTENCE_TRANSACTION_TIMEOUT_MS = 30_000
+
 vi.mock('@mcbroken/db/client', () => ({
   prisma: {
     pos: {
@@ -302,5 +304,30 @@ describe('pollAvailability', () => {
     expect(
       mocks.transaction.mock.calls.map(([updates]) => updates.length)
     ).toEqual([100, 1])
+  })
+
+  it('allows enough transaction time for remote database persistence', async () => {
+    mocks.transaction.mockImplementation(
+      async (
+        updates: Promise<unknown>[],
+        options?: { timeout?: number }
+      ) => {
+        if (options?.timeout !== PERSISTENCE_TRANSACTION_TIMEOUT_MS) {
+          throw new Error(
+            'Transaction API error: A rollback cannot be executed on an expired transaction'
+          )
+        }
+
+        return Promise.all(updates)
+      }
+    )
+
+    await expect(
+      pollAvailability({ apiType: APIType.US })
+    ).resolves.toMatchObject({ successCount: 1 })
+
+    expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Array), {
+      timeout: PERSISTENCE_TRANSACTION_TIMEOUT_MS
+    })
   })
 })

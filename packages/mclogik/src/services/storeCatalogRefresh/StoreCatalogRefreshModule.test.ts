@@ -21,6 +21,12 @@ const TEST_LIMITER: RequestLimiter = {
   maxRequestsPerSecond: 100,
   requestsPerLog: 100
 }
+const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 24
+const MAX_REQUESTS_STARTED_AFTER_ABORT =
+  CIRCUIT_BREAKER_FAILURE_THRESHOLD + TEST_LIMITER.concurrentRequests - 1
+const REQUESTS_BEYOND_BREAKER_THRESHOLD =
+  MAX_REQUESTS_STARTED_AFTER_ABORT + TEST_LIMITER.concurrentRequests
+const PARTIAL_SCOPE_REQUESTS = TEST_LIMITER.concurrentRequests * 2
 
 const LOCATION: ILocation = { latitude: 40, longitude: -70 }
 
@@ -198,6 +204,148 @@ describe('StoreCatalogRefreshModule', () => {
     )
     expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
       expect.objectContaining({ complete: false, stores: [] })
+    )
+  })
+
+  it('stops discovery after repeated upstream failures', async () => {
+    const { dependencies, discoverFromLocation } = createDependencies()
+    vi.mocked(dependencies.generateLocationMesh).mockReturnValue(
+      Array.from({ length: REQUESTS_BEYOND_BREAKER_THRESHOLD }, (_, index) => ({
+        latitude: index,
+        longitude: -index
+      }))
+    )
+    discoverFromLocation.mockRejectedValue(new Error('upstream unavailable'))
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      `Store discovery aborted after ${CIRCUIT_BREAKER_FAILURE_THRESHOLD} consecutive failures`
+    )
+    expect(discoverFromLocation.mock.calls.length).toBeGreaterThanOrEqual(
+      CIRCUIT_BREAKER_FAILURE_THRESHOLD
+    )
+    expect(discoverFromLocation.mock.calls.length).toBeLessThanOrEqual(
+      MAX_REQUESTS_STARTED_AFTER_ABORT
+    )
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ complete: false, stores: [] })
+    )
+  })
+
+  it('records successes completed before the breaker opens and rejects for retry', async () => {
+    const countryInfos = [
+      createCountryInfo(UsLocations.US),
+      createCountryInfo(UsLocations.US2)
+    ]
+    const { dependencies, discoverFromLocation } =
+      createDependencies(countryInfos)
+    vi.mocked(dependencies.generateLocationMesh)
+      .mockReturnValueOnce([LOCATION])
+      .mockReturnValueOnce(
+        Array.from(
+          { length: REQUESTS_BEYOND_BREAKER_THRESHOLD },
+          (_, index) => ({ latitude: index, longitude: -index })
+        )
+      )
+    discoverFromLocation
+      .mockResolvedValueOnce([createStore('US-1')])
+      .mockRejectedValue(new Error('localized upstream failure'))
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      /store discovery requests failed/
+    )
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({
+        complete: true,
+        stores: [expect.objectContaining({ id: 'US-1' })]
+      })
+    )
+  })
+
+  it('keeps a scope incomplete when the breaker cancels some of its requests', async () => {
+    const countryInfos = [
+      createCountryInfo(UsLocations.US),
+      createCountryInfo(UsLocations.US2)
+    ]
+    const { dependencies, discoverFromLocation } =
+      createDependencies(countryInfos)
+    vi.mocked(dependencies.generateLocationMesh)
+      .mockReturnValueOnce(
+        Array.from(
+          { length: CIRCUIT_BREAKER_FAILURE_THRESHOLD },
+          (_, index) => ({ latitude: index, longitude: -index })
+        )
+      )
+      .mockReturnValueOnce(
+        Array.from({ length: PARTIAL_SCOPE_REQUESTS }, (_, index) => ({
+          latitude: index,
+          longitude: -index
+        }))
+      )
+
+    let releaseFinalFailures!: () => void
+    const finalFailuresGate = new Promise<void>((resolve) => {
+      releaseFinalFailures = resolve
+    })
+    let markPartialScopeStarted!: () => void
+    const partialScopeStarted = new Promise<void>((resolve) => {
+      markPartialScopeStarted = resolve
+    })
+    let releasePartialScope!: () => void
+    const partialScopeGate = new Promise<void>((resolve) => {
+      releasePartialScope = resolve
+    })
+    let failingScopeCalls = 0
+    let partialScopeCalls = 0
+    discoverFromLocation.mockImplementation(async (_location, countryInfo) => {
+      if (countryInfo.country === UsLocations.US) {
+        failingScopeCalls++
+        if (
+          failingScopeCalls >
+          CIRCUIT_BREAKER_FAILURE_THRESHOLD -
+            (TEST_LIMITER.concurrentRequests - 1)
+        ) {
+          await finalFailuresGate
+        }
+        throw new Error('localized upstream failure')
+      }
+
+      const requestNumber = ++partialScopeCalls
+      markPartialScopeStarted()
+      await partialScopeGate
+      return [createStore(`US2-${requestNumber}`, 'US2')]
+    })
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    const refreshError = module
+      .refresh({ apiType: APIType.US })
+      .catch((error: unknown) => error)
+    await partialScopeStarted
+    releaseFinalFailures()
+    await vi.waitFor(() => {
+      expect(dependencies.logDiscoveryFailure).toHaveBeenCalledTimes(
+        CIRCUIT_BREAKER_FAILURE_THRESHOLD
+      )
+    })
+    releasePartialScope()
+    expect(await refreshError).toEqual(
+      new Error(
+        `${CIRCUIT_BREAKER_FAILURE_THRESHOLD} of ${CIRCUIT_BREAKER_FAILURE_THRESHOLD + partialScopeCalls} store discovery requests failed`
+      )
+    )
+
+    expect(partialScopeCalls).toBeGreaterThan(0)
+    expect(partialScopeCalls).toBeLessThan(PARTIAL_SCOPE_REQUESTS)
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({
+        country: UsLocations.US2,
+        scope: UsLocations.US2,
+        complete: false,
+        stores: expect.arrayContaining([
+          expect.objectContaining({ country: 'US2' })
+        ])
+      })
     )
   })
 
