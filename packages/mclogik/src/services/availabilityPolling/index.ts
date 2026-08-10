@@ -25,6 +25,8 @@ import {
 } from './AvailabilityPollingModule'
 
 const PERSISTENCE_TRANSACTION_BATCH_SIZE = 100
+// A batch performs sequential writes and may cross regions to reach PostgreSQL.
+const PERSISTENCE_TRANSACTION_TIMEOUT_MS = 30_000
 
 function getRequestLimiter(apiType: APIType): RequestLimiter {
   switch (apiType) {
@@ -79,7 +81,8 @@ async function persistUpdates(updates: UpdatePos[]): Promise<void> {
             updatedAt: now
           }
         })
-      )
+      ),
+      { timeout: PERSISTENCE_TRANSACTION_TIMEOUT_MS }
     )
   }
 }
