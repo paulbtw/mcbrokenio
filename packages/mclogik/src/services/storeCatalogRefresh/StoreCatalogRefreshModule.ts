@@ -104,7 +104,7 @@ interface DiscoveryOutcome {
 interface ScopeOutcome {
   country: string
   scope: string
-  requests: number
+  plannedRequests: number
   successful: number
   failed: number
   storesById: Map<string, CreatePos>
@@ -184,6 +184,17 @@ export class StoreCatalogRefreshModule {
       )
     }
 
+    const plannedRequestsByScope = new Map<string, number>()
+    for (const discoveryRequest of discoveryRequests) {
+      const scope =
+        discoveryRequest.countryInfo.catalogScope ??
+        discoveryRequest.countryInfo.country
+      plannedRequestsByScope.set(
+        scope,
+        (plannedRequestsByScope.get(scope) ?? 0) + 1
+      )
+    }
+
     const requestLimiter = this.dependencies.getRequestLimiter(apiType)
     const executor = createRateLimitedExecutor(
       requestLimiter,
@@ -260,12 +271,11 @@ export class StoreCatalogRefreshModule {
       const scopeOutcome = scopeOutcomes.get(outcome.scope) ?? {
         country: outcome.country,
         scope: outcome.scope,
-        requests: 0,
+        plannedRequests: plannedRequestsByScope.get(outcome.scope) ?? 0,
         successful: 0,
         failed: 0,
         storesById: new Map<string, CreatePos>()
       }
-      scopeOutcome.requests++
       scopeOutcomes.set(outcome.scope, scopeOutcome)
 
       if (outcome.error != null) {
@@ -307,7 +317,7 @@ export class StoreCatalogRefreshModule {
         ),
         complete:
           scopeOutcome.failed === 0 &&
-          scopeOutcome.successful === scopeOutcome.requests,
+          scopeOutcome.successful === scopeOutcome.plannedRequests,
         stores: scopeStores,
         observedAt
       })
