@@ -4,6 +4,14 @@ McBroken tracks whether McDonald's stores can currently sell selected ice-cream 
 
 ## Language
 
+**Market**:
+A McDonald's commercial area whose stores share Product Availability configuration, such as US or AU.
+_Avoid_: Country, location
+
+**Catalog Scope**:
+A scheduled geographic slice of a Market used by a Store Catalog Refresh, such as US2 or AU2. A Market may have one or more Catalog Scopes.
+_Avoid_: Location, country list
+
 **Availability Poll**:
 A recurring evaluation of product availability for eligible stores in one or more markets.
 _Avoid_: Item status job, status poll

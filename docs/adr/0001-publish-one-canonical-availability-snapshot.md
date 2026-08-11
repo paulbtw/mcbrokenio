@@ -1,0 +1,3 @@
+# Publish one canonical availability snapshot
+
+The map and statistics are two views of the same Store Catalog read, so publishing and fetching them independently can expose a mixture of generations. We will publish `snapshot.json` as the canonical, versioned representation containing `schemaVersion`, `publishedAt`, `markers`, and `statistics`; the frontend will fetch it through one shared query cache entry and derive both views locally. The publisher writes the canonical object first, then writes `marker.json` and `stats.json` sequentially as temporary compatibility representations. Any write failure rejects the invocation so a retry can idempotently publish the complete generation. The compatibility files remain until the production frontend migration is verified.

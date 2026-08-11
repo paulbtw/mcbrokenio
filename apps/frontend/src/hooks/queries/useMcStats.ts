@@ -1,20 +1,14 @@
-import type { PublishedAvailabilityStatistics } from "@mcbroken/mclogik/publishedAvailabilitySnapshot";
-import { type QueryFunction, useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
-const fetchMcStats: QueryFunction<PublishedAvailabilityStatistics[]> = async ({
-  signal,
-}) => {
-  const { data } = await axios.get<PublishedAvailabilityStatistics[]>("/stats.json", {
-    signal,
-  });
-
-  return data;
-};
+import {
+  publishedAvailabilitySnapshotQueryFn,
+  publishedAvailabilitySnapshotQueryKey,
+} from "./usePublishedAvailabilitySnapshot";
 
 export const useMcStats = () => {
   return useQuery({
-    queryKey: ["mcStats"],
-    queryFn: fetchMcStats,
+    queryKey: publishedAvailabilitySnapshotQueryKey,
+    queryFn: publishedAvailabilitySnapshotQueryFn,
+    select: (snapshot) => snapshot.statistics,
   });
 };

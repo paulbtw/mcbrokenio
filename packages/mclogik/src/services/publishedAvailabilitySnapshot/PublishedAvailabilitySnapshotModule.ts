@@ -1,6 +1,12 @@
 import { ItemStatus, type Pos } from '@mcbroken/db'
 
-import { createGeoJson, type GeoJsonSourcePos } from './createGeoJson'
+import {
+  type CustomItemType,
+  type GeoJson,
+  type GeoJsonPos
+} from '../../types/geoJson'
+
+export const PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION = 1 as const
 
 export interface PublishedAvailabilityStatistics {
   total: number
@@ -17,16 +23,135 @@ export interface PublishedAvailabilityStatistics {
 export interface PublishAvailabilitySnapshotResult {
   storesPublished: number
   statisticsRowsPublished: number
-  filesPublished: ['marker.json', 'stats.json']
+  filesPublished: ['snapshot.json', 'marker.json', 'stats.json']
+  publishedAt: string
   durationMs: number
 }
 
-type PublishedAvailabilityStore = GeoJsonSourcePos & Pick<Pos, 'country'>
+export interface PublishedAvailabilitySnapshot {
+  schemaVersion: typeof PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION
+  publishedAt: string
+  markers: GeoJson
+  statistics: PublishedAvailabilityStatistics[]
+}
+
+type PublishedAvailabilityStore = Pick<
+  Pos,
+  | 'id'
+  | 'name'
+  | 'latitude'
+  | 'longitude'
+  | 'country'
+  | 'milkshakeStatus'
+  | 'milkshakeCount'
+  | 'milkshakeError'
+  | 'mcSundaeStatus'
+  | 'mcSundaeCount'
+  | 'mcSundaeError'
+  | 'mcFlurryStatus'
+  | 'mcFlurryCount'
+  | 'mcFlurryError'
+  | 'lastChecked'
+  | 'customItems'
+  | 'hasMobileOrdering'
+  | 'isResponsive'
+>
 
 export interface PublishedAvailabilitySnapshotDependencies {
   loadStores(): Promise<PublishedAvailabilityStore[]>
   publishJson(key: string, value: unknown): Promise<void>
+  currentDate(): Date
   now(): number
+}
+
+const unknown = ItemStatus.UNKNOWN
+const available: ItemStatus[] = [
+  ItemStatus.AVAILABLE,
+  ItemStatus.NOT_APPLICABLE
+]
+const unavailable: ItemStatus[] = [
+  ItemStatus.UNAVAILABLE,
+  ItemStatus.NOT_APPLICABLE
+]
+
+function getColorDot(
+  hasMcFlurry: ItemStatus,
+  hasMcSundae: ItemStatus,
+  hasMilkshake: ItemStatus,
+  isResponsive: boolean
+): GeoJsonPos['properties']['dot'] {
+  if (!isResponsive) {
+    return 'GREY'
+  }
+
+  if (
+    hasMcFlurry === unknown &&
+    hasMcSundae === unknown &&
+    hasMilkshake === unknown
+  ) {
+    return 'GREY'
+  }
+  if (
+    available.includes(hasMcFlurry) &&
+    available.includes(hasMcSundae) &&
+    available.includes(hasMilkshake)
+  ) {
+    return 'GREEN'
+  }
+  if (
+    unavailable.includes(hasMcFlurry) &&
+    unavailable.includes(hasMcSundae) &&
+    unavailable.includes(hasMilkshake)
+  ) {
+    return 'RED'
+  }
+
+  return 'YELLOW'
+}
+
+function createGeoJson(stores: PublishedAvailabilityStore[]): GeoJson {
+  const features = stores.map<GeoJsonPos>((store) => ({
+    geometry: {
+      coordinates: [
+        Number(store.longitude),
+        Number(store.latitude),
+        0
+      ],
+      type: 'Point'
+    },
+    properties: {
+      hasMilchshake: store.milkshakeStatus,
+      milkshakeCount: store.milkshakeCount,
+      milkshakeErrorCount: store.milkshakeError,
+      hasMcSundae: store.mcSundaeStatus,
+      mcSundaeCount: store.mcSundaeCount,
+      mcSundaeErrorCount: store.mcSundaeError,
+      hasMcFlurry: store.mcFlurryStatus,
+      mcFlurryCount: store.mcFlurryCount,
+      mcFlurryErrorCount: store.mcFlurryError,
+      lastChecked:
+        store.lastChecked != null
+          ? new Date(store.lastChecked).getTime()
+          : null,
+      customItems: store.customItems as unknown as CustomItemType[],
+      name: store.name,
+      dot: getColorDot(
+        store.mcFlurryStatus,
+        store.mcSundaeStatus,
+        store.milkshakeStatus,
+        store.isResponsive
+      ),
+      hasMobileOrdering: store.hasMobileOrdering,
+      isResponsive: store.isResponsive,
+      id: store.id
+    },
+    type: 'Feature'
+  }))
+
+  return {
+    type: 'FeatureCollection',
+    features
+  }
 }
 
 function createStatisticsRow(country: string): PublishedAvailabilityStatistics {
@@ -116,16 +241,23 @@ export class PublishedAvailabilitySnapshotModule {
     const stores = await this.dependencies.loadStores()
     const markers = createGeoJson(stores)
     const statistics = createPublishedStatistics(stores)
+    const publishedAt = this.dependencies.currentDate().toISOString()
+    const snapshot: PublishedAvailabilitySnapshot = {
+      schemaVersion: PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
+      publishedAt,
+      markers,
+      statistics
+    }
 
-    await Promise.all([
-      this.dependencies.publishJson('marker.json', markers),
-      this.dependencies.publishJson('stats.json', statistics)
-    ])
+    await this.dependencies.publishJson('snapshot.json', snapshot)
+    await this.dependencies.publishJson('marker.json', markers)
+    await this.dependencies.publishJson('stats.json', statistics)
 
     return {
       storesPublished: stores.length,
       statisticsRowsPublished: statistics.length,
-      filesPublished: ['marker.json', 'stats.json'],
+      filesPublished: ['snapshot.json', 'marker.json', 'stats.json'],
+      publishedAt,
       durationMs: this.dependencies.now() - startTime
     }
   }

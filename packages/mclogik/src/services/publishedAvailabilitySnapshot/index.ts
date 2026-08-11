@@ -32,6 +32,7 @@ function getPublishedAvailabilitySnapshotModule(): PublishedAvailabilitySnapshot
   publishedAvailabilitySnapshotModule = new PublishedAvailabilitySnapshotModule({
     loadStores: () => posRepository.findActive(),
     publishJson: (key, value) => storageClient.uploadJson(key, value),
+    currentDate: () => new Date(),
     now: Date.now
   })
 
@@ -47,8 +48,12 @@ export async function publishAvailabilitySnapshot(): Promise<PublishAvailability
   return getPublishedAvailabilitySnapshotModule().publish()
 }
 
-export type { CustomItemType, GeoJson, GeoJsonPos } from './createGeoJson'
+export type { CustomItemType, GeoJson, GeoJsonPos } from '../../types/geoJson'
 export type {
   PublishAvailabilitySnapshotResult,
   PublishedAvailabilityStatistics
+} from './PublishedAvailabilitySnapshotModule'
+export {
+  PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
+  type PublishedAvailabilitySnapshot
 } from './PublishedAvailabilitySnapshotModule'

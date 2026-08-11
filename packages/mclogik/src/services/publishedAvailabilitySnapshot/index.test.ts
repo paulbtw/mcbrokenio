@@ -70,6 +70,16 @@ describe('publishAvailabilitySnapshot', () => {
     const result = await publishAvailabilitySnapshot()
 
     expect(mocks.findActive).toHaveBeenCalledTimes(1)
+    expect(mocks.uploadJson).toHaveBeenNthCalledWith(
+      1,
+      'snapshot.json',
+      expect.objectContaining({
+        schemaVersion: 1,
+        publishedAt: expect.any(String),
+        markers: expect.objectContaining({ type: 'FeatureCollection' }),
+        statistics: expect.any(Array)
+      })
+    )
     expect(mocks.uploadJson).toHaveBeenCalledWith(
       'marker.json',
       expect.objectContaining({ type: 'FeatureCollection' })
@@ -86,7 +96,8 @@ describe('publishAvailabilitySnapshot', () => {
     expect(result).toMatchObject({
       storesPublished: 1,
       statisticsRowsPublished: 2,
-      filesPublished: ['marker.json', 'stats.json']
+      filesPublished: ['snapshot.json', 'marker.json', 'stats.json'],
+      publishedAt: expect.any(String)
     })
   })
 

@@ -11,6 +11,10 @@ const nextConfig = {
 
     return [
       {
+        source: "/snapshot.json",
+        destination: `${assetsOrigin}/snapshot.json`,
+      },
+      {
         source: "/marker.json",
         destination: `${assetsOrigin}/marker.json`,
       },
