@@ -1,9 +1,9 @@
 import {
   createNetworkFailure,
   type NetworkFailure
-} from '../../clients/NetworkFailure'
+} from '../../clients/networkFailure'
 import { type RequestLimiter } from '../../constants/RateLimit'
-import { type MarketDefinition } from '../../markets/MarketDefinitions'
+import { type MarketDefinition } from '../../markets/marketDefinitions'
 import {
   APIType,
   type CreatePos,
@@ -23,7 +23,7 @@ interface StoreCatalogRefreshContext {
 export interface StoreCatalogDiscoveryNetworkDependencies {
   loadRefreshContext(
     apiType: APIType,
-    countryList?: Locations[]
+    catalogScopes?: Locations[]
   ): Promise<StoreCatalogRefreshContext>
   generateLocationMesh(
     market: MarketDefinition,
@@ -42,27 +42,27 @@ export interface StoreCatalogDiscoveryNetworkDependencies {
 
 export interface StoreCatalogDiscoveryBatchRequest {
   apiType: APIType
-  countryList?: Locations[]
+  catalogScopes?: Locations[]
 }
 
 export interface StoreCatalogDiscoveryOutcome {
   index: number
-  country: string
-  scope: string
+  market: string
+  catalogScope: string
   stores: CreatePos[]
   failure?: NetworkFailure
 }
 
 export interface StoreCatalogDiscoveryScope {
-  country: string
-  scope: string
+  market: string
+  catalogScope: string
   plannedRequests: number
 }
 
 export interface StoreCatalogDiscoveryBatch {
-  requestsByCountry: Record<string, number>
+  requestsByMarket: Record<string, number>
   scopes: StoreCatalogDiscoveryScope[]
-  skippedCountries: number
+  skippedMarkets: number
   circuitOpened: boolean
   outcomes: StoreCatalogDiscoveryOutcome[]
 }
@@ -94,10 +94,21 @@ export class StoreCatalogDiscoveryNetwork {
   async discoverBatch(
     request: StoreCatalogDiscoveryBatchRequest
   ): Promise<StoreCatalogDiscoveryBatch> {
-    const { apiType, countryList } = request
+    const { apiType, catalogScopes } = request
     assertSupportedApiType(apiType)
-    const { token, clientId, markets } =
-      await this.dependencies.loadRefreshContext(apiType, countryList)
+    let context: StoreCatalogRefreshContext
+    try {
+      context = await this.dependencies.loadRefreshContext(
+        apiType,
+        catalogScopes
+      )
+    } catch (error) {
+      if (createNetworkFailure(error) != null) {
+        throw new Error('Store Catalog authentication request failed')
+      }
+      throw error
+    }
+    const { token, clientId, markets } = context
     const needsCredentials = apiType !== APIType.EL
 
     if (needsCredentials && (typeof token !== 'string' || token.length === 0)) {
@@ -111,8 +122,8 @@ export class StoreCatalogDiscoveryNetwork {
     }
 
     const discoveryRequests: DiscoveryRequest[] = []
-    const requestsByCountry: Record<string, number> = {}
-    let skippedCountries = 0
+    const requestsByMarket: Record<string, number> = {}
+    let skippedMarkets = 0
 
     for (const market of markets) {
       if (apiType === APIType.EL) {
@@ -121,13 +132,13 @@ export class StoreCatalogDiscoveryNetwork {
           kind: 'url',
           market
         })
-        requestsByCountry[market.country] =
-          (requestsByCountry[market.country] ?? 0) + 1
+        requestsByMarket[market.country] =
+          (requestsByMarket[market.country] ?? 0) + 1
         continue
       }
 
       if (market.country === 'UK') {
-        skippedCountries++
+        skippedMarkets++
         continue
       }
       if (market.locationLimits == null) {
@@ -138,8 +149,8 @@ export class StoreCatalogDiscoveryNetwork {
         market,
         this.dependencies.getLocationIntervalKilometers(apiType)
       )
-      requestsByCountry[market.country] =
-        (requestsByCountry[market.country] ?? 0) + locations.length
+      requestsByMarket[market.country] =
+        (requestsByMarket[market.country] ?? 0) + locations.length
 
       for (const location of locations) {
         discoveryRequests.push({
@@ -151,18 +162,17 @@ export class StoreCatalogDiscoveryNetwork {
       }
     }
 
-    const scopesByScope = new Map<string, StoreCatalogDiscoveryScope>()
+    const scopesByCatalogScope = new Map<string, StoreCatalogDiscoveryScope>()
     for (const discoveryRequest of discoveryRequests) {
-      const scope =
-        discoveryRequest.market.catalogScope ??
-        discoveryRequest.market.country
-      const existing = scopesByScope.get(scope)
+      const catalogScope =
+        discoveryRequest.market.catalogScope ?? discoveryRequest.market.country
+      const existing = scopesByCatalogScope.get(catalogScope)
       if (existing != null) {
         existing.plannedRequests++
       } else {
-        scopesByScope.set(scope, {
-          country: discoveryRequest.market.country,
-          scope,
+        scopesByCatalogScope.set(catalogScope, {
+          market: discoveryRequest.market.country,
+          catalogScope,
           plannedRequests: 1
         })
       }
@@ -170,9 +180,9 @@ export class StoreCatalogDiscoveryNetwork {
 
     if (discoveryRequests.length === 0) {
       return {
-        requestsByCountry,
+        requestsByMarket,
         scopes: [],
-        skippedCountries,
+        skippedMarkets,
         circuitOpened: false,
         outcomes: []
       }
@@ -189,17 +199,16 @@ export class StoreCatalogDiscoveryNetwork {
 
     const { results: outcomes } = await executor.executeAll(
       discoveryRequests,
-      async (discoveryRequest): Promise<StoreCatalogDiscoveryOutcome | null> => {
-        const country = discoveryRequest.market.country
-        const scope =
-          discoveryRequest.market.catalogScope ?? country
+      async (
+        discoveryRequest
+      ): Promise<StoreCatalogDiscoveryOutcome | null> => {
+        const market = discoveryRequest.market.country
+        const catalogScope = discoveryRequest.market.catalogScope ?? market
 
         try {
           const stores =
-                  discoveryRequest.kind === 'url'
-              ? await this.dependencies.discoverFromUrl(
-                  discoveryRequest.market
-                )
+            discoveryRequest.kind === 'url'
+              ? await this.dependencies.discoverFromUrl(discoveryRequest.market)
               : await this.dependencies.discoverFromLocation(
                   discoveryRequest.location,
                   discoveryRequest.market,
@@ -210,8 +219,8 @@ export class StoreCatalogDiscoveryNetwork {
 
           return {
             index: discoveryRequest.index,
-            country,
-            scope,
+            market,
+            catalogScope,
             stores
           }
         } catch (error) {
@@ -237,8 +246,8 @@ export class StoreCatalogDiscoveryNetwork {
 
           return {
             index: discoveryRequest.index,
-            country,
-            scope,
+            market,
+            catalogScope,
             stores: [],
             failure
           }
@@ -254,9 +263,9 @@ export class StoreCatalogDiscoveryNetwork {
     outcomes.sort((left, right) => left.index - right.index)
 
     return {
-      requestsByCountry,
-      scopes: Array.from(scopesByScope.values()),
-      skippedCountries,
+      requestsByMarket,
+      scopes: Array.from(scopesByCatalogScope.values()),
+      skippedMarkets,
       circuitOpened,
       outcomes
     }

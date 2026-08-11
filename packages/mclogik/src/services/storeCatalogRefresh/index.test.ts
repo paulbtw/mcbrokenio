@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  APIType,
-  ElLocations,
-  EuLocations,
-  UsLocations
-} from '../../types'
+import { APIType, ElLocations, EuLocations, UsLocations } from '../../types'
 
 import { refreshStoreCatalog } from './index'
 
@@ -140,7 +135,7 @@ describe('refreshStoreCatalog', () => {
     expect(mocks.discoverFromUrl).toHaveBeenCalledWith(
       expect.objectContaining({
         country: ElLocations.AT,
-      catalogScope: ElLocations.AT
+        catalogScope: ElLocations.AT
       })
     )
     expect(mocks.generateCoordinatesMesh).not.toHaveBeenCalled()
@@ -150,17 +145,17 @@ describe('refreshStoreCatalog', () => {
   it('rejects missing location-discovery credentials before network work', async () => {
     mocks.getBearerToken.mockResolvedValue('')
 
-    await expect(
-      refreshStoreCatalog({ apiType: APIType.US })
-    ).rejects.toThrow('Bearer token is missing for US')
+    await expect(refreshStoreCatalog({ apiType: APIType.US })).rejects.toThrow(
+      'Bearer token is missing for US'
+    )
     expect(mocks.discoverFromLocation).not.toHaveBeenCalled()
     expect(mocks.recordScopeRefresh).not.toHaveBeenCalled()
   })
 
   it('rejects unsupported Store Catalog regions', async () => {
-    await expect(
-      refreshStoreCatalog({ apiType: APIType.HK })
-    ).rejects.toThrow('Store Catalog refresh is not supported for HK')
+    await expect(refreshStoreCatalog({ apiType: APIType.HK })).rejects.toThrow(
+      'Store Catalog refresh is not supported for HK'
+    )
     expect(mocks.getBearerToken).not.toHaveBeenCalled()
   })
 
@@ -198,7 +193,7 @@ describe('refreshStoreCatalog', () => {
 
     expect(consoleError).toHaveBeenCalledWith(
       'Store Catalog discovery request failed',
-      { apiType: APIType.US, country: UsLocations.US },
+      { apiType: APIType.US, market: UsLocations.US },
       {
         kind: 'http',
         retryable: true,

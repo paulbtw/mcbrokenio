@@ -11,6 +11,7 @@ import {
   type McdonaldsRequestHeaders,
   StandardApiClient
 } from './McdonaldsApiClient'
+import { InvalidUpstreamResponseError } from './networkFailure'
 
 describe('StandardApiClient', () => {
   const createMockHttpClient = (): AxiosInstance =>
@@ -43,7 +44,10 @@ describe('StandardApiClient', () => {
         API_CLIENT_CONFIGS.US,
         mockHttpClient
       )
-      const result = await client.fetchRestaurantOutages('12345', createHeaders())
+      const result = await client.fetchRestaurantOutages(
+        '12345',
+        createHeaders()
+      )
 
       expect(result.outageProductCodes).toEqual(['CODE1', 'CODE2', 'CODE3'])
       expect(mockHttpClient.get).toHaveBeenCalledWith(
@@ -60,7 +64,7 @@ describe('StandardApiClient', () => {
       )
     })
 
-    it('should return empty array when response has no outage codes', async () => {
+    it('rejects a response with no outage-code collection', async () => {
       const mockHttpClient = createMockHttpClient()
       vi.mocked(mockHttpClient.get).mockResolvedValue({
         data: {
@@ -76,12 +80,12 @@ describe('StandardApiClient', () => {
         API_CLIENT_CONFIGS.US,
         mockHttpClient
       )
-      const result = await client.fetchRestaurantOutages('12345', createHeaders())
-
-      expect(result.outageProductCodes).toEqual([])
+      await expect(
+        client.fetchRestaurantOutages('12345', createHeaders())
+      ).rejects.toBeInstanceOf(InvalidUpstreamResponseError)
     })
 
-    it('should return empty array when response structure is missing', async () => {
+    it('rejects a response with a missing structure', async () => {
       const mockHttpClient = createMockHttpClient()
       vi.mocked(mockHttpClient.get).mockResolvedValue({
         data: {}
@@ -91,14 +95,32 @@ describe('StandardApiClient', () => {
         API_CLIENT_CONFIGS.US,
         mockHttpClient
       )
-      const result = await client.fetchRestaurantOutages('12345', createHeaders())
-
-      expect(result.outageProductCodes).toEqual([])
+      await expect(
+        client.fetchRestaurantOutages('12345', createHeaders())
+      ).rejects.toBeInstanceOf(InvalidUpstreamResponseError)
     })
+
+    it.each([null, 'invalid'])(
+      'rejects a non-object response body',
+      async (data) => {
+        const mockHttpClient = createMockHttpClient()
+        vi.mocked(mockHttpClient.get).mockResolvedValue({ data })
+        const client = new StandardApiClient(
+          API_CLIENT_CONFIGS.US,
+          mockHttpClient
+        )
+
+        await expect(
+          client.fetchRestaurantOutages('12345', createHeaders())
+        ).rejects.toBeInstanceOf(InvalidUpstreamResponseError)
+      }
+    )
 
     it('should propagate network errors for availability health and diagnostics', async () => {
       const mockHttpClient = createMockHttpClient()
-      vi.mocked(mockHttpClient.get).mockRejectedValue(new Error('Network error'))
+      vi.mocked(mockHttpClient.get).mockRejectedValue(
+        new Error('Network error')
+      )
 
       const client = new StandardApiClient(
         API_CLIENT_CONFIGS.US,
@@ -113,7 +135,9 @@ describe('StandardApiClient', () => {
     it('should use correct config for EU region', async () => {
       const mockHttpClient = createMockHttpClient()
       vi.mocked(mockHttpClient.get).mockResolvedValue({
-        data: { response: { restaurant: { catalog: { outageProductCodes: [] } } } }
+        data: {
+          response: { restaurant: { catalog: { outageProductCodes: [] } } }
+        }
       })
 
       const client = new StandardApiClient(
@@ -139,7 +163,9 @@ describe('StandardApiClient', () => {
     it('should use correct config for AP region', async () => {
       const mockHttpClient = createMockHttpClient()
       vi.mocked(mockHttpClient.get).mockResolvedValue({
-        data: { response: { restaurant: { catalog: { outageProductCodes: [] } } } }
+        data: {
+          response: { restaurant: { catalog: { outageProductCodes: [] } } }
+        }
       })
 
       const client = new StandardApiClient(
@@ -199,7 +225,10 @@ describe('ElApiClient', () => {
         'https://el-prod.api.mcd.com',
         mockHttpClient
       )
-      const result = await client.fetchRestaurantOutages('12345', createHeaders())
+      const result = await client.fetchRestaurantOutages(
+        '12345',
+        createHeaders()
+      )
 
       expect(result.outageProductCodes).toEqual(['123', '456', '789'])
     })
@@ -228,7 +257,7 @@ describe('ElApiClient', () => {
       )
     })
 
-    it('should return empty array when productOutages is missing', async () => {
+    it('rejects a response with a missing product-outage collection', async () => {
       const mockHttpClient = createMockHttpClient()
       vi.mocked(mockHttpClient.get).mockResolvedValue({
         data: {}
@@ -238,14 +267,29 @@ describe('ElApiClient', () => {
         'https://el-prod.api.mcd.com',
         mockHttpClient
       )
-      const result = await client.fetchRestaurantOutages('12345', createHeaders())
+      await expect(
+        client.fetchRestaurantOutages('12345', createHeaders())
+      ).rejects.toBeInstanceOf(InvalidUpstreamResponseError)
+    })
 
-      expect(result.outageProductCodes).toEqual([])
+    it.each([null, 42])('rejects a non-object response body', async (data) => {
+      const mockHttpClient = createMockHttpClient()
+      vi.mocked(mockHttpClient.get).mockResolvedValue({ data })
+      const client = new ElApiClient(
+        'https://el-prod.api.mcd.com',
+        mockHttpClient
+      )
+
+      await expect(
+        client.fetchRestaurantOutages('12345', createHeaders())
+      ).rejects.toBeInstanceOf(InvalidUpstreamResponseError)
     })
 
     it('should propagate network errors for availability health and diagnostics', async () => {
       const mockHttpClient = createMockHttpClient()
-      vi.mocked(mockHttpClient.get).mockRejectedValue(new Error('Network error'))
+      vi.mocked(mockHttpClient.get).mockRejectedValue(
+        new Error('Network error')
+      )
 
       const client = new ElApiClient(
         'https://el-prod.api.mcd.com',
@@ -297,7 +341,9 @@ describe('createApiClient', () => {
   })
 
   it('should throw for unsupported API type', () => {
-    expect(() => createApiClient(APIType.HK)).toThrow('Unsupported API type: HK')
+    expect(() => createApiClient(APIType.HK)).toThrow(
+      'Unsupported API type: HK'
+    )
     expect(() => createApiClient(APIType.UNKNOWN)).toThrow(
       'Unsupported API type: UNKNOWN'
     )

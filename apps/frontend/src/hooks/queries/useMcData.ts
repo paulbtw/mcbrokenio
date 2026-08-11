@@ -12,6 +12,7 @@ import {
 export type McDataProperties = GeoJsonPos["properties"];
 export type McDataGeometry = GeoJson;
 
+/** Reads map markers from the shared published availability snapshot query. */
 export const useMcData = () => {
   return useQuery({
     queryKey: publishedAvailabilitySnapshotQueryKey,

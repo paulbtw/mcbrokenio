@@ -4,10 +4,10 @@ import {
   createInvalidResponseFailure,
   createNetworkFailure,
   type NetworkFailure
-} from '../../clients/NetworkFailure'
+} from '../../clients/networkFailure'
 import { type StoreProductAvailability } from '../../clients/ProductAvailability'
 import { type RequestLimiter } from '../../constants/RateLimit'
-import { type MarketDefinition } from '../../markets/MarketDefinitions'
+import { type MarketDefinition } from '../../markets/marketDefinitions'
 import { type APIType, type Locations } from '../../types'
 import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
 
@@ -19,7 +19,7 @@ interface ProductAvailabilityPollContext {
 
 interface StoreProductAvailabilityFetcher {
   fetchStoreProductAvailability(
-    store: Pos,
+    store: ProductAvailabilityStore,
     market: MarketDefinition,
     token: string,
     clientId: string
@@ -29,7 +29,7 @@ interface StoreProductAvailabilityFetcher {
 export interface ProductAvailabilityNetworkDependencies {
   loadPollContext(
     apiType: APIType,
-    countryList?: Locations[]
+    catalogScopes?: Locations[]
   ): Promise<ProductAvailabilityPollContext>
   createProductAvailabilityFetcher(
     apiType: APIType
@@ -39,30 +39,35 @@ export interface ProductAvailabilityNetworkDependencies {
 
 export interface ProductAvailabilityBatchRequest {
   apiType: APIType
-  countryList?: Locations[]
-  stores: Pos[]
+  catalogScopes?: Locations[]
+  stores: ProductAvailabilityStore[]
 }
+
+export type ProductAvailabilityStore = Pick<
+  Pos,
+  'id' | 'nationalStoreNumber' | 'country' | 'errorCounter'
+>
 
 export type ProductAvailabilityBatchOutcome =
   | {
       outcome: 'success'
-      store: Pos
+      store: ProductAvailabilityStore
       availability: StoreProductAvailability
     }
   | {
       outcome: 'failure'
-      store: Pos
+      store: ProductAvailabilityStore
       failure: NetworkFailure
     }
   | {
       outcome: 'skipped'
-      store: Pos
+      store: ProductAvailabilityStore
       reason: 'market-not-configured'
     }
 
 interface PlannedAvailabilityRequest {
   index: number
-  store: Pos
+  store: ProductAvailabilityStore
   market: MarketDefinition
 }
 
@@ -80,10 +85,18 @@ export class ProductAvailabilityNetwork {
   async fetchBatch(
     request: ProductAvailabilityBatchRequest
   ): Promise<ProductAvailabilityBatchOutcome[]> {
-    const { apiType, countryList, stores } = request
+    const { apiType, catalogScopes, stores } = request
     assertSupportedApiType(apiType)
-    const { token, clientId, markets } =
-      await this.dependencies.loadPollContext(apiType, countryList)
+    let context: ProductAvailabilityPollContext
+    try {
+      context = await this.dependencies.loadPollContext(apiType, catalogScopes)
+    } catch (error) {
+      if (createNetworkFailure(error) != null) {
+        throw new Error('Product Availability authentication request failed')
+      }
+      throw error
+    }
+    const { token, clientId, markets } = context
 
     if (typeof token !== 'string' || token.length === 0) {
       throw new Error(`Bearer token is missing for ${apiType}`)
@@ -92,7 +105,7 @@ export class ProductAvailabilityNetwork {
       throw new Error(`Client id is missing for ${apiType}`)
     }
 
-    const marketsByCountry = new Map(
+    const marketsByCode = new Map(
       markets.map((market) => [market.country, market])
     )
     const outcomes: Array<ProductAvailabilityBatchOutcome | undefined> =
@@ -100,7 +113,7 @@ export class ProductAvailabilityNetwork {
     const plannedRequests: PlannedAvailabilityRequest[] = []
 
     stores.forEach((store, index) => {
-      const market = marketsByCountry.get(store.country as Locations)
+      const market = marketsByCode.get(store.country as Locations)
       if (market == null) {
         outcomes[index] = {
           outcome: 'skipped',
@@ -127,13 +140,12 @@ export class ProductAvailabilityNetwork {
         plannedRequests,
         async ({ index, store, market }) => {
           try {
-            const availability =
-              await fetcher.fetchStoreProductAvailability(
-                store,
-                market,
-                token,
-                clientId
-              )
+            const availability = await fetcher.fetchStoreProductAvailability(
+              store,
+              market,
+              token,
+              clientId
+            )
             const outcome: ProductAvailabilityBatchOutcome =
               availability == null
                 ? {

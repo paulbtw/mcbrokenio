@@ -21,24 +21,24 @@ function createStore(id: string): CreatePos {
 
 function successfulBatch() {
   return {
-    requestsByCountry: { US: 2 },
+    requestsByMarket: { US: 2 },
     scopes: [
-      { country: 'US', scope: UsLocations.US, plannedRequests: 1 },
-      { country: 'US', scope: UsLocations.US2, plannedRequests: 1 }
+      { market: 'US', catalogScope: UsLocations.US, plannedRequests: 1 },
+      { market: 'US', catalogScope: UsLocations.US2, plannedRequests: 1 }
     ],
-    skippedCountries: 0,
+    skippedMarkets: 0,
     circuitOpened: false,
     outcomes: [
       {
         index: 0,
-        country: 'US',
-        scope: UsLocations.US,
+        market: 'US',
+        catalogScope: UsLocations.US,
         stores: [createStore('US-1')]
       },
       {
         index: 1,
-        country: 'US',
-        scope: UsLocations.US2,
+        market: 'US',
+        catalogScope: UsLocations.US2,
         stores: [createStore('US-1'), createStore('US-2')]
       }
     ]
@@ -57,10 +57,9 @@ function createDependencies(): StoreCatalogRefreshDependencies {
       storesClosed: 0,
       storesPurged: 0
     })),
-    getExpectedCatalogScopes: vi.fn().mockReturnValue([
-      UsLocations.US,
-      UsLocations.US2
-    ]),
+    getExpectedCatalogScopes: vi
+      .fn()
+      .mockReturnValue([UsLocations.US, UsLocations.US2]),
     getCatalogCycleId: vi.fn().mockReturnValue('2026-08-02'),
     currentDate: vi.fn().mockReturnValue(new Date('2026-08-11T08:00:00.000Z')),
     logDiscoveryFailure: vi.fn(),
@@ -75,12 +74,12 @@ describe('StoreCatalogRefreshModule', () => {
 
     const result = await module.refresh({
       apiType: APIType.US,
-      countryList: [UsLocations.US, UsLocations.US2]
+      catalogScopes: [UsLocations.US, UsLocations.US2]
     })
 
     expect(dependencies.discoverStoreCatalogBatch).toHaveBeenCalledWith({
       apiType: APIType.US,
-      countryList: [UsLocations.US, UsLocations.US2]
+      catalogScopes: [UsLocations.US, UsLocations.US2]
     })
     expect(dependencies.recordScopeRefresh).toHaveBeenNthCalledWith(
       1,
@@ -107,10 +106,10 @@ describe('StoreCatalogRefreshModule', () => {
       totalRequests: 2,
       successfulRequests: 2,
       failedRequests: 0,
-      skippedCountries: 0,
+      skippedMarkets: 0,
       storesDiscovered: 2,
       storesPersisted: 2,
-      countryBreakdown: {
+      marketBreakdown: {
         US: { requests: 2, successful: 2, failed: 0, stores: 2 }
       },
       durationMs: 300
@@ -126,22 +125,22 @@ describe('StoreCatalogRefreshModule', () => {
       message: 'Upstream HTTP request failed'
     }
     vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
-      requestsByCountry: { US: 2 },
-      scopes: [{ country: 'US', scope: 'US', plannedRequests: 2 }],
-      skippedCountries: 0,
+      requestsByMarket: { US: 2 },
+      scopes: [{ market: 'US', catalogScope: 'US', plannedRequests: 2 }],
+      skippedMarkets: 0,
       circuitOpened: false,
       outcomes: [
         {
           index: 0,
-          country: 'US',
-          scope: 'US',
+          market: 'US',
+          catalogScope: 'US',
           stores: [],
           failure
         },
         {
           index: 1,
-          country: 'US',
-          scope: 'US',
+          market: 'US',
+          catalogScope: 'US',
           stores: [createStore('US-2')]
         }
       ]
@@ -153,7 +152,7 @@ describe('StoreCatalogRefreshModule', () => {
     )
     expect(dependencies.logDiscoveryFailure).toHaveBeenCalledWith(failure, {
       apiType: APIType.US,
-      country: 'US'
+      market: 'US'
     })
     expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -166,14 +165,14 @@ describe('StoreCatalogRefreshModule', () => {
   it('persists an incomplete scope when the circuit breaker cancels queued work', async () => {
     const dependencies = createDependencies()
     vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
-      requestsByCountry: { US: 30 },
-      scopes: [{ country: 'US', scope: 'US', plannedRequests: 30 }],
-      skippedCountries: 0,
+      requestsByMarket: { US: 30 },
+      scopes: [{ market: 'US', catalogScope: 'US', plannedRequests: 30 }],
+      skippedMarkets: 0,
       circuitOpened: true,
       outcomes: Array.from({ length: 24 }, (_, index) => ({
         index,
-        country: 'US',
-        scope: 'US',
+        market: 'US',
+        catalogScope: 'US',
         stores: [],
         failure: {
           kind: 'http' as const,
@@ -209,24 +208,22 @@ describe('StoreCatalogRefreshModule', () => {
   it('returns an empty result when the batch has no planned discovery work', async () => {
     const dependencies = createDependencies()
     vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
-      requestsByCountry: {},
+      requestsByMarket: {},
       scopes: [],
-      skippedCountries: 1,
+      skippedMarkets: 1,
       circuitOpened: false,
       outcomes: []
     })
     const module = new StoreCatalogRefreshModule(dependencies)
 
-    await expect(
-      module.refresh({ apiType: APIType.EU })
-    ).resolves.toEqual({
+    await expect(module.refresh({ apiType: APIType.EU })).resolves.toEqual({
       totalRequests: 0,
       successfulRequests: 0,
       failedRequests: 0,
-      skippedCountries: 1,
+      skippedMarkets: 1,
       storesDiscovered: 0,
       storesPersisted: 0,
-      countryBreakdown: {},
+      marketBreakdown: {},
       durationMs: 300
     })
     expect(dependencies.recordScopeRefresh).not.toHaveBeenCalled()

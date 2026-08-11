@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { APIType, IceType, type ICountryInfos, UsLocations } from '../types'
 
+import { InvalidUpstreamResponseError } from './networkFailure'
 import { AxiosStoreDiscoveryClient } from './StoreDiscoveryClient'
 
 function createCountryInfo(): ICountryInfos {
@@ -150,5 +151,27 @@ describe('AxiosStoreDiscoveryClient', () => {
     await expect(client.discoverFromUrl(createCountryInfo())).rejects.toBe(
       error
     )
+  })
+
+  it.each([
+    ['location', { response: { restaurants: [{ name: 'Malformed' }] } }],
+    ['url', { restaurants: [{ addressLine1: 'Malformed' }] }]
+  ])('rejects malformed %s discovery payloads', async (kind, data) => {
+    const httpClient = {
+      get: vi.fn().mockResolvedValue({ data })
+    } as unknown as AxiosInstance
+    const client = new AxiosStoreDiscoveryClient(httpClient)
+
+    const request =
+      kind === 'location'
+        ? client.discoverFromLocation(
+            { latitude: 1, longitude: 2 },
+            createCountryInfo(),
+            'token',
+            'client'
+          )
+        : client.discoverFromUrl(createCountryInfo())
+
+    await expect(request).rejects.toBeInstanceOf(InvalidUpstreamResponseError)
   })
 })

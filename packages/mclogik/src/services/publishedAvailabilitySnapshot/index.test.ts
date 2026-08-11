@@ -4,24 +4,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { publishAvailabilitySnapshot } from './index'
 
 const mocks = vi.hoisted(() => {
-  const findActive = vi.fn()
+  const findMany = vi.fn()
   const uploadJson = vi.fn()
 
   return {
-    findActive,
+    findMany,
     uploadJson,
-    createPosRepository: vi.fn(() => ({ findActive })),
     createS3StorageClient: vi.fn(() => ({ uploadJson }))
   }
 })
 
-vi.mock('@mcbroken/db/client', () => ({ prisma: {} }))
+vi.mock('@mcbroken/db/client', () => ({
+  prisma: { pos: { findMany: mocks.findMany } }
+}))
 
 vi.mock('../../constants', () => ({ EXPORT_BUCKET: 'test-bucket' }))
-
-vi.mock('../../repositories', () => ({
-  createPosRepository: mocks.createPosRepository
-}))
 
 vi.mock('../../clients/StorageClient', () => ({
   createS3StorageClient: mocks.createS3StorageClient
@@ -62,14 +59,36 @@ function createStore(): Pos {
 describe('publishAvailabilitySnapshot', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.findActive.mockResolvedValue([createStore()])
+    mocks.findMany.mockResolvedValue([createStore()])
     mocks.uploadJson.mockResolvedValue(undefined)
   })
 
   it('composes one Store Catalog read with the production storage adapter', async () => {
     const result = await publishAvailabilitySnapshot()
 
-    expect(mocks.findActive).toHaveBeenCalledTimes(1)
+    expect(mocks.findMany).toHaveBeenCalledWith({
+      where: { closedAt: null },
+      select: {
+        id: true,
+        name: true,
+        latitude: true,
+        longitude: true,
+        country: true,
+        milkshakeStatus: true,
+        milkshakeCount: true,
+        milkshakeError: true,
+        mcFlurryStatus: true,
+        mcFlurryCount: true,
+        mcFlurryError: true,
+        mcSundaeStatus: true,
+        mcSundaeCount: true,
+        mcSundaeError: true,
+        lastChecked: true,
+        customItems: true,
+        hasMobileOrdering: true,
+        isResponsive: true
+      }
+    })
     expect(mocks.uploadJson).toHaveBeenNthCalledWith(
       1,
       'snapshot.json',
@@ -97,6 +116,7 @@ describe('publishAvailabilitySnapshot', () => {
       storesPublished: 1,
       statisticsRowsPublished: 2,
       filesPublished: ['snapshot.json', 'marker.json', 'stats.json'],
+      schemaVersion: 1,
       publishedAt: expect.any(String)
     })
   })

@@ -7,11 +7,16 @@ const SENSITIVE_DIAGNOSTIC_CONTENT =
 
 type JsonRecord = Record<string, unknown>
 
+/** Marks a structurally invalid response from an upstream service. */
+export class InvalidUpstreamResponseError extends Error {
+  constructor() {
+    super('Upstream response was invalid')
+    this.name = 'InvalidUpstreamResponseError'
+  }
+}
+
 export type NetworkFailureKind =
-  | 'http'
-  | 'invalid-response'
-  | 'network'
-  | 'timeout'
+  'http' | 'invalid-response' | 'network' | 'timeout'
 
 export interface NetworkFailure {
   kind: NetworkFailureKind
@@ -56,6 +61,37 @@ function isRetryableStatus(status: number | undefined): boolean {
   return status == null || status === 408 || status === 429 || status >= 500
 }
 
+function getNetworkFailureKind(
+  status: number | undefined,
+  transportCode: string | undefined
+): NetworkFailureKind {
+  if (status != null) {
+    return 'http'
+  }
+
+  if (transportCode === 'ECONNABORTED' || transportCode === 'ETIMEDOUT') {
+    return 'timeout'
+  }
+
+  return 'network'
+}
+
+function getNetworkFailureMessage(kind: NetworkFailureKind): string {
+  if (kind === 'http') {
+    return 'Upstream HTTP request failed'
+  }
+
+  if (kind === 'timeout') {
+    return 'Upstream request timed out'
+  }
+
+  if (kind === 'invalid-response') {
+    return 'Upstream response was invalid'
+  }
+
+  return 'Upstream network request failed'
+}
+
 /**
  * Converts an expected Axios request failure to the strict diagnostic allowlist.
  * Raw errors, URLs, headers, response bodies, and credential-bearing messages
@@ -64,6 +100,10 @@ function isRetryableStatus(status: number | undefined): boolean {
 export function createNetworkFailure(
   error: unknown
 ): NetworkFailure | undefined {
+  if (error instanceof InvalidUpstreamResponseError) {
+    return createInvalidResponseFailure()
+  }
+
   if (!axios.isAxiosError(error)) {
     return undefined
   }
@@ -75,10 +115,7 @@ export function createNetworkFailure(
   const code = getBoundedIdentifier(statusData?.code) ?? transportCode
   const type = getBoundedIdentifier(statusData?.type)
   const service = getBoundedIdentifier(statusData?.service)
-  const timedOut =
-    transportCode === 'ECONNABORTED' || transportCode === 'ETIMEDOUT'
-  const kind: NetworkFailureKind =
-    status != null ? 'http' : timedOut ? 'timeout' : 'network'
+  const kind = getNetworkFailureKind(status, transportCode)
 
   return {
     kind,
@@ -87,15 +124,11 @@ export function createNetworkFailure(
     ...(code != null ? { code } : {}),
     ...(type != null ? { type } : {}),
     ...(service != null ? { service } : {}),
-    message:
-      kind === 'http'
-        ? 'Upstream HTTP request failed'
-        : kind === 'timeout'
-          ? 'Upstream request timed out'
-          : 'Upstream network request failed'
+    message: getNetworkFailureMessage(kind)
   }
 }
 
+/** Creates the safe diagnostic used for an invalid upstream payload. */
 export function createInvalidResponseFailure(): NetworkFailure {
   return {
     kind: 'invalid-response',

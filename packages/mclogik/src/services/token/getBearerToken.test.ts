@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { describe, expect, it, vi } from 'vitest'
 
+import { InvalidUpstreamResponseError } from '../../clients/networkFailure'
 import { APIType } from '../../types'
 
 import { getBearerToken } from './getBearerToken'
@@ -34,4 +35,15 @@ describe('getBearerToken', () => {
       'Token endpoint failed'
     )
   })
+
+  it.each([null, 'invalid'])(
+    'rejects a malformed token response body',
+    async (data) => {
+      vi.mocked(axios.post).mockResolvedValue({ data })
+
+      await expect(getBearerToken(APIType.US)).rejects.toBeInstanceOf(
+        InvalidUpstreamResponseError
+      )
+    }
+  )
 })

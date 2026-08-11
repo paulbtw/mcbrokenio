@@ -56,7 +56,7 @@ function createAvailability() {
 
 function createDependencies(stores: Pos[]) {
   const dependencies: AvailabilityPollingDependencies = {
-    getMarketCountries: vi.fn().mockReturnValue(['US']),
+    getMarketCodes: vi.fn().mockReturnValue(['US']),
     findEligibleStores: vi.fn().mockResolvedValue(stores),
     fetchProductAvailabilityBatch: vi.fn(),
     persistUpdates: vi.fn().mockResolvedValue(undefined),
@@ -76,7 +76,11 @@ describe('AvailabilityPollingModule', () => {
     const skipped = createStore({ id: 'US-skip', country: 'CA' })
     const dependencies = createDependencies([success, failed, skipped])
     vi.mocked(dependencies.fetchProductAvailabilityBatch).mockResolvedValue([
-      { outcome: 'success', store: success, availability: createAvailability() },
+      {
+        outcome: 'success',
+        store: success,
+        availability: createAvailability()
+      },
       {
         outcome: 'failure',
         store: failed,
@@ -100,17 +104,16 @@ describe('AvailabilityPollingModule', () => {
 
     const result = await module.poll({
       apiType: APIType.US,
-      countryList: [UsLocations.US]
+      catalogScopes: [UsLocations.US]
     })
 
-    expect(dependencies.getMarketCountries).toHaveBeenCalledWith(
-      APIType.US,
-      [UsLocations.US]
-    )
+    expect(dependencies.getMarketCodes).toHaveBeenCalledWith(APIType.US, [
+      UsLocations.US
+    ])
     expect(dependencies.findEligibleStores).toHaveBeenCalledWith(['US'])
     expect(dependencies.fetchProductAvailabilityBatch).toHaveBeenCalledWith({
       apiType: APIType.US,
-      countryList: [UsLocations.US],
+      catalogScopes: [UsLocations.US],
       stores: [success, failed, skipped]
     })
     expect(dependencies.persistUpdates).toHaveBeenCalledWith([
@@ -131,7 +134,7 @@ describe('AvailabilityPollingModule', () => {
       successCount: 1,
       failedCount: 1,
       skippedCount: 1,
-      countryBreakdown: {
+      marketBreakdown: {
         US: { total: 2, success: 1, failed: 1, skipped: 0 },
         CA: { total: 1, success: 0, failed: 0, skipped: 1 }
       },
@@ -209,14 +212,12 @@ describe('AvailabilityPollingModule', () => {
     const dependencies = createDependencies([])
     const module = new AvailabilityPollingModule(dependencies)
 
-    await expect(
-      module.poll({ apiType: APIType.US })
-    ).resolves.toEqual({
+    await expect(module.poll({ apiType: APIType.US })).resolves.toEqual({
       totalStores: 0,
       successCount: 0,
       failedCount: 0,
       skippedCount: 0,
-      countryBreakdown: {},
+      marketBreakdown: {},
       durationMs: 250
     })
     expect(dependencies.fetchProductAvailabilityBatch).not.toHaveBeenCalled()

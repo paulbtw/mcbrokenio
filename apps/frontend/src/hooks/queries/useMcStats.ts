@@ -5,6 +5,7 @@ import {
   publishedAvailabilitySnapshotQueryKey,
 } from "./usePublishedAvailabilitySnapshot";
 
+/** Reads statistics from the shared published availability snapshot query. */
 export const useMcStats = () => {
   return useQuery({
     queryKey: publishedAvailabilitySnapshotQueryKey,

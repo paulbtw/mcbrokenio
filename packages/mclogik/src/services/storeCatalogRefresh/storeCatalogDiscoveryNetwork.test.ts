@@ -1,17 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { InvalidUpstreamResponseError } from '../../clients/networkFailure'
 import { type RequestLimiter } from '../../constants/RateLimit'
-import { type MarketDefinition } from '../../markets/MarketDefinitions'
-import {
-  APIType,
-  IceType,
-  type ILocation,
-  UsLocations
-} from '../../types'
+import { type MarketDefinition } from '../../markets/marketDefinitions'
+import { APIType, IceType, type ILocation, UsLocations } from '../../types'
 
 import {
   StoreCatalogDiscoveryNetwork,
-  type StoreCatalogDiscoveryNetworkDependencies} from './StoreCatalogDiscoveryNetwork'
+  type StoreCatalogDiscoveryNetworkDependencies
+} from './storeCatalogDiscoveryNetwork'
 
 const TEST_LIMITER: RequestLimiter = {
   concurrentRequests: 4,
@@ -86,7 +83,10 @@ function axiosFailure(status = 503) {
 
 describe('StoreCatalogDiscoveryNetwork', () => {
   it('authenticates once, owns location planning, and returns stable request order', async () => {
-    const markets = [createMarket(UsLocations.US), createMarket(UsLocations.US2)]
+    const markets = [
+      createMarket(UsLocations.US),
+      createMarket(UsLocations.US2)
+    ]
     const { dependencies, discoverFromLocation } = createDependencies(markets)
     let releaseFirst!: () => void
     const firstGate = new Promise<void>((resolve) => {
@@ -106,50 +106,47 @@ describe('StoreCatalogDiscoveryNetwork', () => {
 
     const batch = await network.discoverBatch({
       apiType: APIType.US,
-      countryList: [UsLocations.US, UsLocations.US2]
+      catalogScopes: [UsLocations.US, UsLocations.US2]
     })
 
     expect(dependencies.loadRefreshContext).toHaveBeenCalledTimes(1)
     expect(dependencies.generateLocationMesh).toHaveBeenCalledTimes(2)
     expect(discoverFromLocation).toHaveBeenCalledTimes(2)
-    expect(batch.outcomes.map((outcome) => outcome.scope)).toEqual([
+    expect(batch.outcomes.map((outcome) => outcome.catalogScope)).toEqual([
       UsLocations.US,
       UsLocations.US2
     ])
     expect(batch.scopes).toEqual([
-      { country: 'US', scope: UsLocations.US, plannedRequests: 1 },
-      { country: 'US', scope: UsLocations.US2, plannedRequests: 1 }
+      { market: 'US', catalogScope: UsLocations.US, plannedRequests: 1 },
+      { market: 'US', catalogScope: UsLocations.US2, plannedRequests: 1 }
     ])
-    expect(batch.requestsByCountry).toEqual({ US: 2 })
+    expect(batch.requestsByMarket).toEqual({ US: 2 })
   })
 
   it('returns expected failures as sanitized values without raw Axios data', async () => {
     const { dependencies, discoverFromLocation } = createDependencies()
     discoverFromLocation.mockRejectedValue(
-      Object.assign(
-        new Error('https://secret.example?key=url-secret'),
-        {
-          name: 'AxiosError',
-          isAxiosError: true,
-          code: 'ERR_BAD_RESPONSE',
-          config: {
-            url: 'https://secret.example?key=url-secret',
-            headers: { authorization: 'Bearer bearer-secret' }
-          },
-          response: {
-            status: 429,
-            data: {
-              status: {
-                code: 'RATE_LIMIT',
-                type: 'TooManyRequests',
-                service: 'store-search',
-                message: 'client-secret'
-              },
-              raw: 'response-secret'
-            }
+      Object.assign(new Error('https://secret.example?key=url-secret'), {
+        name: 'AxiosError',
+        isAxiosError: true,
+        code: 'ERR_BAD_RESPONSE',
+        config: {
+          url: 'https://secret.example?key=url-secret',
+          headers: { authorization: 'Bearer bearer-secret' }
+        },
+        response: {
+          status: 429,
+          data: {
+            status: {
+              code: 'RATE_LIMIT',
+              type: 'TooManyRequests',
+              service: 'store-search',
+              message: 'client-secret'
+            },
+            raw: 'response-secret'
           }
         }
-      )
+      })
     )
     const network = new StoreCatalogDiscoveryNetwork(dependencies)
 
@@ -158,8 +155,8 @@ describe('StoreCatalogDiscoveryNetwork', () => {
     expect(batch.outcomes).toEqual([
       {
         index: 0,
-        country: 'US',
-        scope: UsLocations.US,
+        market: 'US',
+        catalogScope: UsLocations.US,
         stores: [],
         failure: {
           kind: 'http',
@@ -177,6 +174,44 @@ describe('StoreCatalogDiscoveryNetwork', () => {
     expect(serialized).not.toContain('bearer-secret')
     expect(serialized).not.toContain('client-secret')
     expect(serialized).not.toContain('response-secret')
+  })
+
+  it('returns malformed upstream payloads as typed invalid-response outcomes', async () => {
+    const { dependencies, discoverFromLocation } = createDependencies()
+    discoverFromLocation.mockRejectedValue(new InvalidUpstreamResponseError())
+    const network = new StoreCatalogDiscoveryNetwork(dependencies)
+
+    const batch = await network.discoverBatch({ apiType: APIType.US })
+
+    expect(batch.outcomes).toEqual([
+      {
+        index: 0,
+        market: 'US',
+        catalogScope: UsLocations.US,
+        stores: [],
+        failure: {
+          kind: 'invalid-response',
+          retryable: true,
+          message: 'Upstream response was invalid'
+        }
+      }
+    ])
+  })
+
+  it('sanitizes expected authentication transport failures', async () => {
+    const { dependencies } = createDependencies()
+    vi.mocked(dependencies.loadRefreshContext).mockRejectedValue(
+      Object.assign(new Error('Bearer secret at https://private.example'), {
+        name: 'AxiosError',
+        isAxiosError: true,
+        config: { headers: { authorization: 'Bearer secret' } }
+      })
+    )
+    const network = new StoreCatalogDiscoveryNetwork(dependencies)
+
+    await expect(
+      network.discoverBatch({ apiType: APIType.US })
+    ).rejects.toThrow('Store Catalog authentication request failed')
   })
 
   it('opens the circuit breaker after repeated expected failures', async () => {

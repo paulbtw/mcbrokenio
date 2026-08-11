@@ -4,17 +4,19 @@ import { type StoreProductAvailability } from '../../clients/ProductAvailability
 import { type BatchFailureSample, type BatchSummary } from '../../sentry'
 import { type APIType, type Locations, type UpdatePos } from '../../types'
 
-import { type ProductAvailabilityBatchOutcome } from './ProductAvailabilityNetwork'
+import { type ProductAvailabilityBatchOutcome } from './productAvailabilityNetwork'
 
 const ERROR_THRESHOLD = 3
 const MAX_FAILURE_SAMPLES = 5
 
 export interface AvailabilityPollRequest {
   apiType: APIType
+  catalogScopes?: Locations[]
+  /** @deprecated Use `catalogScopes`. Retained at the Lambda input boundary. */
   countryList?: Locations[]
 }
 
-export interface AvailabilityPollCountryResult {
+export interface AvailabilityPollMarketResult {
   total: number
   success: number
   failed: number
@@ -26,17 +28,17 @@ export interface AvailabilityPollResult {
   successCount: number
   failedCount: number
   skippedCount: number
-  countryBreakdown: Record<string, AvailabilityPollCountryResult>
+  marketBreakdown: Record<string, AvailabilityPollMarketResult>
   durationMs: number
 }
 
 export interface AvailabilityPollingDependencies {
-  getMarketCountries(apiType: APIType, countryList?: Locations[]): string[]
-  findEligibleStores(countries: string[]): Promise<Pos[]>
+  getMarketCodes(apiType: APIType, catalogScopes?: Locations[]): string[]
+  findEligibleStores(marketCodes: string[]): Promise<AvailabilityPollStore[]>
   fetchProductAvailabilityBatch(input: {
     apiType: APIType
-    countryList?: Locations[]
-    stores: Pos[]
+    catalogScopes?: Locations[]
+    stores: AvailabilityPollStore[]
   }): Promise<ProductAvailabilityBatchOutcome[]>
   persistUpdates(updates: UpdatePos[]): Promise<void>
   addBreadcrumb(
@@ -48,9 +50,14 @@ export interface AvailabilityPollingDependencies {
   now(): number
 }
 
+type AvailabilityPollStore = Pick<
+  Pos,
+  'id' | 'nationalStoreNumber' | 'country' | 'errorCounter'
+>
+
 function createFailureSignature(
   apiType: APIType,
-  country: string,
+  marketCode: string,
   failure: ProductAvailabilityBatchOutcome & { outcome: 'failure' }
 ): string {
   const { kind, retryable, status, code, type, service, message } =
@@ -58,7 +65,7 @@ function createFailureSignature(
 
   return [
     apiType,
-    country,
+    marketCode,
     kind,
     retryable,
     status ?? 'unknown',
@@ -86,7 +93,7 @@ function createBatchFailureSample(
 }
 
 function createSuccessfulUpdate(
-  store: Pos,
+  store: AvailabilityPollStore,
   productAvailability: StoreProductAvailability
 ): UpdatePos {
   const { milkshake, mcFlurry, mcSundae, custom } = productAvailability
@@ -113,7 +120,7 @@ function createSuccessfulUpdate(
   }
 }
 
-function createFailedUpdate(store: Pos): UpdatePos {
+function createFailedUpdate(store: AvailabilityPollStore): UpdatePos {
   const errorCounter = store.errorCounter + 1
 
   return {
@@ -123,7 +130,7 @@ function createFailedUpdate(store: Pos): UpdatePos {
   }
 }
 
-function createCountryResult(): AvailabilityPollCountryResult {
+function createMarketResult(): AvailabilityPollMarketResult {
   return {
     total: 0,
     success: 0,
@@ -139,12 +146,10 @@ export class AvailabilityPollingModule {
     request: AvailabilityPollRequest
   ): Promise<AvailabilityPollResult> {
     const startTime = this.dependencies.now()
-    const { apiType, countryList } = request
-    const countries = this.dependencies.getMarketCountries(
-      apiType,
-      countryList
-    )
-    const stores = await this.dependencies.findEligibleStores(countries)
+    const { apiType } = request
+    const catalogScopes = request.catalogScopes ?? request.countryList
+    const marketCodes = this.dependencies.getMarketCodes(apiType, catalogScopes)
+    const stores = await this.dependencies.findEligibleStores(marketCodes)
 
     this.dependencies.addBreadcrumb('Starting availability poll', {
       apiType,
@@ -155,20 +160,19 @@ export class AvailabilityPollingModule {
       return this.createResult({}, startTime)
     }
 
-    const countryBreakdown: Record<string, AvailabilityPollCountryResult> = {}
+    const marketBreakdown: Record<string, AvailabilityPollMarketResult> = {}
     for (const store of stores) {
-      const countryResult =
-        countryBreakdown[store.country] ?? createCountryResult()
-      countryResult.total++
-      countryBreakdown[store.country] = countryResult
+      const marketResult =
+        marketBreakdown[store.country] ?? createMarketResult()
+      marketResult.total++
+      marketBreakdown[store.country] = marketResult
     }
 
-    const outcomes =
-      await this.dependencies.fetchProductAvailabilityBatch({
-        apiType,
-        countryList,
-        stores
-      })
+    const outcomes = await this.dependencies.fetchProductAvailabilityBatch({
+      apiType,
+      catalogScopes,
+      stores
+    })
     if (outcomes.length !== stores.length) {
       throw new Error('Product availability batch returned incomplete outcomes')
     }
@@ -177,8 +181,8 @@ export class AvailabilityPollingModule {
     const samplesBySignature = new Map<string, BatchFailureSample>()
 
     for (const outcome of outcomes) {
-      const countryResult = countryBreakdown[outcome.store.country]
-      if (countryResult == null) {
+      const marketResult = marketBreakdown[outcome.store.country]
+      if (marketResult == null) {
         throw new Error(
           `Product availability batch returned unknown store ${outcome.store.id}`
         )
@@ -186,13 +190,13 @@ export class AvailabilityPollingModule {
 
       switch (outcome.outcome) {
         case 'success':
-          countryResult.success++
+          marketResult.success++
           updates.push(
             createSuccessfulUpdate(outcome.store, outcome.availability)
           )
           break
         case 'failure': {
-          countryResult.failed++
+          marketResult.failed++
           updates.push(createFailedUpdate(outcome.store))
           const sample = createBatchFailureSample(apiType, outcome)
 
@@ -206,7 +210,7 @@ export class AvailabilityPollingModule {
           break
         }
         case 'skipped':
-          countryResult.skipped++
+          marketResult.skipped++
           break
       }
     }
@@ -215,15 +219,15 @@ export class AvailabilityPollingModule {
       await this.dependencies.persistUpdates(updates)
     }
 
-    const result = this.createResult(countryBreakdown, startTime)
+    const result = this.createResult(marketBreakdown, startTime)
     this.dependencies.captureBatchSummary({
       apiType,
       totalStores: result.totalStores,
       successCount: result.successCount,
       failedCount: result.failedCount,
       countryBreakdown: Object.fromEntries(
-        Object.entries(countryBreakdown).map(([country, stats]) => [
-          country,
+        Object.entries(marketBreakdown).map(([marketCode, stats]) => [
+          marketCode,
           { total: stats.total, failed: stats.failed }
         ])
       ),
@@ -235,23 +239,23 @@ export class AvailabilityPollingModule {
   }
 
   private createResult(
-    countryBreakdown: Record<string, AvailabilityPollCountryResult>,
+    marketBreakdown: Record<string, AvailabilityPollMarketResult>,
     startTime: number
   ): AvailabilityPollResult {
-    const countryResults = Object.values(countryBreakdown)
+    const marketResults = Object.values(marketBreakdown)
 
     return {
-      totalStores: countryResults.reduce((sum, stats) => sum + stats.total, 0),
-      successCount: countryResults.reduce(
+      totalStores: marketResults.reduce((sum, stats) => sum + stats.total, 0),
+      successCount: marketResults.reduce(
         (sum, stats) => sum + stats.success,
         0
       ),
-      failedCount: countryResults.reduce((sum, stats) => sum + stats.failed, 0),
-      skippedCount: countryResults.reduce(
+      failedCount: marketResults.reduce((sum, stats) => sum + stats.failed, 0),
+      skippedCount: marketResults.reduce(
         (sum, stats) => sum + stats.skipped,
         0
       ),
-      countryBreakdown,
+      marketBreakdown,
       durationMs: this.dependencies.now() - startTime
     }
   }

@@ -10,7 +10,7 @@ import {
 import {
   getExpectedCatalogScopes,
   selectMarketDefinitions
-} from '../../markets/MarketDefinitions'
+} from '../../markets/marketDefinitions'
 import { createCatalogLifecycleRepository } from '../../repositories'
 import { APIType } from '../../types'
 import { getCatalogCycleId } from '../../utils/catalogCycle'
@@ -18,7 +18,7 @@ import { generateCoordinatesMesh } from '../../utils/generateCoordinatesMesh'
 import { getBearerToken } from '../token/getBearerToken'
 import { getClientId } from '../token/getClientId'
 
-import { StoreCatalogDiscoveryNetwork } from './StoreCatalogDiscoveryNetwork'
+import { StoreCatalogDiscoveryNetwork } from './storeCatalogDiscoveryNetwork'
 import {
   StoreCatalogRefreshModule,
   type StoreCatalogRefreshRequest,
@@ -67,12 +67,12 @@ const storeDiscoveryClient = createStoreDiscoveryClient()
 const catalogLifecycleRepository = createCatalogLifecycleRepository(prisma)
 
 const storeCatalogDiscoveryNetwork = new StoreCatalogDiscoveryNetwork({
-  async loadRefreshContext(apiType, countryList) {
+  async loadRefreshContext(apiType, catalogScopes) {
     const needsCredentials = apiType !== APIType.EL
     return {
       token: needsCredentials ? await getBearerToken(apiType) : '',
       clientId: needsCredentials ? getClientId(apiType) : '',
-      markets: selectMarketDefinitions(apiType, countryList)
+      markets: selectMarketDefinitions(apiType, catalogScopes)
     }
   },
   generateLocationMesh(countryInfo, intervalKilometers) {
@@ -115,7 +115,7 @@ export async function refreshStoreCatalog(
 }
 
 export type {
-  StoreCatalogCountryResult,
+  StoreCatalogMarketResult,
   StoreCatalogRefreshRequest,
   StoreCatalogRefreshResult
 } from './StoreCatalogRefreshModule'

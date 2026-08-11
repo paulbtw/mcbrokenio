@@ -1,17 +1,15 @@
 import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
+import { InvalidUpstreamResponseError } from '../../clients/networkFailure'
 import { type RequestLimiter } from '../../constants/RateLimit'
-import { type MarketDefinition } from '../../markets/MarketDefinitions'
-import {
-  APIType,
-  IceType,
-  UsLocations
-} from '../../types'
+import { type MarketDefinition } from '../../markets/marketDefinitions'
+import { APIType, IceType, UsLocations } from '../../types'
 
 import {
   ProductAvailabilityNetwork,
-  type ProductAvailabilityNetworkDependencies} from './ProductAvailabilityNetwork'
+  type ProductAvailabilityNetworkDependencies
+} from './productAvailabilityNetwork'
 
 const TEST_LIMITER: RequestLimiter = {
   concurrentRequests: 4,
@@ -92,8 +90,7 @@ function createDependencies() {
 
 describe('ProductAvailabilityNetwork', () => {
   it('authenticates once, applies the regional batch, and returns stable input order', async () => {
-    const { dependencies, fetchStoreProductAvailability } =
-      createDependencies()
+    const { dependencies, fetchStoreProductAvailability } = createDependencies()
     let releaseFirst!: () => void
     const firstGate = new Promise<void>((resolve) => {
       releaseFirst = resolve
@@ -111,7 +108,7 @@ describe('ProductAvailabilityNetwork', () => {
 
     const outcomes = await network.fetchBatch({
       apiType: APIType.US,
-      countryList: [UsLocations.US],
+      catalogScopes: [UsLocations.US],
       stores
     })
 
@@ -119,9 +116,9 @@ describe('ProductAvailabilityNetwork', () => {
     expect(dependencies.loadPollContext).toHaveBeenCalledWith(APIType.US, [
       UsLocations.US
     ])
-    expect(
-      dependencies.createProductAvailabilityFetcher
-    ).toHaveBeenCalledTimes(1)
+    expect(dependencies.createProductAvailabilityFetcher).toHaveBeenCalledTimes(
+      1
+    )
     expect(fetchStoreProductAvailability).toHaveBeenCalledTimes(2)
     expect(fetchStoreProductAvailability).toHaveBeenCalledWith(
       stores[0],
@@ -139,8 +136,7 @@ describe('ProductAvailabilityNetwork', () => {
   })
 
   it('returns expected request failures as a sanitized allowlisted value', async () => {
-    const { dependencies, fetchStoreProductAvailability } =
-      createDependencies()
+    const { dependencies, fetchStoreProductAvailability } = createDependencies()
     fetchStoreProductAvailability.mockRejectedValue(
       Object.assign(
         new Error('Request to https://secret.example?token=url-secret failed'),
@@ -196,6 +192,50 @@ describe('ProductAvailabilityNetwork', () => {
     expect(serialized).not.toContain('response-secret')
   })
 
+  it('returns malformed upstream payloads as typed invalid-response outcomes', async () => {
+    const { dependencies, fetchStoreProductAvailability } = createDependencies()
+    fetchStoreProductAvailability.mockRejectedValue(
+      new InvalidUpstreamResponseError()
+    )
+    const network = new ProductAvailabilityNetwork(dependencies)
+
+    await expect(
+      network.fetchBatch({
+        apiType: APIType.US,
+        stores: [createStore('US-1', '1')]
+      })
+    ).resolves.toEqual([
+      {
+        outcome: 'failure',
+        store: expect.objectContaining({ id: 'US-1' }),
+        failure: {
+          kind: 'invalid-response',
+          retryable: true,
+          message: 'Upstream response was invalid'
+        }
+      }
+    ])
+  })
+
+  it('sanitizes expected authentication transport failures', async () => {
+    const { dependencies } = createDependencies()
+    vi.mocked(dependencies.loadPollContext).mockRejectedValue(
+      Object.assign(new Error('Bearer secret at https://private.example'), {
+        name: 'AxiosError',
+        isAxiosError: true,
+        config: { headers: { authorization: 'Bearer secret' } }
+      })
+    )
+    const network = new ProductAvailabilityNetwork(dependencies)
+
+    await expect(
+      network.fetchBatch({
+        apiType: APIType.US,
+        stores: [createStore('US-1', '1')]
+      })
+    ).rejects.toThrow('Product Availability authentication request failed')
+  })
+
   it('rejects batch-wide authentication failures without producing outcomes', async () => {
     const { dependencies } = createDependencies()
     vi.mocked(dependencies.loadPollContext).mockRejectedValue(
@@ -209,14 +249,11 @@ describe('ProductAvailabilityNetwork', () => {
         stores: [createStore('US-1', '1')]
       })
     ).rejects.toThrow('Credential lookup failed')
-    expect(
-      dependencies.createProductAvailabilityFetcher
-    ).not.toHaveBeenCalled()
+    expect(dependencies.createProductAvailabilityFetcher).not.toHaveBeenCalled()
   })
 
   it('rejects programming defects instead of converting them to store health failures', async () => {
-    const { dependencies, fetchStoreProductAvailability } =
-      createDependencies()
+    const { dependencies, fetchStoreProductAvailability } = createDependencies()
     fetchStoreProductAvailability.mockRejectedValue(
       new TypeError('Unexpected response parser defect')
     )

@@ -4,9 +4,9 @@ import { APIType, UsLocations } from '../types'
 
 import {
   getExpectedCatalogScopes,
-  getMarketCountries,
+  getMarketCodes,
   selectMarketDefinitions
-} from './MarketDefinitions'
+} from './marketDefinitions'
 
 describe('MarketDefinitions', () => {
   it('selects a Catalog Scope while preserving its commercial Market', () => {
@@ -21,7 +21,7 @@ describe('MarketDefinitions', () => {
 
   it('deduplicates split Catalog Scopes when selecting Market countries', () => {
     expect(
-      getMarketCountries(APIType.US, [UsLocations.US, UsLocations.US2])
+      getMarketCodes(APIType.US, [UsLocations.US, UsLocations.US2])
     ).toEqual([UsLocations.US])
   })
 

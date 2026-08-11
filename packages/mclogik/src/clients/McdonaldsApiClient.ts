@@ -2,6 +2,8 @@ import axios, { type AxiosInstance } from 'axios'
 
 import { type APIType } from '../types'
 
+import { InvalidUpstreamResponseError } from './networkFailure'
+
 /**
  * Response from the McDonald's API containing outage information
  */
@@ -58,26 +60,36 @@ export interface ApiClientConfig {
   storeIdType: string
 }
 
-/**
- * Response format for EU/US/AU APIs
- */
-interface RestaurantInfoResponse {
-  response?: {
-    restaurant?: {
-      catalog?: {
-        outageProductCodes?: string[]
-      }
-    }
+type JsonRecord = Record<string, unknown>
+
+function getRecord(value: unknown): JsonRecord | undefined {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    return value as JsonRecord
   }
+
+  return undefined
 }
 
-/**
- * Response format for EL API
- */
-interface RestaurantStatusResponse {
-  productOutages: {
-    productIDs: number[]
+function requireStringArray(value: unknown): string[] {
+  if (
+    !Array.isArray(value) ||
+    !value.every((item): item is string => typeof item === 'string')
+  ) {
+    throw new InvalidUpstreamResponseError()
   }
+
+  return value
+}
+
+function requireNumberArray(value: unknown): number[] {
+  if (
+    !Array.isArray(value) ||
+    !value.every((item): item is number => typeof item === 'number')
+  ) {
+    throw new InvalidUpstreamResponseError()
+  }
+
+  return value
 }
 
 /**
@@ -100,7 +112,7 @@ export class StandardApiClient implements McdonaldsApiClient {
   ): Promise<OutageResponse> {
     const url = `${this.config.baseUrl}/exp/v1/restaurant/${storeNumber}?filter=full&storeUniqueIdType=${this.config.storeIdType}`
 
-    const { data } = await this.httpClient.get<RestaurantInfoResponse>(url, {
+    const { data } = await this.httpClient.get<unknown>(url, {
       headers: {
         authorization: headers.authorization,
         'mcd-clientId': headers.clientId,
@@ -113,8 +125,10 @@ export class StandardApiClient implements McdonaldsApiClient {
       }
     })
 
-    const outageProductCodes =
-      data.response?.restaurant?.catalog?.outageProductCodes ?? []
+    const response = getRecord(getRecord(data)?.response)
+    const restaurant = getRecord(response?.restaurant)
+    const catalog = getRecord(restaurant?.catalog)
+    const outageProductCodes = requireStringArray(catalog?.outageProductCodes)
 
     return { outageProductCodes }
   }
@@ -138,21 +152,19 @@ export class ElApiClient implements McdonaldsApiClient {
   ): Promise<OutageResponse> {
     const url = `${this.baseUrl}/exp/v1/menu/gmal/restaurants/${storeNumber}/status`
 
-    const { data } = await this.httpClient.get<RestaurantStatusResponse>(
-      url,
-      {
-        headers: {
-          authorization: headers.authorization,
-          'mcd-clientid': headers.clientId,
-          'mcd-sourceapp': 'GMAL'
-        }
+    const { data } = await this.httpClient.get<unknown>(url, {
+      headers: {
+        authorization: headers.authorization,
+        'mcd-clientid': headers.clientId,
+        'mcd-sourceapp': 'GMAL'
       }
-    )
+    })
 
     // EL responses use numbers; normalize to product-code strings.
-    const outageProductCodes = (data.productOutages?.productIDs ?? []).map(
-      (code) => code.toString()
-    )
+    const productOutages = getRecord(getRecord(data)?.productOutages)
+    const outageProductCodes = requireNumberArray(
+      productOutages?.productIDs
+    ).map((code) => code.toString())
 
     return { outageProductCodes }
   }

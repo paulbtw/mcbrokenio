@@ -6,6 +6,7 @@ export const publishedAvailabilitySnapshotQueryKey = [
   "publishedAvailabilitySnapshot",
 ] as const;
 
+/** Fetches the canonical availability snapshot published by the backend. */
 export async function fetchPublishedAvailabilitySnapshot(
   signal?: AbortSignal,
 ): Promise<PublishedAvailabilitySnapshot> {
@@ -17,6 +18,7 @@ export async function fetchPublishedAvailabilitySnapshot(
   return data;
 }
 
+/** React Query function shared by all published snapshot projections. */
 export const publishedAvailabilitySnapshotQueryFn: QueryFunction<
   PublishedAvailabilitySnapshot,
   typeof publishedAvailabilitySnapshotQueryKey

@@ -49,9 +49,7 @@ function createDependencies(stores: Pos[]) {
       publicationOrder.push(key)
       published.set(key, value)
     }),
-    currentDate: vi
-      .fn()
-      .mockReturnValue(new Date('2026-08-11T08:00:00.000Z')),
+    currentDate: vi.fn().mockReturnValue(new Date('2026-08-11T08:00:00.000Z')),
     now: vi.fn().mockReturnValueOnce(1_000).mockReturnValue(1_125)
   }
 
@@ -161,6 +159,7 @@ describe('PublishedAvailabilitySnapshotModule', () => {
       storesPublished: 3,
       statisticsRowsPublished: 3,
       filesPublished: ['snapshot.json', 'marker.json', 'stats.json'],
+      schemaVersion: PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
       publishedAt: '2026-08-11T08:00:00.000Z',
       durationMs: 125
     })

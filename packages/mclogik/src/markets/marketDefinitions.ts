@@ -1,9 +1,5 @@
 import { CountryInfos } from '../constants/CountryInfos'
-import {
-  type APIType,
-  type ICountryInfos,
-  type Locations
-} from '../types'
+import { type APIType, type ICountryInfos, type Locations } from '../types'
 
 export interface MarketDefinition extends ICountryInfos {
   catalogScope: Locations
@@ -22,8 +18,7 @@ export function selectMarketDefinitions(
     .filter(
       ([scope, definition]) =>
         definition.getStores.api === apiType &&
-        (catalogScopes == null ||
-          catalogScopes.includes(scope as Locations))
+        (catalogScopes == null || catalogScopes.includes(scope as Locations))
     )
     .map(([scope, definition]) => ({
       ...definition,
@@ -31,7 +26,8 @@ export function selectMarketDefinitions(
     }))
 }
 
-export function getMarketCountries(
+/** Returns the distinct persisted market codes selected for an API. */
+export function getMarketCodes(
   apiType: APIType,
   catalogScopes?: Locations[]
 ): string[] {
@@ -44,11 +40,12 @@ export function getMarketCountries(
   )
 }
 
+/** Returns every Catalog Scope that must complete a Market refresh cycle. */
 export function getExpectedCatalogScopes(
   apiType: APIType,
-  country: string
+  marketCode: string
 ): Locations[] {
   return selectMarketDefinitions(apiType)
-    .filter((definition) => definition.country === country)
+    .filter((definition) => definition.country === marketCode)
     .map((definition) => definition.catalogScope)
 }

@@ -24,6 +24,7 @@ export interface PublishAvailabilitySnapshotResult {
   storesPublished: number
   statisticsRowsPublished: number
   filesPublished: ['snapshot.json', 'marker.json', 'stats.json']
+  schemaVersion: typeof PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION
   publishedAt: string
   durationMs: number
 }
@@ -112,11 +113,7 @@ function getColorDot(
 function createGeoJson(stores: PublishedAvailabilityStore[]): GeoJson {
   const features = stores.map<GeoJsonPos>((store) => ({
     geometry: {
-      coordinates: [
-        Number(store.longitude),
-        Number(store.latitude),
-        0
-      ],
+      coordinates: [Number(store.longitude), Number(store.latitude), 0],
       type: 'Point'
     },
     properties: {
@@ -212,10 +209,7 @@ function addStoreToStatistics(
 function createPublishedStatistics(
   stores: PublishedAvailabilityStore[]
 ): PublishedAvailabilityStatistics[] {
-  const statisticsByCountry = new Map<
-    string,
-    PublishedAvailabilityStatistics
-  >()
+  const statisticsByCountry = new Map<string, PublishedAvailabilityStatistics>()
   let aggregate = createStatisticsRow('UNKNOWN')
 
   for (const store of stores) {
@@ -257,6 +251,7 @@ export class PublishedAvailabilitySnapshotModule {
       storesPublished: stores.length,
       statisticsRowsPublished: statistics.length,
       filesPublished: ['snapshot.json', 'marker.json', 'stats.json'],
+      schemaVersion: PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
       publishedAt,
       durationMs: this.dependencies.now() - startTime
     }

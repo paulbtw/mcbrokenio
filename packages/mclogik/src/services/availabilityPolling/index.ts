@@ -9,17 +9,15 @@ import {
   type RequestLimiter
 } from '../../constants/RateLimit'
 import {
-  getMarketCountries,
+  getMarketCodes,
   selectMarketDefinitions
-} from '../../markets/MarketDefinitions'
+} from '../../markets/marketDefinitions'
 import {
   addBreadcrumb,
   type BatchFailureSample,
   captureBatchSummary
 } from '../../sentry'
-import { APIType, type UpdatePos } from '../../types'
-import { chunkArray } from '../../utils/chunkArray'
-import { getPosByCountries } from '../../utils/getPosByCountries'
+import { APIType } from '../../types'
 import { getBearerToken } from '../token/getBearerToken'
 import { getClientId } from '../token/getClientId'
 
@@ -28,11 +26,8 @@ import {
   type AvailabilityPollRequest,
   type AvailabilityPollResult
 } from './AvailabilityPollingModule'
-import { ProductAvailabilityNetwork } from './ProductAvailabilityNetwork'
-
-const PERSISTENCE_TRANSACTION_BATCH_SIZE = 100
-// A batch performs sequential writes and may cross regions to reach PostgreSQL.
-const PERSISTENCE_TRANSACTION_TIMEOUT_MS = 30_000
+import { PrismaAvailabilityPollPersistence } from './availabilityPollPersistence'
+import { ProductAvailabilityNetwork } from './productAvailabilityNetwork'
 
 function getRequestLimiter(apiType: APIType): RequestLimiter {
   switch (apiType) {
@@ -49,60 +44,16 @@ function getRequestLimiter(apiType: APIType): RequestLimiter {
   }
 }
 
-async function persistUpdates(updates: UpdatePos[]): Promise<void> {
-  const now = new Date()
-
-  const validatedUpdates = updates.map((update) => {
-    if (typeof update.id !== 'string') {
-      throw new Error('Availability update is missing a store id')
-    }
-
-    return { ...update, id: update.id }
-  })
-
-  const updateBatches = chunkArray(
-    validatedUpdates,
-    PERSISTENCE_TRANSACTION_BATCH_SIZE
-  )
-
-  for (const batch of updateBatches) {
-    await prisma.$transaction(
-      batch.map((update) =>
-        prisma.pos.update({
-          where: { id: update.id },
-          data: {
-            mcFlurryCount: update.mcFlurryCount,
-            mcFlurryError: update.mcFlurryError,
-            mcFlurryStatus: update.mcFlurryStatus,
-            mcSundaeCount: update.mcSundaeCount,
-            mcSundaeError: update.mcSundaeError,
-            mcSundaeStatus: update.mcSundaeStatus,
-            milkshakeCount: update.milkshakeCount,
-            milkshakeError: update.milkshakeError,
-            milkshakeStatus: update.milkshakeStatus,
-            customItems: update.customItems,
-            errorCounter: update.errorCounter,
-            isResponsive: update.isResponsive,
-            lastChecked: now,
-            updatedAt: now
-          }
-        })
-      ),
-      { timeout: PERSISTENCE_TRANSACTION_TIMEOUT_MS }
-    )
-  }
-}
-
 function logStoreFailure(sample: BatchFailureSample): void {
   console.error('Product availability request failed', sample)
 }
 
 const productAvailabilityNetwork = new ProductAvailabilityNetwork({
-  async loadPollContext(apiType, countryList) {
+  async loadPollContext(apiType, catalogScopes) {
     return {
       token: await getBearerToken(apiType),
       clientId: getClientId(apiType),
-      markets: selectMarketDefinitions(apiType, countryList)
+      markets: selectMarketDefinitions(apiType, catalogScopes)
     }
   },
   createProductAvailabilityFetcher(apiType) {
@@ -111,12 +62,17 @@ const productAvailabilityNetwork = new ProductAvailabilityNetwork({
   getRequestLimiter
 })
 
+const availabilityPollPersistence = new PrismaAvailabilityPollPersistence(
+  prisma
+)
+
 const availabilityPollingModule = new AvailabilityPollingModule({
-  getMarketCountries,
-  findEligibleStores: async (countries) => getPosByCountries(prisma, countries),
+  getMarketCodes,
+  findEligibleStores: (marketCodes) =>
+    availabilityPollPersistence.loadEligibleStores(marketCodes),
   fetchProductAvailabilityBatch: (input) =>
     productAvailabilityNetwork.fetchBatch(input),
-  persistUpdates,
+  persistUpdates: (updates) => availabilityPollPersistence.saveUpdates(updates),
   addBreadcrumb,
   captureBatchSummary,
   logStoreFailure,
@@ -136,7 +92,7 @@ export async function pollAvailability(
 }
 
 export type {
-  AvailabilityPollCountryResult,
+  AvailabilityPollMarketResult,
   AvailabilityPollRequest,
   AvailabilityPollResult
 } from './AvailabilityPollingModule'
