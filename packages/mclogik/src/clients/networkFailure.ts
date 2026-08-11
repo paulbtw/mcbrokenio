@@ -1,19 +1,16 @@
 import axios from 'axios'
 
-import { getUpstreamRecord } from './upstreamResponse'
+import {
+  getUpstreamRecord,
+  InvalidUpstreamResponseError
+} from './upstreamResponse'
+
+export { InvalidUpstreamResponseError } from './upstreamResponse'
 
 const MAX_DIAGNOSTIC_FIELD_LENGTH = 120
 const SAFE_DIAGNOSTIC_IDENTIFIER = /^[A-Za-z0-9_.:-]+$/
 const SENSITIVE_DIAGNOSTIC_CONTENT =
   /authorization|bearer|credential|https?:|secret|token/i
-
-/** Marks a structurally invalid response from an upstream service. */
-export class InvalidUpstreamResponseError extends Error {
-  constructor() {
-    super('Upstream response was invalid')
-    this.name = 'InvalidUpstreamResponseError'
-  }
-}
 
 export type NetworkFailureKind =
   'http' | 'invalid-response' | 'network' | 'timeout'

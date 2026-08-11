@@ -153,6 +153,7 @@ packages/mclogik/src/
 │   │   └── index.ts             # Production facade and composition
 │   ├── availabilityPolling/     # Deep Availability Poll module
 │   │   ├── AvailabilityPollingModule.ts
+│   │   ├── availabilityPollTypes.ts # Shared poll store projection
 │   │   ├── availabilityPollPersistence.ts
 │   │   ├── productAvailabilityNetwork.ts
 │   │   └── index.ts             # Production facade and composition
@@ -167,7 +168,7 @@ packages/mclogik/src/
 ├── clients/
 │   ├── McdonaldsApiClient.ts    # Regional network adapters
 │   ├── networkFailure.ts        # Sanitized typed transport failures
-│   ├── upstreamResponse.ts      # Shared untrusted JSON object guard
+│   ├── upstreamResponse.ts      # Shared untrusted JSON guards and validators
 │   ├── ProductAvailability.ts   # Product Availability calculation
 │   └── StoreDiscoveryClient.ts  # Store discovery adapter
 ├── markets/

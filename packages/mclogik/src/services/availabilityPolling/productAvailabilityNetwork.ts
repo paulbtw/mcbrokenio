@@ -1,5 +1,3 @@
-import { type Pos } from '@mcbroken/db'
-
 import {
   createInvalidResponseFailure,
   createNetworkFailure,
@@ -12,6 +10,8 @@ import { type MarketDefinition } from '../../markets/marketDefinitions'
 import { type APIType, asMarketCode, type MarketCode } from '../../types'
 import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
 
+import { type AvailabilityPollStore } from './availabilityPollTypes'
+
 interface ProductAvailabilityPollContext {
   token: string
   clientId: string
@@ -20,7 +20,7 @@ interface ProductAvailabilityPollContext {
 
 interface StoreProductAvailabilityFetcher {
   fetchStoreProductAvailability(
-    store: ProductAvailabilityStore,
+    store: AvailabilityPollStore,
     market: MarketDefinition,
     token: string,
     clientId: string
@@ -41,34 +41,29 @@ export interface ProductAvailabilityNetworkDependencies {
 export interface ProductAvailabilityBatchRequest {
   apiType: APIType
   markets?: MarketCode[]
-  stores: ProductAvailabilityStore[]
+  stores: AvailabilityPollStore[]
 }
-
-export type ProductAvailabilityStore = Pick<
-  Pos,
-  'id' | 'nationalStoreNumber' | 'country' | 'errorCounter'
->
 
 export type ProductAvailabilityBatchOutcome =
   | {
       outcome: 'success'
-      store: ProductAvailabilityStore
+      store: AvailabilityPollStore
       availability: StoreProductAvailability
     }
   | {
       outcome: 'failure'
-      store: ProductAvailabilityStore
+      store: AvailabilityPollStore
       failure: NetworkFailure
     }
   | {
       outcome: 'skipped'
-      store: ProductAvailabilityStore
+      store: AvailabilityPollStore
       reason: 'market-not-configured'
     }
 
 interface PlannedAvailabilityRequest {
   index: number
-  store: ProductAvailabilityStore
+  store: AvailabilityPollStore
   market: MarketDefinition
 }
 

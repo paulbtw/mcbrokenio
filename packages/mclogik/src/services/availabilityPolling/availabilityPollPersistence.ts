@@ -1,19 +1,18 @@
-import { type Pos, type PrismaClient } from '@mcbroken/db'
+import { type PrismaClient } from '@mcbroken/db'
 
-import { type UpdatePos } from '../../types'
+import { type MarketCode, type UpdatePos } from '../../types'
 import { chunkArray } from '../../utils/chunkArray'
+
+import { type AvailabilityPollStore } from './availabilityPollTypes'
 
 const ELIGIBLE_STORE_LIMIT = 2000
 const TRANSACTION_BATCH_SIZE = 100
 const TRANSACTION_TIMEOUT_MS = 30_000
 
-export type AvailabilityPollStore = Pick<
-  Pos,
-  'id' | 'nationalStoreNumber' | 'country' | 'errorCounter'
->
-
 export interface AvailabilityPollPersistence {
-  loadEligibleStores(marketCodes: string[]): Promise<AvailabilityPollStore[]>
+  loadEligibleStores(
+    marketCodes: MarketCode[]
+  ): Promise<AvailabilityPollStore[]>
   saveUpdates(updates: UpdatePos[]): Promise<void>
 }
 
@@ -24,7 +23,7 @@ export class PrismaAvailabilityPollPersistence implements AvailabilityPollPersis
   ) {}
 
   async loadEligibleStores(
-    marketCodes: string[]
+    marketCodes: MarketCode[]
   ): Promise<AvailabilityPollStore[]> {
     return this.prisma.pos.findMany({
       where: {

@@ -66,6 +66,7 @@ function createDependencies(markets: MarketDefinition[] = [createMarket()]) {
   const discoverFromLocation = vi.fn().mockResolvedValue([createStore('US-1')])
   const dependencies: StoreCatalogDiscoveryNetworkDependencies = {
     loadRefreshContext: vi.fn().mockResolvedValue({
+      mode: 'authenticated-location',
       token: 'bearer-token',
       clientId: 'client-id',
       markets
@@ -90,6 +91,35 @@ function axiosFailure(status = 503) {
 }
 
 describe('StoreCatalogDiscoveryNetwork', () => {
+  it('uses a credential-free URL discovery context explicitly', async () => {
+    const { dependencies } = createDependencies()
+    vi.mocked(dependencies.loadRefreshContext).mockResolvedValue({
+      mode: 'url',
+      markets: [createMarket()]
+    })
+    const network = new StoreCatalogDiscoveryNetwork(dependencies)
+
+    await network.discoverBatch({ apiType: APIType.EL })
+
+    expect(dependencies.discoverFromUrl).toHaveBeenCalledTimes(1)
+    expect(dependencies.discoverFromLocation).not.toHaveBeenCalled()
+  })
+
+  it('rejects a credential-free context for location discovery', async () => {
+    const { dependencies } = createDependencies()
+    vi.mocked(dependencies.loadRefreshContext).mockResolvedValue({
+      mode: 'url',
+      markets: [createMarket()]
+    })
+    const network = new StoreCatalogDiscoveryNetwork(dependencies)
+
+    await expect(
+      network.discoverBatch({ apiType: APIType.US })
+    ).rejects.toThrow('Location discovery credentials are missing for US')
+    expect(dependencies.generateLocationMesh).not.toHaveBeenCalled()
+    expect(dependencies.discoverFromLocation).not.toHaveBeenCalled()
+  })
+
   it('authenticates once, owns location planning, and returns stable request order', async () => {
     const markets = [
       createMarket(UsLocations.US),

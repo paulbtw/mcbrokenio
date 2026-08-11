@@ -68,11 +68,16 @@ const catalogLifecycleRepository = createCatalogLifecycleRepository(prisma)
 
 const storeCatalogDiscoveryNetwork = new StoreCatalogDiscoveryNetwork({
   async loadRefreshContext(apiType, catalogScopes) {
-    const needsCredentials = apiType !== APIType.EL
+    const markets = selectMarketDefinitions(apiType, catalogScopes)
+    if (apiType === APIType.EL) {
+      return { mode: 'url', markets }
+    }
+
     return {
-      token: needsCredentials ? await getBearerToken(apiType) : '',
-      clientId: needsCredentials ? getClientId(apiType) : '',
-      markets: selectMarketDefinitions(apiType, catalogScopes)
+      mode: 'authenticated-location',
+      token: await getBearerToken(apiType),
+      clientId: getClientId(apiType),
+      markets
     }
   },
   generateLocationMesh(countryInfo, intervalKilometers) {

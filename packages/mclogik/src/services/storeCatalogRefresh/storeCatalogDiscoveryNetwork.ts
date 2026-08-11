@@ -16,11 +16,24 @@ import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
 
 const MAX_CONSECUTIVE_DISCOVERY_FAILURES = 24
 
-interface StoreCatalogRefreshContext {
-  token: string
-  clientId: string
+interface StoreCatalogRefreshContextBase {
   markets: MarketDefinition[]
 }
+
+interface AuthenticatedLocationRefreshContext
+  extends StoreCatalogRefreshContextBase {
+  mode: 'authenticated-location'
+  token: string
+  clientId: string
+}
+
+interface UrlRefreshContext extends StoreCatalogRefreshContextBase {
+  mode: 'url'
+}
+
+type StoreCatalogRefreshContext =
+  | AuthenticatedLocationRefreshContext
+  | UrlRefreshContext
 
 export interface StoreCatalogDiscoveryNetworkDependencies {
   loadRefreshContext(
@@ -88,6 +101,18 @@ function assertSupportedApiType(apiType: APIType): void {
   }
 }
 
+function assertCompatibleRefreshContext(
+  apiType: APIType,
+  context: StoreCatalogRefreshContext
+): void {
+  if (apiType === APIType.EL && context.mode !== 'url') {
+    throw new Error('URL discovery context is required for EL')
+  }
+  if (apiType !== APIType.EL && context.mode !== 'authenticated-location') {
+    throw new Error(`Location discovery credentials are missing for ${apiType}`)
+  }
+}
+
 export class StoreCatalogDiscoveryNetwork {
   constructor(
     private readonly dependencies: StoreCatalogDiscoveryNetworkDependencies
@@ -114,15 +139,18 @@ export class StoreCatalogDiscoveryNetwork {
       }
       throw error
     }
-    const { token, clientId, markets } = context
-    const needsCredentials = apiType !== APIType.EL
+    assertCompatibleRefreshContext(apiType, context)
+    const { markets } = context
 
-    if (needsCredentials && (typeof token !== 'string' || token.length === 0)) {
+    if (
+      context.mode === 'authenticated-location' &&
+      (typeof context.token !== 'string' || context.token.length === 0)
+    ) {
       throw new Error(`Bearer token is missing for ${apiType}`)
     }
     if (
-      needsCredentials &&
-      (typeof clientId !== 'string' || clientId.length === 0)
+      context.mode === 'authenticated-location' &&
+      (typeof context.clientId !== 'string' || context.clientId.length === 0)
     ) {
       throw new Error(`Client id is missing for ${apiType}`)
     }
@@ -132,7 +160,7 @@ export class StoreCatalogDiscoveryNetwork {
     let skippedMarkets = 0
 
     for (const market of markets) {
-      if (apiType === APIType.EL) {
+      if (context.mode === 'url') {
         discoveryRequests.push({
           index: discoveryRequests.length,
           kind: 'url',
@@ -214,15 +242,21 @@ export class StoreCatalogDiscoveryNetwork {
         const catalogScope = discoveryRequest.market.catalogScope
 
         try {
-          const stores =
-            discoveryRequest.kind === 'url'
-              ? await this.dependencies.discoverFromUrl(discoveryRequest.market)
-              : await this.dependencies.discoverFromLocation(
-                  discoveryRequest.location,
-                  discoveryRequest.market,
-                  token,
-                  clientId
-                )
+          let stores: CreatePos[]
+          if (discoveryRequest.kind === 'url') {
+            stores = await this.dependencies.discoverFromUrl(
+              discoveryRequest.market
+            )
+          } else if (context.mode === 'authenticated-location') {
+            stores = await this.dependencies.discoverFromLocation(
+              discoveryRequest.location,
+              discoveryRequest.market,
+              context.token,
+              context.clientId
+            )
+          } else {
+            throw new Error('Location discovery request has no credentials')
+          }
           consecutiveFailures = 0
 
           return {

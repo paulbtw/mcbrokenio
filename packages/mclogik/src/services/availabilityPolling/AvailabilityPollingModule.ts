@@ -1,5 +1,3 @@
-import { type Pos } from '@mcbroken/db'
-
 import { type StoreProductAvailability } from '../../clients/ProductAvailability'
 import { type BatchFailureSample, type BatchSummary } from '../../sentry'
 import {
@@ -9,6 +7,7 @@ import {
   type UpdatePos
 } from '../../types'
 
+import { type AvailabilityPollStore } from './availabilityPollTypes'
 import { type ProductAvailabilityBatchOutcome } from './productAvailabilityNetwork'
 
 const ERROR_THRESHOLD = 3
@@ -54,11 +53,6 @@ export interface AvailabilityPollingDependencies {
   logStoreFailure(sample: BatchFailureSample): void
   now(): number
 }
-
-type AvailabilityPollStore = Pick<
-  Pos,
-  'id' | 'nationalStoreNumber' | 'country' | 'errorCounter'
->
 
 function createFailureSignature(
   apiType: APIType,

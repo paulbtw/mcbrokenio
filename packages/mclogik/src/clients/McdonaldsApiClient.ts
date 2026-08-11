@@ -2,8 +2,11 @@ import axios, { type AxiosInstance } from 'axios'
 
 import { type APIType } from '../types'
 
-import { InvalidUpstreamResponseError } from './networkFailure'
-import { getUpstreamRecord } from './upstreamResponse'
+import {
+  getUpstreamRecord,
+  requireUpstreamNumberArray,
+  requireUpstreamStringArray
+} from './upstreamResponse'
 
 /**
  * Response from the McDonald's API containing outage information
@@ -61,28 +64,6 @@ export interface ApiClientConfig {
   storeIdType: string
 }
 
-function requireStringArray(value: unknown): string[] {
-  if (
-    !Array.isArray(value) ||
-    !value.every((item): item is string => typeof item === 'string')
-  ) {
-    throw new InvalidUpstreamResponseError()
-  }
-
-  return value
-}
-
-function requireNumberArray(value: unknown): number[] {
-  if (
-    !Array.isArray(value) ||
-    !value.every((item): item is number => typeof item === 'number')
-  ) {
-    throw new InvalidUpstreamResponseError()
-  }
-
-  return value
-}
-
 /**
  * API client for EU, US, and AU regions
  * These all use the same response format
@@ -119,7 +100,9 @@ export class StandardApiClient implements McdonaldsApiClient {
     const response = getUpstreamRecord(getUpstreamRecord(data)?.response)
     const restaurant = getUpstreamRecord(response?.restaurant)
     const catalog = getUpstreamRecord(restaurant?.catalog)
-    const outageProductCodes = requireStringArray(catalog?.outageProductCodes)
+    const outageProductCodes = requireUpstreamStringArray(
+      catalog?.outageProductCodes
+    )
 
     return { outageProductCodes }
   }
@@ -155,7 +138,7 @@ export class ElApiClient implements McdonaldsApiClient {
     const productOutages = getUpstreamRecord(
       getUpstreamRecord(data)?.productOutages
     )
-    const outageProductCodes = requireNumberArray(
+    const outageProductCodes = requireUpstreamNumberArray(
       productOutages?.productIDs
     ).map((code) => code.toString())
 

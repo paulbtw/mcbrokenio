@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/aws-serverless'
 
+import { type NetworkFailure } from '../clients/networkFailure'
 import { type MarketCode } from '../types'
 
 // Ensures Sentry.init() is only called once per Lambda container
@@ -86,19 +87,12 @@ interface MarketStats {
   failed: number
 }
 
-export interface BatchFailureSample {
+export interface BatchFailureSample extends NetworkFailure {
   signature: string
   apiType: string
   market: MarketCode
   storeId: string
   nationalStoreNumber: string
-  kind: 'http' | 'invalid-response' | 'network' | 'timeout'
-  retryable: boolean
-  status?: number
-  code?: string
-  type?: string
-  service?: string
-  message: string
 }
 
 export interface BatchSummary {

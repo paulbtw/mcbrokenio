@@ -1,12 +1,36 @@
 import { type PrismaClient } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
-import { type UpdatePos } from '../../types'
+import { asMarketCode, type MarketCode, type UpdatePos } from '../../types'
 
-import { PrismaAvailabilityPollPersistence } from './availabilityPollPersistence'
+import {
+  type AvailabilityPollPersistence,
+  PrismaAvailabilityPollPersistence
+} from './availabilityPollPersistence'
+import { type AvailabilityPollStore } from './availabilityPollTypes'
 
 const FIXED_DATE = new Date('2026-08-11T08:00:00.000Z')
 const TRANSACTION_TIMEOUT_MS = 30_000
+
+type Equal<Left, Right> =
+  (<Value>() => Value extends Left ? 1 : 2) extends <Value>() =>
+    Value extends Right ? 1 : 2
+    ? true
+    : false
+type Expect<Value extends true> = Value
+type EligibleMarketInput = Parameters<
+  AvailabilityPollPersistence['loadEligibleStores']
+>[0]
+type _EligibleMarketInputIsBranded = Expect<
+  Equal<EligibleMarketInput, MarketCode[]>
+>
+
+const STORE_PROJECTION: AvailabilityPollStore = {
+  id: 'US-1',
+  nationalStoreNumber: '1',
+  country: 'US',
+  errorCounter: 0
+}
 
 function createPrisma() {
   const findMany = vi.fn()
@@ -31,12 +55,16 @@ function createUpdate(id: string): UpdatePos {
 describe('PrismaAvailabilityPollPersistence', () => {
   it('loads only eligible active stores in oldest-first polling order', async () => {
     const { client, findMany } = createPrisma()
-    findMany.mockResolvedValue([])
     const persistence = new PrismaAvailabilityPollPersistence(client)
 
-    await expect(persistence.loadEligibleStores(['US', 'CA'])).resolves.toEqual(
-      []
-    )
+    findMany.mockResolvedValue([STORE_PROJECTION])
+
+    await expect(
+      persistence.loadEligibleStores([
+        asMarketCode('US'),
+        asMarketCode('CA')
+      ])
+    ).resolves.toEqual([STORE_PROJECTION])
     expect(findMany).toHaveBeenCalledWith({
       where: {
         country: { in: ['US', 'CA'] },

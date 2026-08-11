@@ -5,7 +5,10 @@ import { type CreatePos, type ICountryInfos, type ILocation } from '../types'
 import { randomUserAgent } from '../utils/randomUserAgent'
 
 import { InvalidUpstreamResponseError } from './networkFailure'
-import { getUpstreamRecord } from './upstreamResponse'
+import {
+  getUpstreamRecord,
+  requireUpstreamStringArray
+} from './upstreamResponse'
 
 const STORE_DISCOVERY_TIMEOUT_MS = 10_000
 
@@ -41,17 +44,6 @@ function requireNumber(value: unknown): number {
   return value
 }
 
-function requireFacilities(value: unknown): string[] {
-  if (
-    !Array.isArray(value) ||
-    !value.every((facility): facility is string => typeof facility === 'string')
-  ) {
-    throw new InvalidUpstreamResponseError()
-  }
-
-  return value
-}
-
 function mapLocationRestaurant(
   value: unknown,
   countryInfo: ICountryInfos
@@ -59,7 +51,7 @@ function mapLocationRestaurant(
   const restaurant = getUpstreamRecord(value)
   const location = getUpstreamRecord(restaurant?.location)
   const identifier = requireStoreIdentifier(restaurant?.nationalStoreNumber)
-  const facilities = requireFacilities(restaurant?.facilities)
+  const facilities = requireUpstreamStringArray(restaurant?.facilities)
   const { country, getStores } = countryInfo
 
   return {
@@ -82,7 +74,7 @@ function mapUrlRestaurant(
 ): CreatePos {
   const restaurant = getUpstreamRecord(value)
   const identifier = requireStoreIdentifier(restaurant?.rid)
-  const facilities = requireFacilities(restaurant?.facilities)
+  const facilities = requireUpstreamStringArray(restaurant?.facilities)
   const { country, getStores } = countryInfo
 
   return {
