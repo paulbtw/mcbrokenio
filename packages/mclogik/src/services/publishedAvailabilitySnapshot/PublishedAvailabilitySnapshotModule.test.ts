@@ -104,6 +104,15 @@ describe('PublishedAvailabilitySnapshotModule', () => {
       }),
       statistics: expect.any(Array)
     })
+    const snapshot = published.get('snapshot.json') as {
+      statistics: Array<Record<string, unknown>>
+    }
+    expect(snapshot.statistics.map((row) => row.market)).toEqual([
+      'US',
+      'CA',
+      'UNKNOWN'
+    ])
+    expect(snapshot.statistics.every((row) => !('country' in row))).toBe(true)
     expect(published.get('marker.json')).toEqual(
       expect.objectContaining({
         type: 'FeatureCollection',

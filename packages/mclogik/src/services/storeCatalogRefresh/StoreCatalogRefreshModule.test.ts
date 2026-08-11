@@ -1,11 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { APIType, type CreatePos, UsLocations } from '../../types'
+import {
+  APIType,
+  asCatalogScope,
+  asMarketCode,
+  type CreatePos,
+  UsLocations
+} from '../../types'
 
 import {
   type StoreCatalogRefreshDependencies,
   StoreCatalogRefreshModule
 } from './StoreCatalogRefreshModule'
+
+const US_MARKET = asMarketCode(UsLocations.US)
+const US_SCOPE = asCatalogScope(UsLocations.US)
+const US2_SCOPE = asCatalogScope(UsLocations.US2)
 
 function createStore(id: string): CreatePos {
   return {
@@ -23,22 +33,22 @@ function successfulBatch() {
   return {
     requestsByMarket: { US: 2 },
     scopes: [
-      { market: 'US', catalogScope: UsLocations.US, plannedRequests: 1 },
-      { market: 'US', catalogScope: UsLocations.US2, plannedRequests: 1 }
+      { market: US_MARKET, catalogScope: US_SCOPE, plannedRequests: 1 },
+      { market: US_MARKET, catalogScope: US2_SCOPE, plannedRequests: 1 }
     ],
     skippedMarkets: 0,
     circuitOpened: false,
     outcomes: [
       {
         index: 0,
-        market: 'US',
-        catalogScope: UsLocations.US,
+        market: US_MARKET,
+        catalogScope: US_SCOPE,
         stores: [createStore('US-1')]
       },
       {
         index: 1,
-        market: 'US',
-        catalogScope: UsLocations.US2,
+        market: US_MARKET,
+        catalogScope: US2_SCOPE,
         stores: [createStore('US-1'), createStore('US-2')]
       }
     ]
@@ -74,7 +84,7 @@ describe('StoreCatalogRefreshModule', () => {
 
     const result = await module.refresh({
       apiType: APIType.US,
-      catalogScopes: [UsLocations.US, UsLocations.US2]
+      catalogScopes: [US_SCOPE, US2_SCOPE]
     })
 
     expect(dependencies.discoverStoreCatalogBatch).toHaveBeenCalledWith({
@@ -126,21 +136,23 @@ describe('StoreCatalogRefreshModule', () => {
     }
     vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
       requestsByMarket: { US: 2 },
-      scopes: [{ market: 'US', catalogScope: 'US', plannedRequests: 2 }],
+      scopes: [
+        { market: US_MARKET, catalogScope: US_SCOPE, plannedRequests: 2 }
+      ],
       skippedMarkets: 0,
       circuitOpened: false,
       outcomes: [
         {
           index: 0,
-          market: 'US',
-          catalogScope: 'US',
+          market: US_MARKET,
+          catalogScope: US_SCOPE,
           stores: [],
           failure
         },
         {
           index: 1,
-          market: 'US',
-          catalogScope: 'US',
+          market: US_MARKET,
+          catalogScope: US_SCOPE,
           stores: [createStore('US-2')]
         }
       ]
@@ -166,13 +178,15 @@ describe('StoreCatalogRefreshModule', () => {
     const dependencies = createDependencies()
     vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
       requestsByMarket: { US: 30 },
-      scopes: [{ market: 'US', catalogScope: 'US', plannedRequests: 30 }],
+      scopes: [
+        { market: US_MARKET, catalogScope: US_SCOPE, plannedRequests: 30 }
+      ],
       skippedMarkets: 0,
       circuitOpened: true,
       outcomes: Array.from({ length: 24 }, (_, index) => ({
         index,
-        market: 'US',
-        catalogScope: 'US',
+        market: US_MARKET,
+        catalogScope: US_SCOPE,
         stores: [],
         failure: {
           kind: 'http' as const,

@@ -72,10 +72,12 @@ export async function publishAvailabilitySnapshot(): Promise<PublishAvailability
 
 export type { CustomItemType, GeoJson, GeoJsonPos } from '../../types/geoJson'
 export type {
+  LegacyPublishedAvailabilityStatistics,
   PublishAvailabilitySnapshotResult,
   PublishedAvailabilityStatistics
 } from './PublishedAvailabilitySnapshotModule'
 export {
+  convertLegacyPublishedAvailabilityStatistics,
   PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
   type PublishedAvailabilitySnapshot
 } from './PublishedAvailabilitySnapshotModule'

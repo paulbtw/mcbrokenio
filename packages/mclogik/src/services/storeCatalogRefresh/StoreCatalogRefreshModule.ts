@@ -3,15 +3,18 @@ import {
   type CatalogScopeRefreshInput,
   type CatalogScopeRefreshResult
 } from '../../repositories'
-import { type APIType, type CreatePos, type Locations } from '../../types'
+import {
+  type APIType,
+  type CatalogScope,
+  type CreatePos,
+  type MarketCode
+} from '../../types'
 
 import { type StoreCatalogDiscoveryBatch } from './storeCatalogDiscoveryNetwork'
 
 export interface StoreCatalogRefreshRequest {
   apiType: APIType
-  catalogScopes?: Locations[]
-  /** @deprecated Use `catalogScopes`. Retained at the Lambda input boundary. */
-  countryList?: Locations[]
+  catalogScopes?: CatalogScope[]
 }
 
 export interface StoreCatalogMarketResult {
@@ -35,24 +38,27 @@ export interface StoreCatalogRefreshResult {
 export interface StoreCatalogRefreshDependencies {
   discoverStoreCatalogBatch(input: {
     apiType: APIType
-    catalogScopes?: Locations[]
+    catalogScopes?: CatalogScope[]
   }): Promise<StoreCatalogDiscoveryBatch>
   recordScopeRefresh(
     input: CatalogScopeRefreshInput
   ): Promise<CatalogScopeRefreshResult>
-  getExpectedCatalogScopes(apiType: APIType, marketCode: string): string[]
+  getExpectedCatalogScopes(
+    apiType: APIType,
+    marketCode: MarketCode
+  ): CatalogScope[]
   getCatalogCycleId(date: Date): string
   currentDate(): Date
   logDiscoveryFailure(
     failure: NetworkFailure,
-    context: { apiType: APIType; market: string }
+    context: { apiType: APIType; market: MarketCode }
   ): void
   now(): number
 }
 
 interface ScopeOutcome {
-  market: string
-  catalogScope: string
+  market: MarketCode
+  catalogScope: CatalogScope
   plannedRequests: number
   successful: number
   failed: number
@@ -71,10 +77,9 @@ export class StoreCatalogRefreshModule {
   ): Promise<StoreCatalogRefreshResult> {
     const startTime = this.dependencies.now()
     const { apiType } = request
-    const catalogScopes = request.catalogScopes ?? request.countryList
     const batch = await this.dependencies.discoverStoreCatalogBatch({
       apiType,
-      catalogScopes
+      catalogScopes: request.catalogScopes
     })
     const marketBreakdown: Record<string, StoreCatalogMarketResult> =
       Object.fromEntries(

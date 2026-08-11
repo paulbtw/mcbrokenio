@@ -31,3 +31,9 @@ _Avoid_: Get all stores, store-list job
 **Published Availability Snapshot**:
 The public marker and aggregate-statistics representations of store availability derived from one coherent view of the Store Catalog.
 _Avoid_: JSON export, create JSON
+
+## Contract boundaries
+
+- Domain services use branded `MarketCode` and `CatalogScope` values. Raw strings and legacy `countryList`/`countries` event fields are translated in Lambda adapters.
+- `snapshot.json` schema version 2 uses `market`. The legacy `stats.json` file deliberately retains `country` until the compatibility rollout is complete.
+- Sentry batch summaries use Market terminology and receive only sanitized, allowlisted upstream failure metadata.

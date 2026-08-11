@@ -10,14 +10,19 @@ import {
 } from '../../constants/RateLimit'
 import {
   getMarketCodes,
-  selectMarketDefinitions
+  selectAvailabilityMarketDefinitions
 } from '../../markets/marketDefinitions'
 import {
   addBreadcrumb,
   type BatchFailureSample,
   captureBatchSummary
 } from '../../sentry'
-import { APIType } from '../../types'
+import {
+  APIType,
+  asCatalogScope,
+  type Locations,
+  type MarketCode
+} from '../../types'
 import { getBearerToken } from '../token/getBearerToken'
 import { getClientId } from '../token/getClientId'
 
@@ -49,11 +54,11 @@ function logStoreFailure(sample: BatchFailureSample): void {
 }
 
 const productAvailabilityNetwork = new ProductAvailabilityNetwork({
-  async loadPollContext(apiType, catalogScopes) {
+  async loadPollContext(apiType, markets) {
     return {
       token: await getBearerToken(apiType),
       clientId: getClientId(apiType),
-      markets: selectMarketDefinitions(apiType, catalogScopes)
+      markets: selectAvailabilityMarketDefinitions(apiType, markets)
     }
   },
   createProductAvailabilityFetcher(apiType) {
@@ -67,7 +72,7 @@ const availabilityPollPersistence = new PrismaAvailabilityPollPersistence(
 )
 
 const availabilityPollingModule = new AvailabilityPollingModule({
-  getMarketCodes,
+  getDefaultMarkets: getMarketCodes,
   findEligibleStores: (marketCodes) =>
     availabilityPollPersistence.loadEligibleStores(marketCodes),
   fetchProductAvailabilityBatch: (input) =>
@@ -82,13 +87,26 @@ const availabilityPollingModule = new AvailabilityPollingModule({
 /**
  * Polls eligible stores and persists their latest product availability.
  *
- * @param request - Regional API and optional countries to poll
+ * @param request - Regional API and optional Markets to poll
  * @returns A summary of polling and persistence outcomes
  */
 export async function pollAvailability(
   request: AvailabilityPollRequest
 ): Promise<AvailabilityPollResult> {
   return availabilityPollingModule.poll(request)
+}
+
+/**
+ * Translates legacy Lambda Catalog Scope input into distinct Markets.
+ * Kept at the transport boundary so the polling domain never sees scopes.
+ */
+export function resolveLegacyAvailabilityMarkets(
+  apiType: APIType,
+  catalogScopes?: Locations[]
+): MarketCode[] | undefined {
+  if (catalogScopes == null) return undefined
+
+  return getMarketCodes(apiType, catalogScopes.map(asCatalogScope))
 }
 
 export type {

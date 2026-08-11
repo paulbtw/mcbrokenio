@@ -2,6 +2,7 @@ import { Logger } from '@sailplane/logger'
 import axios from 'axios'
 
 import { InvalidUpstreamResponseError } from '../../clients/networkFailure'
+import { getUpstreamRecord } from '../../clients/upstreamResponse'
 import {
   BASIC_TOKEN_AP,
   BASIC_TOKEN_EL,
@@ -11,16 +12,9 @@ import {
 import { APIType } from '../../types'
 
 const logger = new Logger('getBearerToken')
-
-type JsonRecord = Record<string, unknown>
-
-function getRecord(value: unknown): JsonRecord | undefined {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return value as JsonRecord
-  }
-
-  return undefined
-}
+// Two short retries absorb transient token read stalls without hiding sustained endpoint failures.
+const MAX_TOKEN_REQUEST_ATTEMPTS = 3
+const TOKEN_RETRY_BASE_DELAY_MS = 250
 
 type BearerAPIType = Exclude<APIType, APIType.UNKNOWN | APIType.HK>
 
@@ -55,6 +49,23 @@ function getHeaders(basicToken: string) {
   }
 }
 
+function getErrorCode(error: unknown): string | undefined {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string'
+  ) {
+    return error.code
+  }
+
+  return undefined
+}
+
+function isReadTimeout(error: unknown): boolean {
+  return getErrorCode(error) === 'ETIMEDOUT'
+}
+
 export async function getBearerToken(apiType: APIType) {
   if ([APIType.UNKNOWN, APIType.HK].includes(apiType)) {
     throw new Error(`No bearer token available for this api ${apiType}`)
@@ -66,21 +77,37 @@ export async function getBearerToken(apiType: APIType) {
     throw new Error(`url or basic token missing for ${apiType}`)
   }
 
-  try {
-    const { data } = await axios.post<unknown>(
-      url,
-      null,
-      getHeaders(basicToken)
-    )
-    const response = getRecord(getRecord(data)?.response)
-    const token = response?.token
-    if (typeof token !== 'string' || token.length === 0) {
-      throw new InvalidUpstreamResponseError()
-    }
+  let attempt = 1
 
-    return token
-  } catch (error) {
-    logger.error(`error getting new bearer token for ${apiType}`)
-    throw error
+  while (true) {
+    try {
+      const { data } = await axios.post<unknown>(
+        url,
+        null,
+        getHeaders(basicToken)
+      )
+      const response = getUpstreamRecord(getUpstreamRecord(data)?.response)
+      const token = response?.token
+      if (typeof token !== 'string' || token.length === 0) {
+        throw new InvalidUpstreamResponseError()
+      }
+
+      return token
+    } catch (error) {
+      if (attempt >= MAX_TOKEN_REQUEST_ATTEMPTS || !isReadTimeout(error)) {
+        logger.error(`error getting new bearer token for ${apiType}`)
+        throw error
+      }
+
+      const delayMs = TOKEN_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1)
+      logger.warn(`retrying bearer token request for ${apiType}`, {
+        attempt,
+        maxAttempts: MAX_TOKEN_REQUEST_ATTEMPTS,
+        delayMs,
+        errorCode: getErrorCode(error)
+      })
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      attempt++
+    }
   }
 }

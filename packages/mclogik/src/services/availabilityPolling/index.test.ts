@@ -4,13 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   APIType,
   ApLocations,
+  asMarketCode,
   ElLocations,
   EuLocations,
   type Locations,
   UsLocations
 } from '../../types'
 
-import { pollAvailability } from './index'
+import { pollAvailability, resolveLegacyAvailabilityMarkets } from './index'
 
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
@@ -125,7 +126,7 @@ describe('pollAvailability', () => {
   it('composes the deep production module behind one public facade', async () => {
     const result = await pollAvailability({
       apiType: APIType.US,
-      countryList: [UsLocations.US]
+      markets: [asMarketCode(UsLocations.US)]
     })
 
     expect(mocks.getBearerToken).toHaveBeenCalledWith(APIType.US)
@@ -181,6 +182,12 @@ describe('pollAvailability', () => {
         failedCount: 0
       })
     )
+  })
+
+  it('collapses legacy US2 Catalog Scope input to the US Market boundary', () => {
+    expect(
+      resolveLegacyAvailabilityMarkets(APIType.US, [UsLocations.US2])
+    ).toEqual([UsLocations.US])
   })
 
   it('rejects credential failures without persisting store health', async () => {

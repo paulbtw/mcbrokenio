@@ -1,3 +1,4 @@
+import type { PublishedAvailabilityStatistics } from "@mcbroken/mclogik/publishedAvailabilitySnapshot";
 import { describe, expect, it } from "vitest";
 
 import { getStatsSummary } from "./stats";
@@ -16,7 +17,7 @@ describe("getStatsSummary", () => {
     expect(
       getStatsSummary([
         {
-          country: "UNKNOWN",
+          market: "UNKNOWN" as PublishedAvailabilityStatistics["market"],
           total: 200,
           trackable: 150,
           availablemilkshakes: 45,
@@ -39,7 +40,7 @@ describe("getStatsSummary", () => {
     expect(
       getStatsSummary([
         {
-          country: "UNKNOWN",
+          market: "UNKNOWN" as PublishedAvailabilityStatistics["market"],
           total: 0,
           trackable: 0,
           availablemilkshakes: 0,

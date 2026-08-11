@@ -2,7 +2,12 @@ import { type Pos } from '@mcbroken/db'
 
 import { type StoreProductAvailability } from '../../clients/ProductAvailability'
 import { type BatchFailureSample, type BatchSummary } from '../../sentry'
-import { type APIType, type Locations, type UpdatePos } from '../../types'
+import {
+  APIType,
+  asMarketCode,
+  type MarketCode,
+  type UpdatePos
+} from '../../types'
 
 import { type ProductAvailabilityBatchOutcome } from './productAvailabilityNetwork'
 
@@ -11,9 +16,7 @@ const MAX_FAILURE_SAMPLES = 5
 
 export interface AvailabilityPollRequest {
   apiType: APIType
-  catalogScopes?: Locations[]
-  /** @deprecated Use `catalogScopes`. Retained at the Lambda input boundary. */
-  countryList?: Locations[]
+  markets?: MarketCode[]
 }
 
 export interface AvailabilityPollMarketResult {
@@ -33,11 +36,13 @@ export interface AvailabilityPollResult {
 }
 
 export interface AvailabilityPollingDependencies {
-  getMarketCodes(apiType: APIType, catalogScopes?: Locations[]): string[]
-  findEligibleStores(marketCodes: string[]): Promise<AvailabilityPollStore[]>
+  getDefaultMarkets(apiType: APIType): MarketCode[]
+  findEligibleStores(
+    marketCodes: MarketCode[]
+  ): Promise<AvailabilityPollStore[]>
   fetchProductAvailabilityBatch(input: {
     apiType: APIType
-    catalogScopes?: Locations[]
+    markets?: MarketCode[]
     stores: AvailabilityPollStore[]
   }): Promise<ProductAvailabilityBatchOutcome[]>
   persistUpdates(updates: UpdatePos[]): Promise<void>
@@ -57,7 +62,7 @@ type AvailabilityPollStore = Pick<
 
 function createFailureSignature(
   apiType: APIType,
-  marketCode: string,
+  marketCode: MarketCode,
   failure: ProductAvailabilityBatchOutcome & { outcome: 'failure' }
 ): string {
   const { kind, retryable, status, code, type, service, message } =
@@ -81,11 +86,12 @@ function createBatchFailureSample(
   outcome: ProductAvailabilityBatchOutcome & { outcome: 'failure' }
 ): BatchFailureSample {
   const { store, failure } = outcome
+  const market = asMarketCode(store.country)
 
   return {
-    signature: createFailureSignature(apiType, store.country, outcome),
+    signature: createFailureSignature(apiType, market, outcome),
     apiType,
-    country: store.country,
+    market,
     storeId: store.id,
     nationalStoreNumber: store.nationalStoreNumber,
     ...failure
@@ -139,6 +145,12 @@ function createMarketResult(): AvailabilityPollMarketResult {
   }
 }
 
+function assertSupportedApiType(apiType: APIType): void {
+  if (apiType === APIType.HK || apiType === APIType.UNKNOWN) {
+    throw new Error(`Availability polling is not supported for ${apiType}`)
+  }
+}
+
 export class AvailabilityPollingModule {
   constructor(private readonly dependencies: AvailabilityPollingDependencies) {}
 
@@ -147,9 +159,10 @@ export class AvailabilityPollingModule {
   ): Promise<AvailabilityPollResult> {
     const startTime = this.dependencies.now()
     const { apiType } = request
-    const catalogScopes = request.catalogScopes ?? request.countryList
-    const marketCodes = this.dependencies.getMarketCodes(apiType, catalogScopes)
-    const stores = await this.dependencies.findEligibleStores(marketCodes)
+    assertSupportedApiType(apiType)
+    const markets =
+      request.markets ?? this.dependencies.getDefaultMarkets(apiType)
+    const stores = await this.dependencies.findEligibleStores(markets)
 
     this.dependencies.addBreadcrumb('Starting availability poll', {
       apiType,
@@ -170,7 +183,7 @@ export class AvailabilityPollingModule {
 
     const outcomes = await this.dependencies.fetchProductAvailabilityBatch({
       apiType,
-      catalogScopes,
+      markets,
       stores
     })
     if (outcomes.length !== stores.length) {
@@ -225,7 +238,7 @@ export class AvailabilityPollingModule {
       totalStores: result.totalStores,
       successCount: result.successCount,
       failedCount: result.failedCount,
-      countryBreakdown: Object.fromEntries(
+      marketBreakdown: Object.fromEntries(
         Object.entries(marketBreakdown).map(([marketCode, stats]) => [
           marketCode,
           { total: stats.total, failed: stats.failed }

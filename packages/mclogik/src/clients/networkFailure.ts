@@ -1,11 +1,11 @@
 import axios from 'axios'
 
+import { getUpstreamRecord } from './upstreamResponse'
+
 const MAX_DIAGNOSTIC_FIELD_LENGTH = 120
 const SAFE_DIAGNOSTIC_IDENTIFIER = /^[A-Za-z0-9_.:-]+$/
 const SENSITIVE_DIAGNOSTIC_CONTENT =
   /authorization|bearer|credential|https?:|secret|token/i
-
-type JsonRecord = Record<string, unknown>
 
 /** Marks a structurally invalid response from an upstream service. */
 export class InvalidUpstreamResponseError extends Error {
@@ -28,12 +28,25 @@ export interface NetworkFailure {
   message: string
 }
 
-function getRecord(value: unknown): JsonRecord | undefined {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return value as JsonRecord
-  }
+/** A sanitized, typed batch-wide upstream failure safe to cross a workflow seam. */
+export class NetworkFailureError extends Error implements NetworkFailure {
+  readonly kind: NetworkFailureKind
+  readonly retryable: boolean
+  readonly status?: number
+  readonly code?: string
+  readonly type?: string
+  readonly service?: string
 
-  return undefined
+  constructor(message: string, failure: NetworkFailure) {
+    super(message)
+    this.name = 'NetworkFailureError'
+    this.kind = failure.kind
+    this.retryable = failure.retryable
+    this.status = failure.status
+    this.code = failure.code
+    this.type = failure.type
+    this.service = failure.service
+  }
 }
 
 function getBoundedIdentifier(value: unknown): string | undefined {
@@ -109,8 +122,8 @@ export function createNetworkFailure(
   }
 
   const status = error.response?.status
-  const responseData = getRecord(error.response?.data)
-  const statusData = getRecord(responseData?.status)
+  const responseData = getUpstreamRecord(error.response?.data)
+  const statusData = getUpstreamRecord(responseData?.status)
   const transportCode = getBoundedIdentifier(error.code)
   const code = getBoundedIdentifier(statusData?.code) ?? transportCode
   const type = getBoundedIdentifier(statusData?.type)

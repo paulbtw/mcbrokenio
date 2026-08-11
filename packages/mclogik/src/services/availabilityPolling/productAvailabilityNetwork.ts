@@ -3,12 +3,13 @@ import { type Pos } from '@mcbroken/db'
 import {
   createInvalidResponseFailure,
   createNetworkFailure,
-  type NetworkFailure
+  type NetworkFailure,
+  NetworkFailureError
 } from '../../clients/networkFailure'
 import { type StoreProductAvailability } from '../../clients/ProductAvailability'
 import { type RequestLimiter } from '../../constants/RateLimit'
 import { type MarketDefinition } from '../../markets/marketDefinitions'
-import { type APIType, type Locations } from '../../types'
+import { type APIType, asMarketCode, type MarketCode } from '../../types'
 import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
 
 interface ProductAvailabilityPollContext {
@@ -29,7 +30,7 @@ interface StoreProductAvailabilityFetcher {
 export interface ProductAvailabilityNetworkDependencies {
   loadPollContext(
     apiType: APIType,
-    catalogScopes?: Locations[]
+    markets?: MarketCode[]
   ): Promise<ProductAvailabilityPollContext>
   createProductAvailabilityFetcher(
     apiType: APIType
@@ -39,7 +40,7 @@ export interface ProductAvailabilityNetworkDependencies {
 
 export interface ProductAvailabilityBatchRequest {
   apiType: APIType
-  catalogScopes?: Locations[]
+  markets?: MarketCode[]
   stores: ProductAvailabilityStore[]
 }
 
@@ -85,14 +86,21 @@ export class ProductAvailabilityNetwork {
   async fetchBatch(
     request: ProductAvailabilityBatchRequest
   ): Promise<ProductAvailabilityBatchOutcome[]> {
-    const { apiType, catalogScopes, stores } = request
+    const { apiType, markets: requestedMarkets, stores } = request
     assertSupportedApiType(apiType)
     let context: ProductAvailabilityPollContext
     try {
-      context = await this.dependencies.loadPollContext(apiType, catalogScopes)
+      context = await this.dependencies.loadPollContext(
+        apiType,
+        requestedMarkets
+      )
     } catch (error) {
-      if (createNetworkFailure(error) != null) {
-        throw new Error('Product Availability authentication request failed')
+      const failure = createNetworkFailure(error)
+      if (failure != null) {
+        throw new NetworkFailureError(
+          'Product Availability authentication request failed',
+          failure
+        )
       }
       throw error
     }
@@ -106,14 +114,14 @@ export class ProductAvailabilityNetwork {
     }
 
     const marketsByCode = new Map(
-      markets.map((market) => [market.country, market])
+      markets.map((market) => [market.market, market])
     )
     const outcomes: Array<ProductAvailabilityBatchOutcome | undefined> =
       new Array(stores.length)
     const plannedRequests: PlannedAvailabilityRequest[] = []
 
     stores.forEach((store, index) => {
-      const market = marketsByCode.get(store.country as Locations)
+      const market = marketsByCode.get(asMarketCode(store.country))
       if (market == null) {
         outcomes[index] = {
           outcome: 'skipped',

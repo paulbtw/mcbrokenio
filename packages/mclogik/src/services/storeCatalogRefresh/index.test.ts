@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { APIType, ElLocations, EuLocations, UsLocations } from '../../types'
+import {
+  APIType,
+  asCatalogScope,
+  ElLocations,
+  EuLocations,
+  UsLocations
+} from '../../types'
 
 import { refreshStoreCatalog } from './index'
 
@@ -78,7 +84,7 @@ describe('refreshStoreCatalog', () => {
   it('owns credentials, location spacing, discovery, and persistence for US', async () => {
     const result = await refreshStoreCatalog({
       apiType: APIType.US,
-      countryList: [UsLocations.US]
+      catalogScopes: [asCatalogScope(UsLocations.US)]
     })
 
     expect(mocks.getBearerToken).toHaveBeenCalledWith(APIType.US)
@@ -103,7 +109,7 @@ describe('refreshStoreCatalog', () => {
   it('owns the wider location spacing for EU discovery', async () => {
     await refreshStoreCatalog({
       apiType: APIType.EU,
-      countryList: [EuLocations.DE]
+      catalogScopes: [asCatalogScope(EuLocations.DE)]
     })
 
     expect(mocks.generateCoordinatesMesh).toHaveBeenCalledWith(
@@ -127,7 +133,7 @@ describe('refreshStoreCatalog', () => {
 
     const result = await refreshStoreCatalog({
       apiType: APIType.EL,
-      countryList: [ElLocations.AT]
+      catalogScopes: [asCatalogScope(ElLocations.AT)]
     })
 
     expect(mocks.getBearerToken).not.toHaveBeenCalled()
@@ -187,7 +193,7 @@ describe('refreshStoreCatalog', () => {
     await expect(
       refreshStoreCatalog({
         apiType: APIType.US,
-        countryList: [UsLocations.US]
+        catalogScopes: [asCatalogScope(UsLocations.US)]
       })
     ).rejects.toThrow('All store discovery requests failed')
 

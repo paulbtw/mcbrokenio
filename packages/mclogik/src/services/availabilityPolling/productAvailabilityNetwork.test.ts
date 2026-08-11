@@ -4,7 +4,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { InvalidUpstreamResponseError } from '../../clients/networkFailure'
 import { type RequestLimiter } from '../../constants/RateLimit'
 import { type MarketDefinition } from '../../markets/marketDefinitions'
-import { APIType, IceType, UsLocations } from '../../types'
+import {
+  APIType,
+  asCatalogScope,
+  asMarketCode,
+  IceType,
+  UsLocations
+} from '../../types'
 
 import {
   ProductAvailabilityNetwork,
@@ -52,7 +58,8 @@ function createStore(id: string, nationalStoreNumber: string): Pos {
 function createMarket(): MarketDefinition {
   return {
     country: UsLocations.US,
-    catalogScope: UsLocations.US,
+    market: asMarketCode(UsLocations.US),
+    catalogScope: asCatalogScope(UsLocations.US),
     getStores: { api: APIType.US, url: 'https://example.com' },
     productCodes: {
       [IceType.MILCHSHAKE]: ['shake'],
@@ -108,7 +115,7 @@ describe('ProductAvailabilityNetwork', () => {
 
     const outcomes = await network.fetchBatch({
       apiType: APIType.US,
-      catalogScopes: [UsLocations.US],
+      markets: [asMarketCode(UsLocations.US)],
       stores
     })
 
@@ -228,12 +235,21 @@ describe('ProductAvailabilityNetwork', () => {
     )
     const network = new ProductAvailabilityNetwork(dependencies)
 
-    await expect(
-      network.fetchBatch({
+    const failure = await network
+      .fetchBatch({
         apiType: APIType.US,
         stores: [createStore('US-1', '1')]
       })
-    ).rejects.toThrow('Product Availability authentication request failed')
+      .catch((error: unknown) => error)
+
+    expect(failure).toMatchObject({
+      name: 'NetworkFailureError',
+      kind: 'network',
+      retryable: true,
+      message: 'Product Availability authentication request failed'
+    })
+    expect(JSON.stringify(failure)).not.toContain('private.example')
+    expect(JSON.stringify(failure)).not.toContain('Bearer secret')
   })
 
   it('rejects batch-wide authentication failures without producing outcomes', async () => {

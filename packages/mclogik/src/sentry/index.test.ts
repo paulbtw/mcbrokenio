@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { asMarketCode } from '../types'
+
 import {
   addBreadcrumb,
   type BatchFailureSample,
   type BatchSummary,
   captureBatchSummary,
-  wrapHandler
+  wrapHandler,
 } from './index'
 
 vi.mock('@sentry/aws-serverless', () => {
@@ -29,7 +31,7 @@ vi.mock('@sentry/aws-serverless', () => {
   }
 })
 
-const Sentry = await import('@sentry/aws-serverless') as unknown as {
+const Sentry = (await import('@sentry/aws-serverless')) as unknown as {
   withScope: ReturnType<typeof vi.fn>
   captureMessage: ReturnType<typeof vi.fn>
   captureException: ReturnType<typeof vi.fn>
@@ -52,7 +54,7 @@ describe('captureBatchSummary', () => {
     totalStores: 100,
     successCount: 95,
     failedCount: 5,
-    countryBreakdown: {
+    marketBreakdown: {
       DE: { total: 50, failed: 3 },
       ES: { total: 50, failed: 2 },
     },
@@ -60,13 +62,11 @@ describe('captureBatchSummary', () => {
     ...overrides,
   })
 
-  const createSampleError = (
-    overrides: Partial<BatchFailureSample> = {}
-  ): BatchFailureSample => ({
+  const createSampleError = (overrides: Partial<BatchFailureSample> = {}): BatchFailureSample => ({
     signature:
       'EU|DE|http|false|400|40000|ValidationException|Restaurant|Upstream HTTP request failed',
     apiType: 'EU',
-    country: 'DE',
+    market: asMarketCode('DE'),
     storeId: 'DE-27601435',
     nationalStoreNumber: '27601435',
     kind: 'http',
@@ -79,33 +79,39 @@ describe('captureBatchSummary', () => {
     ...overrides,
   })
 
-  it('should not fire when failure rate is below 10% and no country fully down', () => {
-    captureBatchSummary(createSummary({
-      failedCount: 5,
-      totalStores: 100,
-    }))
+  it('should not fire when failure rate is below 10% and no Market is fully down', () => {
+    captureBatchSummary(
+      createSummary({
+        failedCount: 5,
+        totalStores: 100,
+      }),
+    )
 
     expect(Sentry.captureMessage).not.toHaveBeenCalled()
   })
 
   it('should not fire when totalStores is 0', () => {
-    captureBatchSummary(createSummary({
-      totalStores: 0,
-      failedCount: 0,
-    }))
+    captureBatchSummary(
+      createSummary({
+        totalStores: 0,
+        failedCount: 0,
+      }),
+    )
 
     expect(Sentry.captureMessage).not.toHaveBeenCalled()
   })
 
-  it('should fire error level when a country is fully down', () => {
-    captureBatchSummary(createSummary({
-      failedCount: 50,
-      totalStores: 100,
-      countryBreakdown: {
-        DE: { total: 50, failed: 0 },
-        ES: { total: 50, failed: 50 },
-      },
-    }))
+  it('should fire error level when a Market is fully down', () => {
+    captureBatchSummary(
+      createSummary({
+        failedCount: 50,
+        totalStores: 100,
+        marketBreakdown: {
+          DE: { total: 50, failed: 0 },
+          ES: { total: 50, failed: 50 },
+        },
+      }),
+    )
 
     expect(Sentry.withScope).toHaveBeenCalled()
     expect(Sentry.__mockScope.setTag).toHaveBeenCalledWith('api_type', 'EU')
@@ -113,115 +119,123 @@ describe('captureBatchSummary', () => {
     expect(Sentry.__mockScope.setFingerprint).toHaveBeenCalledWith(['EU', 'batch-failure'])
     expect(Sentry.captureMessage).toHaveBeenCalledWith(
       expect.stringContaining('ES fully down'),
-      'error'
+      'error',
     )
   })
 
-  it('should fire warning level when failure rate exceeds 10% but no country fully down', () => {
-    captureBatchSummary(createSummary({
-      failedCount: 20,
-      totalStores: 100,
-      successCount: 80,
-      countryBreakdown: {
-        DE: { total: 50, failed: 10 },
-        ES: { total: 50, failed: 10 },
-      },
-    }))
+  it('should fire warning level when failure rate exceeds 10% but no Market is fully down', () => {
+    captureBatchSummary(
+      createSummary({
+        failedCount: 20,
+        totalStores: 100,
+        successCount: 80,
+        marketBreakdown: {
+          DE: { total: 50, failed: 10 },
+          ES: { total: 50, failed: 10 },
+        },
+      }),
+    )
 
     expect(Sentry.withScope).toHaveBeenCalled()
     expect(Sentry.__mockScope.setLevel).toHaveBeenCalledWith('warning')
     expect(Sentry.captureMessage).toHaveBeenCalledWith(
       expect.stringContaining('high failure rate'),
-      'warning'
+      'warning',
     )
   })
 
-  it('should include country breakdown in context', () => {
+  it('should include Market breakdown in context', () => {
     const breakdown = {
       DE: { total: 50, failed: 0 },
       ES: { total: 50, failed: 50 },
     }
 
-    captureBatchSummary(createSummary({
-      failedCount: 50,
-      totalStores: 100,
-      countryBreakdown: breakdown,
-    }))
-
-    expect(Sentry.__mockScope.setContext).toHaveBeenCalledWith(
-      'country_breakdown',
-      breakdown
+    captureBatchSummary(
+      createSummary({
+        failedCount: 50,
+        totalStores: 100,
+        marketBreakdown: breakdown,
+      }),
     )
+
+    expect(Sentry.__mockScope.setContext).toHaveBeenCalledWith('market_breakdown', breakdown)
     expect(Sentry.__mockScope.setContext).toHaveBeenCalledWith(
       'batch_summary',
       expect.objectContaining({
         totalStores: 100,
         failedCount: 50,
-        countriesFullyDown: ['ES'],
-      })
+        marketsFullyDown: ['ES'],
+      }),
     )
   })
 
-  it('should list multiple fully-down countries', () => {
-    captureBatchSummary(createSummary({
-      failedCount: 100,
-      totalStores: 100,
-      successCount: 0,
-      countryBreakdown: {
-        ES: { total: 50, failed: 50 },
-        FR: { total: 50, failed: 50 },
-      },
-    }))
+  it('should list multiple fully-down Markets', () => {
+    captureBatchSummary(
+      createSummary({
+        failedCount: 100,
+        totalStores: 100,
+        successCount: 0,
+        marketBreakdown: {
+          ES: { total: 50, failed: 50 },
+          FR: { total: 50, failed: 50 },
+        },
+      }),
+    )
 
     expect(Sentry.captureMessage).toHaveBeenCalledWith(
       expect.stringContaining('ES, FR fully down'),
-      'error'
+      'error',
     )
   })
 
   it('should include sample errors in context when provided', () => {
     const sampleErrors = [createSampleError()]
 
-    captureBatchSummary(createSummary({
-      failedCount: 50,
-      totalStores: 100,
-      successCount: 50,
-      countryBreakdown: {
-        DE: { total: 50, failed: 50 },
-        ES: { total: 50, failed: 0 },
-      },
-      sampleErrors,
-    }))
-
-    expect(Sentry.__mockScope.setContext).toHaveBeenCalledWith(
-      'sample_errors',
-      { samples: sampleErrors }
+    captureBatchSummary(
+      createSummary({
+        failedCount: 50,
+        totalStores: 100,
+        successCount: 50,
+        marketBreakdown: {
+          DE: { total: 50, failed: 50 },
+          ES: { total: 50, failed: 0 },
+        },
+        sampleErrors,
+      }),
     )
+
+    expect(Sentry.__mockScope.setContext).toHaveBeenCalledWith('sample_errors', {
+      samples: sampleErrors,
+    })
   })
 
   it('should fire at exactly 10% boundary', () => {
-    captureBatchSummary(createSummary({
-      failedCount: 10,
-      totalStores: 100,
-      countryBreakdown: {
-        DE: { total: 50, failed: 5 },
-        ES: { total: 50, failed: 5 },
-      },
-    }))
+    captureBatchSummary(
+      createSummary({
+        failedCount: 10,
+        totalStores: 100,
+        marketBreakdown: {
+          DE: { total: 50, failed: 5 },
+          ES: { total: 50, failed: 5 },
+        },
+      }),
+    )
 
     // 10% is the boundary — at exactly 10%, should NOT fire (> 10% required)
     expect(Sentry.captureMessage).not.toHaveBeenCalled()
   })
 
   it('should fire just above 10% boundary', () => {
-    captureBatchSummary(createSummary({
-      failedCount: 11,
-      totalStores: 100,
-      countryBreakdown: {
-        DE: { total: 50, failed: 6 },
-        ES: { total: 50, failed: 5 },
-      },
-    }))
+    captureBatchSummary(
+      createSummary({
+        failedCount: 11,
+        totalStores: 100,
+        marketBreakdown: {
+          DE: { total: 50, failed: 6 },
+          ES: { total: 50, failed: 5 },
+        },
+      }),
+    )
 
     expect(Sentry.captureMessage).toHaveBeenCalled()
   })
@@ -280,7 +294,7 @@ describe('wrapHandler', () => {
         requestId: 'req-123',
         name: 'Error',
         message: 'boom',
-      })
+      }),
     )
 
     consoleErrorSpy.mockRestore()

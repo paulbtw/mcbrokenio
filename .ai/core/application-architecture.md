@@ -18,8 +18,8 @@
 │                                                                             │
 │    ┌──────────────┐     ┌──────────────┐     ┌──────────────┐              │
 │    │ Amazon S3    │     │ PostgreSQL   │     │ Mapbox       │              │
-│    │ GeoJSON      │     │ Store Data   │     │ Tiles        │              │
-│    │ Stats JSON   │     │ Statistics   │     │              │              │
+│    │ Snapshot v2  │     │ Store Data   │     │ Tiles        │              │
+│    │ Legacy JSON  │     │ Catalog life │     │              │              │
 │    └──────────────┘     └──────────────┘     └──────────────┘              │
 └────────────────────────────────────────────────────────────────────────────┘
                                  ▲
@@ -76,8 +76,9 @@ apps/frontend/src/
 │   └── LocationList.tsx
 ├── hooks/
 │   ├── queries/                 # React Query hooks
-│   │   ├── useMcData.ts         # Store data fetching
-│   │   └── useMcStats.ts        # Statistics fetching
+│   │   ├── usePublishedAvailabilitySnapshot.ts # Shared snapshot query
+│   │   ├── useMcData.ts         # Marker projection
+│   │   └── useMcStats.ts        # Statistics projection
 │   ├── useMapInteractions.ts
 │   ├── useDebounce.ts
 │   └── useSettings.ts
@@ -108,8 +109,8 @@ User visits site
        │
        ▼
 ┌──────────────────┐
-│ React Query      │ ← Fetches GeoJSON from S3 (via rewrites)
-│ Hooks            │
+│ React Query      │ ← Fetches snapshot.json through a rewrite; only a
+│ Snapshot Query   │   missing 403/404 falls back to marker.json + stats.json
 └──────────────────┘
        │
        ▼
@@ -135,11 +136,11 @@ apps/mc{all,us,au}/
 
 ### Function Responsibilities
 
-| Function | Purpose | Schedule |
-|----------|---------|----------|
-| `getAllStores` | Refresh the Store Catalog | Weekly |
-| `getItemStatus` | Run an Availability Poll | Hourly/30min |
-| `createJson` | Publish the Availability Snapshot | Every 15 min |
+| Function        | Purpose                           | Schedule     |
+| --------------- | --------------------------------- | ------------ |
+| `getAllStores`  | Refresh the Store Catalog         | Weekly       |
+| `getItemStatus` | Run an Availability Poll          | Hourly/30min |
+| `createJson`    | Publish the Availability Snapshot | Every 15 min |
 
 ### Shared Logic (mclogik)
 
@@ -148,13 +149,15 @@ packages/mclogik/src/
 ├── services/
 │   ├── storeCatalogRefresh/     # Deep Store Catalog Refresh module
 │   │   ├── StoreCatalogRefreshModule.ts
+│   │   ├── storeCatalogDiscoveryNetwork.ts
 │   │   └── index.ts             # Production facade and composition
 │   ├── availabilityPolling/     # Deep Availability Poll module
 │   │   ├── AvailabilityPollingModule.ts
+│   │   ├── availabilityPollPersistence.ts
+│   │   ├── productAvailabilityNetwork.ts
 │   │   └── index.ts             # Production facade and composition
 │   ├── publishedAvailabilitySnapshot/
 │   │   ├── PublishedAvailabilitySnapshotModule.ts
-│   │   ├── createGeoJson.ts
 │   │   └── index.ts             # Production facade and composition
 │   └── token/                   # Auth token management
 │       ├── getBearerToken.ts
@@ -163,8 +166,12 @@ packages/mclogik/src/
 │   └── index.ts                 # Regional configs
 ├── clients/
 │   ├── McdonaldsApiClient.ts    # Regional network adapters
+│   ├── networkFailure.ts        # Sanitized typed transport failures
+│   ├── upstreamResponse.ts      # Shared untrusted JSON object guard
 │   ├── ProductAvailability.ts   # Product Availability calculation
 │   └── StoreDiscoveryClient.ts  # Store discovery adapter
+├── markets/
+│   └── marketDefinitions.ts     # Market and Catalog Scope selection
 └── utils/
     ├── generateCoordinatesMesh.ts
     ├── chunkArray.ts
@@ -315,15 +322,16 @@ CloudWatch Cron (every 15 min)
        │
        ▼
 ┌──────────────────┐
-│ Publish stable   │
-│ snapshot files   │
+│ Publish v2       │
+│ snapshot +       │
+│ legacy assets    │
 └──────────────────┘
        │
        ▼
 ┌──────────────────┐
 │ Frontend fetches │
-│ via Next.js      │
-│ rewrites         │
+│ snapshot; missing│
+│ file falls back  │
 └──────────────────┘
 ```
 

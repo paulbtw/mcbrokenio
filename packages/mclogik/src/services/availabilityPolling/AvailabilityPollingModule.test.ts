@@ -1,11 +1,12 @@
 import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
-import { APIType, UsLocations } from '../../types'
+import { APIType, asMarketCode, UsLocations } from '../../types'
 
 import {
   type AvailabilityPollingDependencies,
-  AvailabilityPollingModule
+  AvailabilityPollingModule,
+  type AvailabilityPollRequest
 } from './AvailabilityPollingModule'
 
 function createStore(overrides: Partial<Pos> = {}): Pos {
@@ -56,7 +57,7 @@ function createAvailability() {
 
 function createDependencies(stores: Pos[]) {
   const dependencies: AvailabilityPollingDependencies = {
-    getMarketCodes: vi.fn().mockReturnValue(['US']),
+    getDefaultMarkets: vi.fn().mockReturnValue([asMarketCode('US')]),
     findEligibleStores: vi.fn().mockResolvedValue(stores),
     fetchProductAvailabilityBatch: vi.fn(),
     persistUpdates: vi.fn().mockResolvedValue(undefined),
@@ -104,16 +105,13 @@ describe('AvailabilityPollingModule', () => {
 
     const result = await module.poll({
       apiType: APIType.US,
-      catalogScopes: [UsLocations.US]
+      markets: [asMarketCode(UsLocations.US)]
     })
 
-    expect(dependencies.getMarketCodes).toHaveBeenCalledWith(APIType.US, [
-      UsLocations.US
-    ])
     expect(dependencies.findEligibleStores).toHaveBeenCalledWith(['US'])
     expect(dependencies.fetchProductAvailabilityBatch).toHaveBeenCalledWith({
       apiType: APIType.US,
-      catalogScopes: [UsLocations.US],
+      markets: [UsLocations.US],
       stores: [success, failed, skipped]
     })
     expect(dependencies.persistUpdates).toHaveBeenCalledWith([
@@ -144,7 +142,7 @@ describe('AvailabilityPollingModule', () => {
       signature:
         'US|US|http|true|503|UPSTREAM_DOWN|ServiceUnavailable|restaurant-api|Upstream HTTP request failed',
       apiType: APIType.US,
-      country: 'US',
+      market: 'US',
       storeId: 'US-fail',
       nationalStoreNumber: '1',
       kind: 'http',
@@ -223,4 +221,34 @@ describe('AvailabilityPollingModule', () => {
     expect(dependencies.fetchProductAvailabilityBatch).not.toHaveBeenCalled()
     expect(dependencies.persistUpdates).not.toHaveBeenCalled()
   })
+
+  it('uses requested Markets directly instead of interpreting them as Catalog Scopes', async () => {
+    const dependencies = createDependencies([])
+    vi.mocked(dependencies.getDefaultMarkets).mockReturnValue([
+      asMarketCode('CA')
+    ])
+    const module = new AvailabilityPollingModule(dependencies)
+    const request = {
+      apiType: APIType.US,
+      markets: [asMarketCode(UsLocations.US)]
+    } satisfies AvailabilityPollRequest
+
+    await module.poll(request)
+
+    expect(dependencies.findEligibleStores).toHaveBeenCalledWith(['US'])
+  })
+
+  it.each([APIType.HK, APIType.UNKNOWN])(
+    'rejects unsupported %s polling before loading stores',
+    async (apiType) => {
+      const dependencies = createDependencies([])
+      const module = new AvailabilityPollingModule(dependencies)
+
+      await expect(module.poll({ apiType })).rejects.toThrow(
+        `Availability polling is not supported for ${apiType}`
+      )
+      expect(dependencies.getDefaultMarkets).not.toHaveBeenCalled()
+      expect(dependencies.findEligibleStores).not.toHaveBeenCalled()
+    }
+  )
 })

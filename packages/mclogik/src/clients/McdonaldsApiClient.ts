@@ -3,6 +3,7 @@ import axios, { type AxiosInstance } from 'axios'
 import { type APIType } from '../types'
 
 import { InvalidUpstreamResponseError } from './networkFailure'
+import { getUpstreamRecord } from './upstreamResponse'
 
 /**
  * Response from the McDonald's API containing outage information
@@ -60,16 +61,6 @@ export interface ApiClientConfig {
   storeIdType: string
 }
 
-type JsonRecord = Record<string, unknown>
-
-function getRecord(value: unknown): JsonRecord | undefined {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return value as JsonRecord
-  }
-
-  return undefined
-}
-
 function requireStringArray(value: unknown): string[] {
   if (
     !Array.isArray(value) ||
@@ -125,9 +116,9 @@ export class StandardApiClient implements McdonaldsApiClient {
       }
     })
 
-    const response = getRecord(getRecord(data)?.response)
-    const restaurant = getRecord(response?.restaurant)
-    const catalog = getRecord(restaurant?.catalog)
+    const response = getUpstreamRecord(getUpstreamRecord(data)?.response)
+    const restaurant = getUpstreamRecord(response?.restaurant)
+    const catalog = getUpstreamRecord(restaurant?.catalog)
     const outageProductCodes = requireStringArray(catalog?.outageProductCodes)
 
     return { outageProductCodes }
@@ -161,7 +152,9 @@ export class ElApiClient implements McdonaldsApiClient {
     })
 
     // EL responses use numbers; normalize to product-code strings.
-    const productOutages = getRecord(getRecord(data)?.productOutages)
+    const productOutages = getUpstreamRecord(
+      getUpstreamRecord(data)?.productOutages
+    )
     const outageProductCodes = requireNumberArray(
       productOutages?.productIDs
     ).map((code) => code.toString())

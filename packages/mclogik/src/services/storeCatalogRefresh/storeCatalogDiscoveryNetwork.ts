@@ -1,14 +1,16 @@
 import {
   createNetworkFailure,
-  type NetworkFailure
+  type NetworkFailure,
+  NetworkFailureError
 } from '../../clients/networkFailure'
 import { type RequestLimiter } from '../../constants/RateLimit'
 import { type MarketDefinition } from '../../markets/marketDefinitions'
 import {
   APIType,
+  type CatalogScope,
   type CreatePos,
   type ILocation,
-  type Locations
+  type MarketCode
 } from '../../types'
 import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
 
@@ -23,7 +25,7 @@ interface StoreCatalogRefreshContext {
 export interface StoreCatalogDiscoveryNetworkDependencies {
   loadRefreshContext(
     apiType: APIType,
-    catalogScopes?: Locations[]
+    catalogScopes?: CatalogScope[]
   ): Promise<StoreCatalogRefreshContext>
   generateLocationMesh(
     market: MarketDefinition,
@@ -42,20 +44,20 @@ export interface StoreCatalogDiscoveryNetworkDependencies {
 
 export interface StoreCatalogDiscoveryBatchRequest {
   apiType: APIType
-  catalogScopes?: Locations[]
+  catalogScopes?: CatalogScope[]
 }
 
 export interface StoreCatalogDiscoveryOutcome {
   index: number
-  market: string
-  catalogScope: string
+  market: MarketCode
+  catalogScope: CatalogScope
   stores: CreatePos[]
   failure?: NetworkFailure
 }
 
 export interface StoreCatalogDiscoveryScope {
-  market: string
-  catalogScope: string
+  market: MarketCode
+  catalogScope: CatalogScope
   plannedRequests: number
 }
 
@@ -103,8 +105,12 @@ export class StoreCatalogDiscoveryNetwork {
         catalogScopes
       )
     } catch (error) {
-      if (createNetworkFailure(error) != null) {
-        throw new Error('Store Catalog authentication request failed')
+      const failure = createNetworkFailure(error)
+      if (failure != null) {
+        throw new NetworkFailureError(
+          'Store Catalog authentication request failed',
+          failure
+        )
       }
       throw error
     }
@@ -132,8 +138,8 @@ export class StoreCatalogDiscoveryNetwork {
           kind: 'url',
           market
         })
-        requestsByMarket[market.country] =
-          (requestsByMarket[market.country] ?? 0) + 1
+        requestsByMarket[market.market] =
+          (requestsByMarket[market.market] ?? 0) + 1
         continue
       }
 
@@ -149,8 +155,8 @@ export class StoreCatalogDiscoveryNetwork {
         market,
         this.dependencies.getLocationIntervalKilometers(apiType)
       )
-      requestsByMarket[market.country] =
-        (requestsByMarket[market.country] ?? 0) + locations.length
+      requestsByMarket[market.market] =
+        (requestsByMarket[market.market] ?? 0) + locations.length
 
       for (const location of locations) {
         discoveryRequests.push({
@@ -162,16 +168,18 @@ export class StoreCatalogDiscoveryNetwork {
       }
     }
 
-    const scopesByCatalogScope = new Map<string, StoreCatalogDiscoveryScope>()
+    const scopesByCatalogScope = new Map<
+      CatalogScope,
+      StoreCatalogDiscoveryScope
+    >()
     for (const discoveryRequest of discoveryRequests) {
-      const catalogScope =
-        discoveryRequest.market.catalogScope ?? discoveryRequest.market.country
+      const catalogScope = discoveryRequest.market.catalogScope
       const existing = scopesByCatalogScope.get(catalogScope)
       if (existing != null) {
         existing.plannedRequests++
       } else {
         scopesByCatalogScope.set(catalogScope, {
-          market: discoveryRequest.market.country,
+          market: discoveryRequest.market.market,
           catalogScope,
           plannedRequests: 1
         })
@@ -202,8 +210,8 @@ export class StoreCatalogDiscoveryNetwork {
       async (
         discoveryRequest
       ): Promise<StoreCatalogDiscoveryOutcome | null> => {
-        const market = discoveryRequest.market.country
-        const catalogScope = discoveryRequest.market.catalogScope ?? market
+        const market = discoveryRequest.market.market
+        const catalogScope = discoveryRequest.market.catalogScope
 
         try {
           const stores =

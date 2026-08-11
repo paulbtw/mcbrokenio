@@ -5,18 +5,9 @@ import { type CreatePos, type ICountryInfos, type ILocation } from '../types'
 import { randomUserAgent } from '../utils/randomUserAgent'
 
 import { InvalidUpstreamResponseError } from './networkFailure'
+import { getUpstreamRecord } from './upstreamResponse'
 
 const STORE_DISCOVERY_TIMEOUT_MS = 10_000
-
-type JsonRecord = Record<string, unknown>
-
-function getRecord(value: unknown): JsonRecord | undefined {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return value as JsonRecord
-  }
-
-  return undefined
-}
 
 function requireRestaurantCollection(value: unknown): unknown[] {
   if (!Array.isArray(value)) {
@@ -65,8 +56,8 @@ function mapLocationRestaurant(
   value: unknown,
   countryInfo: ICountryInfos
 ): CreatePos {
-  const restaurant = getRecord(value)
-  const location = getRecord(restaurant?.location)
+  const restaurant = getUpstreamRecord(value)
+  const location = getUpstreamRecord(restaurant?.location)
   const identifier = requireStoreIdentifier(restaurant?.nationalStoreNumber)
   const facilities = requireFacilities(restaurant?.facilities)
   const { country, getStores } = countryInfo
@@ -89,7 +80,7 @@ function mapUrlRestaurant(
   value: unknown,
   countryInfo: ICountryInfos
 ): CreatePos {
-  const restaurant = getRecord(value)
+  const restaurant = getUpstreamRecord(value)
   const identifier = requireStoreIdentifier(restaurant?.rid)
   const facilities = requireFacilities(restaurant?.facilities)
   const { country, getStores } = countryInfo
@@ -147,7 +138,7 @@ export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
       }
     )
 
-    const response = getRecord(getRecord(data)?.response)
+    const response = getUpstreamRecord(getUpstreamRecord(data)?.response)
     const restaurants = requireRestaurantCollection(response?.restaurants)
 
     return restaurants.map((restaurant) =>
@@ -163,7 +154,7 @@ export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
     )
 
     const restaurants = requireRestaurantCollection(
-      getRecord(data)?.restaurants
+      getUpstreamRecord(data)?.restaurants
     )
 
     return restaurants.map((restaurant) =>

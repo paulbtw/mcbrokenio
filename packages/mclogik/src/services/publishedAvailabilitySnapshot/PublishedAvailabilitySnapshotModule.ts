@@ -1,14 +1,27 @@
 import { ItemStatus, type Pos } from '@mcbroken/db'
 
+import { asMarketCode, type MarketCode } from '../../types'
 import {
   type CustomItemType,
   type GeoJson,
   type GeoJsonPos
 } from '../../types/geoJson'
 
-export const PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION = 1 as const
+export const PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION = 2 as const
 
 export interface PublishedAvailabilityStatistics {
+  total: number
+  trackable: number
+  availablemilkshakes: number
+  totalmilkshakes: number
+  availablemcflurry: number
+  totalmcflurry: number
+  availablemcsundae: number
+  totalmcsundae: number
+  market: MarketCode
+}
+
+export interface LegacyPublishedAvailabilityStatistics {
   total: number
   trackable: number
   availablemilkshakes: number
@@ -65,12 +78,12 @@ export interface PublishedAvailabilitySnapshotDependencies {
   now(): number
 }
 
-const unknown = ItemStatus.UNKNOWN
-const available: ItemStatus[] = [
+const UNKNOWN_ITEM_STATUS = ItemStatus.UNKNOWN
+const GREEN_ITEM_STATUSES: ItemStatus[] = [
   ItemStatus.AVAILABLE,
   ItemStatus.NOT_APPLICABLE
 ]
-const unavailable: ItemStatus[] = [
+const RED_ITEM_STATUSES: ItemStatus[] = [
   ItemStatus.UNAVAILABLE,
   ItemStatus.NOT_APPLICABLE
 ]
@@ -86,23 +99,23 @@ function getColorDot(
   }
 
   if (
-    hasMcFlurry === unknown &&
-    hasMcSundae === unknown &&
-    hasMilkshake === unknown
+    hasMcFlurry === UNKNOWN_ITEM_STATUS &&
+    hasMcSundae === UNKNOWN_ITEM_STATUS &&
+    hasMilkshake === UNKNOWN_ITEM_STATUS
   ) {
     return 'GREY'
   }
   if (
-    available.includes(hasMcFlurry) &&
-    available.includes(hasMcSundae) &&
-    available.includes(hasMilkshake)
+    GREEN_ITEM_STATUSES.includes(hasMcFlurry) &&
+    GREEN_ITEM_STATUSES.includes(hasMcSundae) &&
+    GREEN_ITEM_STATUSES.includes(hasMilkshake)
   ) {
     return 'GREEN'
   }
   if (
-    unavailable.includes(hasMcFlurry) &&
-    unavailable.includes(hasMcSundae) &&
-    unavailable.includes(hasMilkshake)
+    RED_ITEM_STATUSES.includes(hasMcFlurry) &&
+    RED_ITEM_STATUSES.includes(hasMcSundae) &&
+    RED_ITEM_STATUSES.includes(hasMilkshake)
   ) {
     return 'RED'
   }
@@ -151,7 +164,9 @@ function createGeoJson(stores: PublishedAvailabilityStore[]): GeoJson {
   }
 }
 
-function createStatisticsRow(country: string): PublishedAvailabilityStatistics {
+function createStatisticsRow(
+  market: MarketCode
+): PublishedAvailabilityStatistics {
   return {
     total: 0,
     trackable: 0,
@@ -161,7 +176,7 @@ function createStatisticsRow(country: string): PublishedAvailabilityStatistics {
     totalmcflurry: 0,
     availablemcsundae: 0,
     totalmcsundae: 0,
-    country
+    market
   }
 }
 
@@ -209,20 +224,42 @@ function addStoreToStatistics(
 function createPublishedStatistics(
   stores: PublishedAvailabilityStore[]
 ): PublishedAvailabilityStatistics[] {
-  const statisticsByCountry = new Map<string, PublishedAvailabilityStatistics>()
-  let aggregate = createStatisticsRow('UNKNOWN')
+  const statisticsByMarket = new Map<
+    MarketCode,
+    PublishedAvailabilityStatistics
+  >()
+  let aggregate = createStatisticsRow(asMarketCode('UNKNOWN'))
 
   for (const store of stores) {
-    const countryStatistics = addStoreToStatistics(
-      statisticsByCountry.get(store.country) ??
-        createStatisticsRow(store.country),
+    const market = asMarketCode(store.country)
+    const marketStatistics = addStoreToStatistics(
+      statisticsByMarket.get(market) ?? createStatisticsRow(market),
       store
     )
-    statisticsByCountry.set(store.country, countryStatistics)
+    statisticsByMarket.set(market, marketStatistics)
     aggregate = addStoreToStatistics(aggregate, store)
   }
 
-  return [...statisticsByCountry.values(), aggregate]
+  return [...statisticsByMarket.values(), aggregate]
+}
+
+/** Converts legacy stats.json rows into the canonical Market-based contract. */
+export function convertLegacyPublishedAvailabilityStatistics(
+  statistics: LegacyPublishedAvailabilityStatistics[]
+): PublishedAvailabilityStatistics[] {
+  return statistics.map(({ country, ...metrics }) => ({
+    ...metrics,
+    market: asMarketCode(country)
+  }))
+}
+
+function createLegacyPublishedAvailabilityStatistics(
+  statistics: PublishedAvailabilityStatistics[]
+): LegacyPublishedAvailabilityStatistics[] {
+  return statistics.map(({ market, ...metrics }) => ({
+    ...metrics,
+    country: market
+  }))
 }
 
 export class PublishedAvailabilitySnapshotModule {
@@ -245,7 +282,10 @@ export class PublishedAvailabilitySnapshotModule {
 
     await this.dependencies.publishJson('snapshot.json', snapshot)
     await this.dependencies.publishJson('marker.json', markers)
-    await this.dependencies.publishJson('stats.json', statistics)
+    await this.dependencies.publishJson(
+      'stats.json',
+      createLegacyPublishedAvailabilityStatistics(statistics)
+    )
 
     return {
       storesPublished: stores.length,

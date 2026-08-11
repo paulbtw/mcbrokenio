@@ -3,7 +3,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { InvalidUpstreamResponseError } from '../../clients/networkFailure'
 import { type RequestLimiter } from '../../constants/RateLimit'
 import { type MarketDefinition } from '../../markets/marketDefinitions'
-import { APIType, IceType, type ILocation, UsLocations } from '../../types'
+import {
+  APIType,
+  asCatalogScope,
+  asMarketCode,
+  IceType,
+  type ILocation,
+  UsLocations
+} from '../../types'
 
 import {
   StoreCatalogDiscoveryNetwork,
@@ -23,7 +30,8 @@ function createMarket(
 ): MarketDefinition {
   return {
     country,
-    catalogScope: scope,
+    market: asMarketCode(country),
+    catalogScope: asCatalogScope(scope),
     getStores: {
       api: APIType.US,
       url: 'https://example.com/stores?'
@@ -106,7 +114,10 @@ describe('StoreCatalogDiscoveryNetwork', () => {
 
     const batch = await network.discoverBatch({
       apiType: APIType.US,
-      catalogScopes: [UsLocations.US, UsLocations.US2]
+      catalogScopes: [
+        asCatalogScope(UsLocations.US),
+        asCatalogScope(UsLocations.US2)
+      ]
     })
 
     expect(dependencies.loadRefreshContext).toHaveBeenCalledTimes(1)
@@ -209,9 +220,18 @@ describe('StoreCatalogDiscoveryNetwork', () => {
     )
     const network = new StoreCatalogDiscoveryNetwork(dependencies)
 
-    await expect(
-      network.discoverBatch({ apiType: APIType.US })
-    ).rejects.toThrow('Store Catalog authentication request failed')
+    const failure = await network
+      .discoverBatch({ apiType: APIType.US })
+      .catch((error: unknown) => error)
+
+    expect(failure).toMatchObject({
+      name: 'NetworkFailureError',
+      kind: 'network',
+      retryable: true,
+      message: 'Store Catalog authentication request failed'
+    })
+    expect(JSON.stringify(failure)).not.toContain('private.example')
+    expect(JSON.stringify(failure)).not.toContain('Bearer secret')
   })
 
   it('opens the circuit breaker after repeated expected failures', async () => {

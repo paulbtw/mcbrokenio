@@ -93,7 +93,7 @@ describe('publishAvailabilitySnapshot', () => {
       1,
       'snapshot.json',
       expect.objectContaining({
-        schemaVersion: 1,
+        schemaVersion: 2,
         publishedAt: expect.any(String),
         markers: expect.objectContaining({ type: 'FeatureCollection' }),
         statistics: expect.any(Array)
@@ -116,7 +116,7 @@ describe('publishAvailabilitySnapshot', () => {
       storesPublished: 1,
       statisticsRowsPublished: 2,
       filesPublished: ['snapshot.json', 'marker.json', 'stats.json'],
-      schemaVersion: 1,
+      schemaVersion: 2,
       publishedAt: expect.any(String)
     })
   })
