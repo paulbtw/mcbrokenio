@@ -1,91 +1,53 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { type RequestLimiter } from '../../constants/RateLimit'
-import { type CreatePos } from '../../types'
-import {
-  APIType,
-  EuLocations,
-  IceType,
-  type ICountryInfos,
-  type ILocation,
-  UsLocations
-} from '../../types'
+import { APIType, type CreatePos, UsLocations } from '../../types'
 
 import {
   type StoreCatalogRefreshDependencies,
   StoreCatalogRefreshModule
 } from './StoreCatalogRefreshModule'
 
-const TEST_LIMITER: RequestLimiter = {
-  concurrentRequests: 4,
-  maxRequestsPerSecond: 100,
-  requestsPerLog: 100
-}
-const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 24
-const MAX_REQUESTS_STARTED_AFTER_ABORT =
-  CIRCUIT_BREAKER_FAILURE_THRESHOLD + TEST_LIMITER.concurrentRequests - 1
-const REQUESTS_BEYOND_BREAKER_THRESHOLD =
-  MAX_REQUESTS_STARTED_AFTER_ABORT + TEST_LIMITER.concurrentRequests
-const PARTIAL_SCOPE_REQUESTS = TEST_LIMITER.concurrentRequests * 2
-
-const LOCATION: ILocation = { latitude: 40, longitude: -70 }
-
-function createCountryInfo(
-  country: UsLocations | EuLocations = UsLocations.US,
-  apiType = APIType.US
-): ICountryInfos {
-  return {
-    country,
-    getStores: {
-      api: apiType,
-      url: 'https://example.com/stores?',
-      mobileString: 'MOBILEORDERS'
-    },
-    locationLimits: {
-      minLatitude: 1,
-      maxLatitude: 2,
-      minLongitude: 3,
-      maxLongitude: 4
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: []
-    }
-  }
-}
-
-function createStore(
-  id: string,
-  country = 'US',
-  nationalStoreNumber = '123'
-): CreatePos {
+function createStore(id: string): CreatePos {
   return {
     id,
-    nationalStoreNumber,
-    name: `Store ${id}`,
-    latitude: '40',
-    longitude: '-70',
-    hasMobileOrdering: true,
-    country
+    nationalStoreNumber: id,
+    name: id,
+    latitude: '1',
+    longitude: '2',
+    country: 'US',
+    hasMobileOrdering: true
   }
 }
 
-function createDependencies(
-  countryInfos: ICountryInfos[] = [createCountryInfo()]
-) {
-  const discoverFromLocation = vi.fn().mockResolvedValue([createStore('US-1')])
-  const discoverFromUrl = vi.fn().mockResolvedValue([createStore('AT-1', 'AT')])
+function successfulBatch() {
+  return {
+    requestsByCountry: { US: 2 },
+    scopes: [
+      { country: 'US', scope: UsLocations.US, plannedRequests: 1 },
+      { country: 'US', scope: UsLocations.US2, plannedRequests: 1 }
+    ],
+    skippedCountries: 0,
+    circuitOpened: false,
+    outcomes: [
+      {
+        index: 0,
+        country: 'US',
+        scope: UsLocations.US,
+        stores: [createStore('US-1')]
+      },
+      {
+        index: 1,
+        country: 'US',
+        scope: UsLocations.US2,
+        stores: [createStore('US-1'), createStore('US-2')]
+      }
+    ]
+  }
+}
 
-  const dependencies: StoreCatalogRefreshDependencies = {
-    loadRefreshContext: vi.fn().mockResolvedValue({
-      token: 'token',
-      clientId: 'client-id',
-      countryInfos
-    }),
-    generateLocationMesh: vi.fn().mockReturnValue([LOCATION]),
-    discoverFromLocation,
-    discoverFromUrl,
+function createDependencies(): StoreCatalogRefreshDependencies {
+  return {
+    discoverStoreCatalogBatch: vi.fn().mockResolvedValue(successfulBatch()),
     recordScopeRefresh: vi.fn().mockImplementation(async ({ stores }) => ({
       storesPersisted: stores.length,
       scopeCompleted: true,
@@ -95,31 +57,20 @@ function createDependencies(
       storesClosed: 0,
       storesPurged: 0
     })),
-    getExpectedCatalogScopes: vi
-      .fn()
-      .mockImplementation((_apiType, country) => [country]),
+    getExpectedCatalogScopes: vi.fn().mockReturnValue([
+      UsLocations.US,
+      UsLocations.US2
+    ]),
     getCatalogCycleId: vi.fn().mockReturnValue('2026-08-02'),
-    currentDate: vi.fn().mockReturnValue(new Date('2026-08-08T10:00:00.000Z')),
-    getRequestLimiter: vi.fn().mockReturnValue(TEST_LIMITER),
-    getLocationIntervalKilometers: vi.fn().mockReturnValue(30),
+    currentDate: vi.fn().mockReturnValue(new Date('2026-08-11T08:00:00.000Z')),
     logDiscoveryFailure: vi.fn(),
     now: vi.fn().mockReturnValueOnce(1_000).mockReturnValue(1_300)
   }
-
-  return { dependencies, discoverFromLocation, discoverFromUrl }
 }
 
 describe('StoreCatalogRefreshModule', () => {
-  it('discovers, deduplicates by globally scoped id, and persists once', async () => {
-    const countryInfos = [
-      createCountryInfo(UsLocations.US),
-      createCountryInfo(UsLocations.US2)
-    ]
-    const { dependencies, discoverFromLocation } =
-      createDependencies(countryInfos)
-    discoverFromLocation
-      .mockResolvedValueOnce([createStore('US-123', 'US', '123')])
-      .mockResolvedValueOnce([createStore('US2-123', 'US2', '123')])
+  it('persists ordered scope observations and deduplicates the batch summary', async () => {
+    const dependencies = createDependencies()
     const module = new StoreCatalogRefreshModule(dependencies)
 
     const result = await module.refresh({
@@ -127,325 +78,15 @@ describe('StoreCatalogRefreshModule', () => {
       countryList: [UsLocations.US, UsLocations.US2]
     })
 
-    expect(dependencies.loadRefreshContext).toHaveBeenCalledWith(APIType.US, [
-      UsLocations.US,
-      UsLocations.US2
-    ])
-    expect(dependencies.getLocationIntervalKilometers).toHaveBeenCalledWith(
-      APIType.US
-    )
-    expect(dependencies.recordScopeRefresh).toHaveBeenCalledTimes(2)
-    expect(result).toEqual({
-      totalRequests: 2,
-      successfulRequests: 2,
-      failedRequests: 0,
-      skippedCountries: 0,
-      storesDiscovered: 2,
-      storesPersisted: 2,
-      countryBreakdown: {
-        US: { requests: 1, successful: 1, failed: 0, stores: 1 },
-        US2: { requests: 1, successful: 1, failed: 0, stores: 1 }
-      },
-      durationMs: 300
+    expect(dependencies.discoverStoreCatalogBatch).toHaveBeenCalledWith({
+      apiType: APIType.US,
+      countryList: [UsLocations.US, UsLocations.US2]
     })
-  })
-
-  it('combines request outcomes for geographic slices sharing a country code', async () => {
-    const countryInfos = [createCountryInfo(), createCountryInfo()]
-    const { dependencies, discoverFromLocation } =
-      createDependencies(countryInfos)
-    discoverFromLocation
-      .mockResolvedValueOnce([createStore('US-1')])
-      .mockResolvedValueOnce([createStore('US-2')])
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    const result = await module.refresh({ apiType: APIType.US })
-
-    expect(result).toMatchObject({
-      totalRequests: 2,
-      successfulRequests: 2,
-      failedRequests: 0,
-      countryBreakdown: {
-        US: { requests: 2, successful: 2, failed: 0, stores: 2 }
-      }
-    })
-  })
-
-  it('records partial discovery progress and rejects so Lambda can retry', async () => {
-    const { dependencies, discoverFromLocation } = createDependencies()
-    vi.mocked(dependencies.generateLocationMesh).mockReturnValue([
-      LOCATION,
-      { latitude: 41, longitude: -71 }
-    ])
-    discoverFromLocation
-      .mockRejectedValueOnce(new Error('upstream unavailable'))
-      .mockResolvedValueOnce([createStore('US-2')])
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
-      '1 of 2 store discovery requests failed'
-    )
-    expect(dependencies.logDiscoveryFailure).toHaveBeenCalledTimes(1)
-    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
-      expect.objectContaining({
-        complete: false,
-        stores: [expect.objectContaining({ id: 'US-2' })]
-      })
-    )
-  })
-
-  it('rejects when every discovery request fails so Lambda can retry', async () => {
-    const { dependencies, discoverFromLocation } = createDependencies()
-    discoverFromLocation.mockRejectedValue(new Error('offline'))
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
-      'All store discovery requests failed'
-    )
-    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
-      expect.objectContaining({ complete: false, stores: [] })
-    )
-  })
-
-  it('stops discovery after repeated upstream failures', async () => {
-    const { dependencies, discoverFromLocation } = createDependencies()
-    vi.mocked(dependencies.generateLocationMesh).mockReturnValue(
-      Array.from({ length: REQUESTS_BEYOND_BREAKER_THRESHOLD }, (_, index) => ({
-        latitude: index,
-        longitude: -index
-      }))
-    )
-    discoverFromLocation.mockRejectedValue(new Error('upstream unavailable'))
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
-      `Store discovery aborted after ${CIRCUIT_BREAKER_FAILURE_THRESHOLD} consecutive failures`
-    )
-    expect(discoverFromLocation.mock.calls.length).toBeGreaterThanOrEqual(
-      CIRCUIT_BREAKER_FAILURE_THRESHOLD
-    )
-    expect(discoverFromLocation.mock.calls.length).toBeLessThanOrEqual(
-      MAX_REQUESTS_STARTED_AFTER_ABORT
-    )
-    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
-      expect.objectContaining({ complete: false, stores: [] })
-    )
-  })
-
-  it('records successes completed before the breaker opens and rejects for retry', async () => {
-    const countryInfos = [
-      createCountryInfo(UsLocations.US),
-      createCountryInfo(UsLocations.US2)
-    ]
-    const { dependencies, discoverFromLocation } =
-      createDependencies(countryInfos)
-    vi.mocked(dependencies.generateLocationMesh)
-      .mockReturnValueOnce([LOCATION])
-      .mockReturnValueOnce(
-        Array.from(
-          { length: REQUESTS_BEYOND_BREAKER_THRESHOLD },
-          (_, index) => ({ latitude: index, longitude: -index })
-        )
-      )
-    discoverFromLocation
-      .mockResolvedValueOnce([createStore('US-1')])
-      .mockRejectedValue(new Error('localized upstream failure'))
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
-      /store discovery requests failed/
-    )
-    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
-      expect.objectContaining({
-        complete: true,
-        stores: [expect.objectContaining({ id: 'US-1' })]
-      })
-    )
-  })
-
-  it('keeps a scope incomplete when the breaker cancels some of its requests', async () => {
-    const countryInfos = [
-      createCountryInfo(UsLocations.US),
-      createCountryInfo(UsLocations.US2)
-    ]
-    const { dependencies, discoverFromLocation } =
-      createDependencies(countryInfos)
-    vi.mocked(dependencies.generateLocationMesh)
-      .mockReturnValueOnce(
-        Array.from(
-          { length: CIRCUIT_BREAKER_FAILURE_THRESHOLD },
-          (_, index) => ({ latitude: index, longitude: -index })
-        )
-      )
-      .mockReturnValueOnce(
-        Array.from({ length: PARTIAL_SCOPE_REQUESTS }, (_, index) => ({
-          latitude: index,
-          longitude: -index
-        }))
-      )
-
-    let releaseFinalFailures!: () => void
-    const finalFailuresGate = new Promise<void>((resolve) => {
-      releaseFinalFailures = resolve
-    })
-    let markPartialScopeStarted!: () => void
-    const partialScopeStarted = new Promise<void>((resolve) => {
-      markPartialScopeStarted = resolve
-    })
-    let releasePartialScope!: () => void
-    const partialScopeGate = new Promise<void>((resolve) => {
-      releasePartialScope = resolve
-    })
-    let failingScopeCalls = 0
-    let partialScopeCalls = 0
-    discoverFromLocation.mockImplementation(async (_location, countryInfo) => {
-      if (countryInfo.country === UsLocations.US) {
-        failingScopeCalls++
-        if (
-          failingScopeCalls >
-          CIRCUIT_BREAKER_FAILURE_THRESHOLD -
-            (TEST_LIMITER.concurrentRequests - 1)
-        ) {
-          await finalFailuresGate
-        }
-        throw new Error('localized upstream failure')
-      }
-
-      const requestNumber = ++partialScopeCalls
-      markPartialScopeStarted()
-      await partialScopeGate
-      return [createStore(`US2-${requestNumber}`, 'US2')]
-    })
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    const refreshError = module
-      .refresh({ apiType: APIType.US })
-      .catch((error: unknown) => error)
-    await partialScopeStarted
-    releaseFinalFailures()
-    await vi.waitFor(() => {
-      expect(dependencies.logDiscoveryFailure).toHaveBeenCalledTimes(
-        CIRCUIT_BREAKER_FAILURE_THRESHOLD
-      )
-    })
-    releasePartialScope()
-    expect(await refreshError).toEqual(
-      new Error(
-        `${CIRCUIT_BREAKER_FAILURE_THRESHOLD} of ${CIRCUIT_BREAKER_FAILURE_THRESHOLD + partialScopeCalls} store discovery requests failed`
-      )
-    )
-
-    expect(partialScopeCalls).toBeGreaterThan(0)
-    expect(partialScopeCalls).toBeLessThan(PARTIAL_SCOPE_REQUESTS)
-    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
-      expect.objectContaining({
-        country: UsLocations.US2,
-        scope: UsLocations.US2,
-        complete: false,
-        stores: expect.arrayContaining([
-          expect.objectContaining({ country: 'US2' })
-        ])
-      })
-    )
-  })
-
-  it('uses URL discovery internally for EL markets', async () => {
-    const countryInfo = createCountryInfo(UsLocations.US, APIType.EL)
-    countryInfo.country = 'AT' as typeof countryInfo.country
-    const { dependencies, discoverFromLocation, discoverFromUrl } =
-      createDependencies([countryInfo])
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    const result = await module.refresh({ apiType: APIType.EL })
-
-    expect(discoverFromUrl).toHaveBeenCalledWith(countryInfo)
-    expect(discoverFromLocation).not.toHaveBeenCalled()
-    expect(dependencies.generateLocationMesh).not.toHaveBeenCalled()
-    expect(result.storesPersisted).toBe(1)
-  })
-
-  it('preserves the existing UK exclusion as an explicit skip', async () => {
-    const uk = createCountryInfo(EuLocations.UK, APIType.EU)
-    const de = createCountryInfo(EuLocations.DE, APIType.EU)
-    const { dependencies, discoverFromLocation } = createDependencies([uk, de])
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    const result = await module.refresh({ apiType: APIType.EU })
-
-    expect(result.skippedCountries).toBe(1)
-    expect(discoverFromLocation).toHaveBeenCalledTimes(1)
-  })
-
-  it('returns an empty summary when no markets are configured', async () => {
-    const { dependencies } = createDependencies([])
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    const result = await module.refresh({ apiType: APIType.US })
-
-    expect(result).toEqual({
-      totalRequests: 0,
-      successfulRequests: 0,
-      failedRequests: 0,
-      skippedCountries: 0,
-      storesDiscovered: 0,
-      storesPersisted: 0,
-      countryBreakdown: {},
-      durationMs: 300
-    })
-    expect(dependencies.recordScopeRefresh).not.toHaveBeenCalled()
-  })
-
-  it('rejects invalid location configuration before discovery', async () => {
-    const countryInfo = createCountryInfo()
-    delete countryInfo.locationLimits
-    const { dependencies, discoverFromLocation } = createDependencies([
-      countryInfo
-    ])
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
-      'No locations found for US'
-    )
-    expect(discoverFromLocation).not.toHaveBeenCalled()
-    expect(dependencies.recordScopeRefresh).not.toHaveBeenCalled()
-  })
-
-  it('rejects persistence failures', async () => {
-    const { dependencies } = createDependencies()
-    vi.mocked(dependencies.recordScopeRefresh).mockRejectedValue(
-      new Error('transaction failed')
-    )
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
-      'transaction failed'
-    )
-  })
-
-  it('records split geographic scopes separately while reconciling their shared country together', async () => {
-    const us = createCountryInfo(UsLocations.US)
-    us.catalogScope = UsLocations.US
-    const us2 = createCountryInfo(UsLocations.US)
-    us2.catalogScope = UsLocations.US2
-    const { dependencies, discoverFromLocation } = createDependencies([us, us2])
-    vi.mocked(dependencies.getExpectedCatalogScopes).mockReturnValue([
-      UsLocations.US,
-      UsLocations.US2
-    ])
-    discoverFromLocation
-      .mockResolvedValueOnce([createStore('US-1')])
-      .mockResolvedValueOnce([createStore('US-2')])
-    const module = new StoreCatalogRefreshModule(dependencies)
-
-    await module.refresh({ apiType: APIType.US })
-
     expect(dependencies.recordScopeRefresh).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        cycleId: '2026-08-02',
         country: 'US',
         scope: UsLocations.US,
-        expectedScopes: [UsLocations.US, UsLocations.US2],
         complete: true,
         stores: [expect.objectContaining({ id: 'US-1' })]
       })
@@ -455,28 +96,139 @@ describe('StoreCatalogRefreshModule', () => {
       expect.objectContaining({
         country: 'US',
         scope: UsLocations.US2,
+        complete: true,
+        stores: [
+          expect.objectContaining({ id: 'US-1' }),
+          expect.objectContaining({ id: 'US-2' })
+        ]
+      })
+    )
+    expect(result).toEqual({
+      totalRequests: 2,
+      successfulRequests: 2,
+      failedRequests: 0,
+      skippedCountries: 0,
+      storesDiscovered: 2,
+      storesPersisted: 2,
+      countryBreakdown: {
+        US: { requests: 2, successful: 2, failed: 0, stores: 2 }
+      },
+      durationMs: 300
+    })
+  })
+
+  it('persists partial observations as incomplete before rejecting for retry', async () => {
+    const dependencies = createDependencies()
+    const failure = {
+      kind: 'http' as const,
+      retryable: true,
+      status: 503,
+      message: 'Upstream HTTP request failed'
+    }
+    vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
+      requestsByCountry: { US: 2 },
+      scopes: [{ country: 'US', scope: 'US', plannedRequests: 2 }],
+      skippedCountries: 0,
+      circuitOpened: false,
+      outcomes: [
+        {
+          index: 0,
+          country: 'US',
+          scope: 'US',
+          stores: [],
+          failure
+        },
+        {
+          index: 1,
+          country: 'US',
+          scope: 'US',
+          stores: [createStore('US-2')]
+        }
+      ]
+    })
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      '1 of 2 store discovery requests failed'
+    )
+    expect(dependencies.logDiscoveryFailure).toHaveBeenCalledWith(failure, {
+      apiType: APIType.US,
+      country: 'US'
+    })
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({
+        complete: false,
         stores: [expect.objectContaining({ id: 'US-2' })]
       })
     )
   })
 
-  it('preserves globally deduplicated result counts for overlapping scopes', async () => {
-    const us = createCountryInfo(UsLocations.US)
-    us.catalogScope = UsLocations.US
-    const us2 = createCountryInfo(UsLocations.US)
-    us2.catalogScope = UsLocations.US2
-    const { dependencies, discoverFromLocation } = createDependencies([us, us2])
-    vi.mocked(dependencies.getExpectedCatalogScopes).mockReturnValue([
-      UsLocations.US,
-      UsLocations.US2
-    ])
-    discoverFromLocation.mockResolvedValue([createStore('US-1')])
+  it('persists an incomplete scope when the circuit breaker cancels queued work', async () => {
+    const dependencies = createDependencies()
+    vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
+      requestsByCountry: { US: 30 },
+      scopes: [{ country: 'US', scope: 'US', plannedRequests: 30 }],
+      skippedCountries: 0,
+      circuitOpened: true,
+      outcomes: Array.from({ length: 24 }, (_, index) => ({
+        index,
+        country: 'US',
+        scope: 'US',
+        stores: [],
+        failure: {
+          kind: 'http' as const,
+          retryable: true,
+          status: 503,
+          message: 'Upstream HTTP request failed'
+        }
+      }))
+    })
     const module = new StoreCatalogRefreshModule(dependencies)
 
-    const result = await module.refresh({ apiType: APIType.US })
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      'Store discovery aborted after repeated failures'
+    )
+    expect(dependencies.recordScopeRefresh).toHaveBeenCalledWith(
+      expect.objectContaining({ complete: false, stores: [] })
+    )
+  })
 
-    expect(dependencies.recordScopeRefresh).toHaveBeenCalledTimes(2)
-    expect(result.storesDiscovered).toBe(1)
-    expect(result.storesPersisted).toBe(1)
+  it('does not persist when the network batch rejects during auth or configuration', async () => {
+    const dependencies = createDependencies()
+    vi.mocked(dependencies.discoverStoreCatalogBatch).mockRejectedValue(
+      new Error('Credential lookup failed')
+    )
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    await expect(module.refresh({ apiType: APIType.US })).rejects.toThrow(
+      'Credential lookup failed'
+    )
+    expect(dependencies.recordScopeRefresh).not.toHaveBeenCalled()
+  })
+
+  it('returns an empty result when the batch has no planned discovery work', async () => {
+    const dependencies = createDependencies()
+    vi.mocked(dependencies.discoverStoreCatalogBatch).mockResolvedValue({
+      requestsByCountry: {},
+      scopes: [],
+      skippedCountries: 1,
+      circuitOpened: false,
+      outcomes: []
+    })
+    const module = new StoreCatalogRefreshModule(dependencies)
+
+    await expect(
+      module.refresh({ apiType: APIType.EU })
+    ).resolves.toEqual({
+      totalRequests: 0,
+      successfulRequests: 0,
+      failedRequests: 0,
+      skippedCountries: 1,
+      storesDiscovered: 0,
+      storesPersisted: 0,
+      countryBreakdown: {},
+      durationMs: 300
+    })
+    expect(dependencies.recordScopeRefresh).not.toHaveBeenCalled()
   })
 })

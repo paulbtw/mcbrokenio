@@ -9,20 +9,26 @@ import {
   type RequestLimiter
 } from '../../constants/RateLimit'
 import {
+  getMarketCountries,
+  selectMarketDefinitions
+} from '../../markets/MarketDefinitions'
+import {
   addBreadcrumb,
   type BatchFailureSample,
   captureBatchSummary
 } from '../../sentry'
 import { APIType, type UpdatePos } from '../../types'
 import { chunkArray } from '../../utils/chunkArray'
-import { getMetaForApi } from '../../utils/getMetaForApi'
 import { getPosByCountries } from '../../utils/getPosByCountries'
+import { getBearerToken } from '../token/getBearerToken'
+import { getClientId } from '../token/getClientId'
 
 import {
   AvailabilityPollingModule,
   type AvailabilityPollRequest,
   type AvailabilityPollResult
 } from './AvailabilityPollingModule'
+import { ProductAvailabilityNetwork } from './ProductAvailabilityNetwork'
 
 const PERSISTENCE_TRANSACTION_BATCH_SIZE = 100
 // A batch performs sequential writes and may cross regions to reach PostgreSQL.
@@ -91,29 +97,26 @@ function logStoreFailure(sample: BatchFailureSample): void {
   console.error('Product availability request failed', sample)
 }
 
-const availabilityPollingModule = new AvailabilityPollingModule({
+const productAvailabilityNetwork = new ProductAvailabilityNetwork({
   async loadPollContext(apiType, countryList) {
-    const context = await getMetaForApi(apiType, countryList, true)
-
-    if (typeof context.token !== 'string' || context.token.length === 0) {
-      throw new Error(`Bearer token is missing for ${apiType}`)
-    }
-
-    return context
-  },
-  findEligibleStores: async (countries) => getPosByCountries(prisma, countries),
-  createProductAvailabilityAdapter(apiType) {
-    const productAvailabilityFetcher = createStoreProductAvailabilityFetcher(
-      createApiClient(apiType)
-    )
-
     return {
-      fetchStoreProductAvailability: (...args) =>
-        productAvailabilityFetcher.fetchStoreProductAvailability(...args)
+      token: await getBearerToken(apiType),
+      clientId: getClientId(apiType),
+      markets: selectMarketDefinitions(apiType, countryList)
     }
   },
+  createProductAvailabilityFetcher(apiType) {
+    return createStoreProductAvailabilityFetcher(createApiClient(apiType))
+  },
+  getRequestLimiter
+})
+
+const availabilityPollingModule = new AvailabilityPollingModule({
+  getMarketCountries,
+  findEligibleStores: async (countries) => getPosByCountries(prisma, countries),
+  fetchProductAvailabilityBatch: (input) =>
+    productAvailabilityNetwork.fetchBatch(input),
   persistUpdates,
-  getRequestLimiter,
   addBreadcrumb,
   captureBatchSummary,
   logStoreFailure,

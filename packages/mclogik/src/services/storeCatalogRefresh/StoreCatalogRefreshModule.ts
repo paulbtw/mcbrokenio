@@ -1,24 +1,11 @@
-import { type RequestLimiter } from '../../constants/RateLimit'
+import { type NetworkFailure } from '../../clients/NetworkFailure'
 import {
   type CatalogScopeRefreshInput,
   type CatalogScopeRefreshResult
 } from '../../repositories'
-import {
-  APIType,
-  type CreatePos,
-  type ICountryInfos,
-  type ILocation,
-  type Locations
-} from '../../types'
-import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
+import { type APIType, type CreatePos, type Locations } from '../../types'
 
-/**
- * Three full failure waves at the production location-discovery concurrency of
- * eight. Because requests complete concurrently, "consecutive" means observed
- * completion order; any successful completion resets the count. Opening the
- * breaker cancels queued work, while completed successes remain persistable.
- */
-const MAX_CONSECUTIVE_DISCOVERY_FAILURES = 24
+import { type StoreCatalogDiscoveryBatch } from './StoreCatalogDiscoveryNetwork'
 
 export interface StoreCatalogRefreshRequest {
   apiType: APIType
@@ -43,62 +30,22 @@ export interface StoreCatalogRefreshResult {
   durationMs: number
 }
 
-interface StoreCatalogRefreshContext {
-  token: string
-  clientId: string
-  countryInfos: ICountryInfos[]
-}
-
 export interface StoreCatalogRefreshDependencies {
-  loadRefreshContext(
-    apiType: APIType,
+  discoverStoreCatalogBatch(input: {
+    apiType: APIType
     countryList?: Locations[]
-  ): Promise<StoreCatalogRefreshContext>
-  generateLocationMesh(
-    countryInfo: ICountryInfos,
-    intervalKilometers: number
-  ): ILocation[]
-  discoverFromLocation(
-    location: ILocation,
-    countryInfo: ICountryInfos,
-    token: string,
-    clientId: string
-  ): Promise<CreatePos[]>
-  discoverFromUrl(countryInfo: ICountryInfos): Promise<CreatePos[]>
+  }): Promise<StoreCatalogDiscoveryBatch>
   recordScopeRefresh(
     input: CatalogScopeRefreshInput
   ): Promise<CatalogScopeRefreshResult>
   getExpectedCatalogScopes(apiType: APIType, country: string): string[]
   getCatalogCycleId(date: Date): string
   currentDate(): Date
-  getRequestLimiter(apiType: APIType): RequestLimiter
-  getLocationIntervalKilometers(apiType: APIType): number
   logDiscoveryFailure(
-    error: unknown,
+    failure: NetworkFailure,
     context: { apiType: APIType; country: string }
   ): void
   now(): number
-}
-
-type DiscoveryRequest =
-  | {
-      index: number
-      kind: 'location'
-      countryInfo: ICountryInfos
-      location: ILocation
-    }
-  | {
-      index: number
-      kind: 'url'
-      countryInfo: ICountryInfos
-    }
-
-interface DiscoveryOutcome {
-  index: number
-  country: string
-  scope: string
-  stores: CreatePos[]
-  error?: unknown
 }
 
 interface ScopeOutcome {
@@ -110,8 +57,8 @@ interface ScopeOutcome {
   storesById: Map<string, CreatePos>
 }
 
-function createCountryResult(): StoreCatalogCountryResult {
-  return { requests: 0, successful: 0, failed: 0, stores: 0 }
+function createCountryResult(requests = 0): StoreCatalogCountryResult {
+  return { requests, successful: 0, failed: 0, stores: 0 }
 }
 
 export class StoreCatalogRefreshModule {
@@ -122,166 +69,62 @@ export class StoreCatalogRefreshModule {
   ): Promise<StoreCatalogRefreshResult> {
     const startTime = this.dependencies.now()
     const { apiType, countryList } = request
-    const { token, clientId, countryInfos } =
-      await this.dependencies.loadRefreshContext(apiType, countryList)
-    const countryBreakdown: Record<string, StoreCatalogCountryResult> = {}
-    let skippedCountries = 0
-    const discoveryRequests: DiscoveryRequest[] = []
+    const batch = await this.dependencies.discoverStoreCatalogBatch({
+      apiType,
+      countryList
+    })
+    const countryBreakdown: Record<string, StoreCatalogCountryResult> =
+      Object.fromEntries(
+        Object.entries(batch.requestsByCountry).map(([country, requests]) => [
+          country,
+          createCountryResult(requests)
+        ])
+      )
 
-    if (apiType === APIType.EL) {
-      for (const countryInfo of countryInfos) {
-        const countryResult =
-          countryBreakdown[countryInfo.country] ?? createCountryResult()
-        countryResult.requests += 1
-        countryBreakdown[countryInfo.country] = countryResult
-        discoveryRequests.push({
-          index: discoveryRequests.length,
-          kind: 'url',
-          countryInfo
-        })
-      }
-    } else if (countryInfos.length > 0) {
-      const intervalKilometers =
-        this.dependencies.getLocationIntervalKilometers(apiType)
-
-      for (const countryInfo of countryInfos) {
-        if (countryInfo.country === 'UK') {
-          skippedCountries++
-          continue
-        }
-
-        if (countryInfo.locationLimits == null) {
-          throw new Error(`No locations found for ${countryInfo.country}`)
-        }
-
-        const locations = this.dependencies.generateLocationMesh(
-          countryInfo,
-          intervalKilometers
-        )
-        const countryResult =
-          countryBreakdown[countryInfo.country] ?? createCountryResult()
-        countryResult.requests += locations.length
-        countryBreakdown[countryInfo.country] = countryResult
-
-        for (const location of locations) {
-          discoveryRequests.push({
-            index: discoveryRequests.length,
-            kind: 'location',
-            countryInfo,
-            location
-          })
-        }
-      }
-    }
-
-    if (discoveryRequests.length === 0) {
+    if (batch.scopes.length === 0) {
       return this.createResult(
         countryBreakdown,
-        skippedCountries,
+        batch.skippedCountries,
         0,
         0,
         startTime
       )
     }
 
-    const plannedRequestsByScope = new Map<string, number>()
-    for (const discoveryRequest of discoveryRequests) {
-      const scope =
-        discoveryRequest.countryInfo.catalogScope ??
-        discoveryRequest.countryInfo.country
-      plannedRequestsByScope.set(
-        scope,
-        (plannedRequestsByScope.get(scope) ?? 0) + 1
-      )
-    }
-
-    const requestLimiter = this.dependencies.getRequestLimiter(apiType)
-    const executor = createRateLimitedExecutor(
-      requestLimiter,
-      'StoreCatalogRefreshModule'
-    )
-    const abortController = new AbortController()
-    let consecutiveFailures = 0
-    let circuitBreakerError: Error | undefined
-    const { results: outcomes } = await executor.executeAll(
-      discoveryRequests,
-      async (discoveryRequest): Promise<DiscoveryOutcome> => {
-        try {
-          const stores =
-            discoveryRequest.kind === 'url'
-              ? await this.dependencies.discoverFromUrl(
-                  discoveryRequest.countryInfo
-                )
-              : await this.dependencies.discoverFromLocation(
-                  discoveryRequest.location,
-                  discoveryRequest.countryInfo,
-                  token,
-                  clientId
-                )
-
-          consecutiveFailures = 0
-
-          return {
-            index: discoveryRequest.index,
-            country: discoveryRequest.countryInfo.country,
-            scope:
-              discoveryRequest.countryInfo.catalogScope ??
-              discoveryRequest.countryInfo.country,
-            stores
-          }
-        } catch (error) {
-          consecutiveFailures++
-          this.dependencies.logDiscoveryFailure(error, {
-            apiType,
-            country: discoveryRequest.countryInfo.country
-          })
-
-          if (
-            consecutiveFailures >= MAX_CONSECUTIVE_DISCOVERY_FAILURES &&
-            !abortController.signal.aborted
-          ) {
-            circuitBreakerError = new Error(
-              `Store discovery aborted after ${MAX_CONSECUTIVE_DISCOVERY_FAILURES} consecutive failures`
-            )
-            abortController.abort()
-          }
-
-          return {
-            index: discoveryRequest.index,
-            country: discoveryRequest.countryInfo.country,
-            scope:
-              discoveryRequest.countryInfo.catalogScope ??
-              discoveryRequest.countryInfo.country,
-            stores: [],
-            error
-          }
+    const scopeOutcomes = new Map<string, ScopeOutcome>(
+      batch.scopes.map((scope) => [
+        scope.scope,
+        {
+          ...scope,
+          successful: 0,
+          failed: 0,
+          storesById: new Map<string, CreatePos>()
         }
-      },
-      { signal: abortController.signal }
+      ])
     )
-
-    outcomes.sort((left, right) => left.index - right.index)
     const storesById = new Map<string, CreatePos>()
-    const scopeOutcomes = new Map<string, ScopeOutcome>()
     let successfulRequests = 0
     let failedRequests = 0
 
-    for (const outcome of outcomes) {
-      const countryResult = countryBreakdown[outcome.country]!
-      const scopeOutcome = scopeOutcomes.get(outcome.scope) ?? {
-        country: outcome.country,
-        scope: outcome.scope,
-        plannedRequests: plannedRequestsByScope.get(outcome.scope) ?? 0,
-        successful: 0,
-        failed: 0,
-        storesById: new Map<string, CreatePos>()
+    for (const outcome of batch.outcomes) {
+      const countryResult =
+        countryBreakdown[outcome.country] ?? createCountryResult()
+      countryBreakdown[outcome.country] = countryResult
+      const scopeOutcome = scopeOutcomes.get(outcome.scope)
+      if (scopeOutcome == null) {
+        throw new Error(
+          `Store discovery returned unknown Catalog Scope ${outcome.scope}`
+        )
       }
-      scopeOutcomes.set(outcome.scope, scopeOutcome)
 
-      if (outcome.error != null) {
+      if (outcome.failure != null) {
         failedRequests++
         countryResult.failed++
         scopeOutcome.failed++
+        this.dependencies.logDiscoveryFailure(outcome.failure, {
+          apiType,
+          country: outcome.country
+        })
         continue
       }
 
@@ -290,16 +133,13 @@ export class StoreCatalogRefreshModule {
       scopeOutcome.successful++
 
       for (const store of outcome.stores) {
-        scopeOutcome.storesById.set(store.id, store)
-        if (!storesById.has(store.id)) {
-          storesById.set(store.id, store)
+        scopeOutcome.storesById.set(store.id as string, store)
+        if (!storesById.has(store.id as string)) {
+          storesById.set(store.id as string, store)
           countryResult.stores++
         }
       }
     }
-
-    const allDiscoveryRequestsFailed =
-      successfulRequests === 0 && failedRequests > 0
 
     const observedAt = this.dependencies.currentDate()
     const cycleId = this.dependencies.getCatalogCycleId(observedAt)
@@ -324,28 +164,35 @@ export class StoreCatalogRefreshModule {
 
       if (persistenceResult.storesPersisted > 0) {
         for (const store of scopeStores) {
-          persistedStoreIds.add(store.id)
+          persistedStoreIds.add(store.id as string)
         }
       }
     }
 
-    if (successfulRequests === 0 && circuitBreakerError != null) {
-      throw circuitBreakerError
-    }
+    const completedRequests = successfulRequests + failedRequests
+    const plannedRequests = batch.scopes.reduce(
+      (sum, scope) => sum + scope.plannedRequests,
+      0
+    )
 
-    if (allDiscoveryRequestsFailed) {
+    if (batch.circuitOpened && successfulRequests === 0) {
+      throw new Error('Store discovery aborted after repeated failures')
+    }
+    if (successfulRequests === 0 && failedRequests > 0) {
       throw new Error('All store discovery requests failed')
     }
-
     if (failedRequests > 0) {
       throw new Error(
-        `${failedRequests} of ${successfulRequests + failedRequests} store discovery requests failed`
+        `${failedRequests} of ${completedRequests} store discovery requests failed`
       )
+    }
+    if (completedRequests !== plannedRequests) {
+      throw new Error('Store discovery batch did not complete all planned requests')
     }
 
     return this.createResult(
       countryBreakdown,
-      skippedCountries,
+      batch.skippedCountries,
       storesById.size,
       persistedStoreIds.size,
       startTime

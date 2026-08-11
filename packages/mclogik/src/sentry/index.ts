@@ -87,21 +87,13 @@ export interface BatchFailureSample {
   country: string
   storeId: string
   nationalStoreNumber: string
-  errorName: string
-  errorMessage: string
-  requestUrl?: string
-  httpStatus?: number
-  responseCode?: string
-  responseType?: string
-  responseMessage?: string
-  responseService?: string
-  responseErrors?: Array<{
-    code?: string
-    type?: string
-    message?: string
-    property?: string
-    service?: string
-  }>
+  kind: 'http' | 'invalid-response' | 'network' | 'timeout'
+  retryable: boolean
+  status?: number
+  code?: string
+  type?: string
+  service?: string
+  message: string
 }
 
 export interface BatchSummary {

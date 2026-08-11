@@ -1,21 +1,13 @@
 import { type Pos } from '@mcbroken/db'
-import axios from 'axios'
 
 import { type StoreProductAvailability } from '../../clients/ProductAvailability'
-import { type RequestLimiter } from '../../constants/RateLimit'
 import { type BatchFailureSample, type BatchSummary } from '../../sentry'
-import {
-  type APIType,
-  type ICountryInfos,
-  type Locations,
-  type UpdatePos
-} from '../../types'
-import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
+import { type APIType, type Locations, type UpdatePos } from '../../types'
+
+import { type ProductAvailabilityBatchOutcome } from './ProductAvailabilityNetwork'
 
 const ERROR_THRESHOLD = 3
 const MAX_FAILURE_SAMPLES = 5
-
-type JsonRecord = Record<string, unknown>
 
 export interface AvailabilityPollRequest {
   apiType: APIType
@@ -38,30 +30,15 @@ export interface AvailabilityPollResult {
   durationMs: number
 }
 
-interface AvailabilityPollContext {
-  token: string
-  clientId: string
-  countryInfos: ICountryInfos[]
-}
-
-interface ProductAvailabilityAdapter {
-  fetchStoreProductAvailability(
-    pos: Pos,
-    countryInfo: ICountryInfos,
-    token: string,
-    clientId: string
-  ): Promise<StoreProductAvailability>
-}
-
 export interface AvailabilityPollingDependencies {
-  loadPollContext(
-    apiType: APIType,
-    countryList?: Locations[]
-  ): Promise<AvailabilityPollContext>
+  getMarketCountries(apiType: APIType, countryList?: Locations[]): string[]
   findEligibleStores(countries: string[]): Promise<Pos[]>
-  createProductAvailabilityAdapter(apiType: APIType): ProductAvailabilityAdapter
+  fetchProductAvailabilityBatch(input: {
+    apiType: APIType
+    countryList?: Locations[]
+    stores: Pos[]
+  }): Promise<ProductAvailabilityBatchOutcome[]>
   persistUpdates(updates: UpdatePos[]): Promise<void>
-  getRequestLimiter(apiType: APIType): RequestLimiter
   addBreadcrumb(
     message: string,
     data?: Record<string, string | number | boolean>
@@ -71,112 +48,51 @@ export interface AvailabilityPollingDependencies {
   now(): number
 }
 
-function getStringValue(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    return value
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value)
-  }
-
-  return undefined
-}
-
-function getRecordValue(value: unknown): JsonRecord | undefined {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return value as JsonRecord
-  }
-
-  return undefined
-}
-
 function createFailureSignature(
-  sample: Omit<BatchFailureSample, 'signature'>
+  apiType: APIType,
+  country: string,
+  failure: ProductAvailabilityBatchOutcome & { outcome: 'failure' }
 ): string {
+  const { kind, retryable, status, code, type, service, message } =
+    failure.failure
+
   return [
-    sample.apiType,
-    sample.country,
-    sample.httpStatus ?? 'unknown',
-    sample.responseCode ?? 'unknown',
-    sample.responseType ?? sample.errorName,
-    sample.responseMessage ?? sample.errorMessage
+    apiType,
+    country,
+    kind,
+    retryable,
+    status ?? 'unknown',
+    code ?? 'unknown',
+    type ?? 'unknown',
+    service ?? 'unknown',
+    message
   ].join('|')
 }
 
 function createBatchFailureSample(
-  error: unknown,
   apiType: APIType,
-  pos: Pos
+  outcome: ProductAvailabilityBatchOutcome & { outcome: 'failure' }
 ): BatchFailureSample {
-  const baseSample = {
-    apiType,
-    country: pos.country,
-    storeId: pos.id,
-    nationalStoreNumber: pos.nationalStoreNumber
-  }
-
-  if (axios.isAxiosError(error)) {
-    const responseData = getRecordValue(error.response?.data)
-    const statusData = getRecordValue(responseData?.status)
-    const responseErrors = Array.isArray(statusData?.errors)
-      ? statusData.errors
-          .slice(0, 3)
-          .map((item) => getRecordValue(item))
-          .filter((item): item is JsonRecord => item != null)
-          .map((item) => ({
-            code: getStringValue(item.code),
-            type: getStringValue(item.type),
-            message: getStringValue(item.message),
-            property: getStringValue(item.property),
-            service: getStringValue(item.service)
-          }))
-      : undefined
-
-    const sample: Omit<BatchFailureSample, 'signature'> = {
-      ...baseSample,
-      errorName: error.name,
-      errorMessage: error.message,
-      requestUrl: error.config?.url,
-      httpStatus: error.response?.status,
-      responseCode: getStringValue(statusData?.code),
-      responseType: getStringValue(statusData?.type),
-      responseMessage:
-        getStringValue(statusData?.message) ??
-        getStringValue(responseData?.message),
-      responseService: getStringValue(statusData?.service),
-      responseErrors
-    }
-
-    return {
-      ...sample,
-      signature: createFailureSignature(sample)
-    }
-  }
-
-  const sample: Omit<BatchFailureSample, 'signature'> = {
-    ...baseSample,
-    errorName: error instanceof Error ? error.name : 'UnknownError',
-    errorMessage:
-      error instanceof Error
-        ? error.message
-        : 'Product availability request failed'
-  }
+  const { store, failure } = outcome
 
   return {
-    ...sample,
-    signature: createFailureSignature(sample)
+    signature: createFailureSignature(apiType, store.country, outcome),
+    apiType,
+    country: store.country,
+    storeId: store.id,
+    nationalStoreNumber: store.nationalStoreNumber,
+    ...failure
   }
 }
 
 function createSuccessfulUpdate(
-  pos: Pos,
+  store: Pos,
   productAvailability: StoreProductAvailability
 ): UpdatePos {
   const { milkshake, mcFlurry, mcSundae, custom } = productAvailability
 
   return {
-    id: pos.id,
+    id: store.id,
     milkshakeCount: milkshake.count,
     milkshakeError: milkshake.unavailable,
     milkshakeStatus: milkshake.status,
@@ -197,11 +113,11 @@ function createSuccessfulUpdate(
   }
 }
 
-function createFailedUpdate(pos: Pos): UpdatePos {
-  const errorCounter = pos.errorCounter + 1
+function createFailedUpdate(store: Pos): UpdatePos {
+  const errorCounter = store.errorCounter + 1
 
   return {
-    id: pos.id,
+    id: store.id,
     errorCounter,
     isResponsive: errorCounter < ERROR_THRESHOLD
   }
@@ -224,11 +140,9 @@ export class AvailabilityPollingModule {
   ): Promise<AvailabilityPollResult> {
     const startTime = this.dependencies.now()
     const { apiType, countryList } = request
-    const { token, clientId, countryInfos } =
-      await this.dependencies.loadPollContext(apiType, countryList)
-    const countries = countryInfos.map((countryInfo) => countryInfo.country)
-    const countryInfosByCountry = new Map(
-      countryInfos.map((countryInfo) => [countryInfo.country, countryInfo])
+    const countries = this.dependencies.getMarketCountries(
+      apiType,
+      countryList
     )
     const stores = await this.dependencies.findEligibleStores(countries)
 
@@ -242,55 +156,45 @@ export class AvailabilityPollingModule {
     }
 
     const countryBreakdown: Record<string, AvailabilityPollCountryResult> = {}
-    const storesWithConfig: Array<{ pos: Pos; countryInfo: ICountryInfos }> = []
-
-    for (const pos of stores) {
+    for (const store of stores) {
       const countryResult =
-        countryBreakdown[pos.country] ?? createCountryResult()
+        countryBreakdown[store.country] ?? createCountryResult()
       countryResult.total++
-      countryBreakdown[pos.country] = countryResult
-
-      const countryInfo = countryInfosByCountry.get(pos.country as Locations)
-      if (countryInfo == null) {
-        countryResult.skipped++
-        continue
-      }
-
-      storesWithConfig.push({ pos, countryInfo })
+      countryBreakdown[store.country] = countryResult
     }
 
-    const productAvailabilityAdapter =
-      this.dependencies.createProductAvailabilityAdapter(apiType)
-    const executor = createRateLimitedExecutor(
-      this.dependencies.getRequestLimiter(apiType),
-      'AvailabilityPollingModule'
-    )
+    const outcomes =
+      await this.dependencies.fetchProductAvailabilityBatch({
+        apiType,
+        countryList,
+        stores
+      })
+    if (outcomes.length !== stores.length) {
+      throw new Error('Product availability batch returned incomplete outcomes')
+    }
+
+    const updates: UpdatePos[] = []
     const samplesBySignature = new Map<string, BatchFailureSample>()
 
-    const { results: updates } = await executor.executeAll(
-      storesWithConfig,
-      async ({ pos, countryInfo }) => {
-        const countryResult = countryBreakdown[pos.country]!
+    for (const outcome of outcomes) {
+      const countryResult = countryBreakdown[outcome.store.country]
+      if (countryResult == null) {
+        throw new Error(
+          `Product availability batch returned unknown store ${outcome.store.id}`
+        )
+      }
 
-        try {
-          const productAvailability =
-            await productAvailabilityAdapter.fetchStoreProductAvailability(
-              pos,
-              countryInfo,
-              token,
-              clientId
-            )
-
-          if (productAvailability == null) {
-            throw new Error('Product availability request returned null')
-          }
-
-          const update = createSuccessfulUpdate(pos, productAvailability)
+      switch (outcome.outcome) {
+        case 'success':
           countryResult.success++
-          return update
-        } catch (error) {
+          updates.push(
+            createSuccessfulUpdate(outcome.store, outcome.availability)
+          )
+          break
+        case 'failure': {
           countryResult.failed++
-          const sample = createBatchFailureSample(error, apiType, pos)
+          updates.push(createFailedUpdate(outcome.store))
+          const sample = createBatchFailureSample(apiType, outcome)
 
           if (
             !samplesBySignature.has(sample.signature) &&
@@ -299,11 +203,13 @@ export class AvailabilityPollingModule {
             samplesBySignature.set(sample.signature, sample)
             this.dependencies.logStoreFailure(sample)
           }
-
-          return createFailedUpdate(pos)
+          break
         }
+        case 'skipped':
+          countryResult.skipped++
+          break
       }
-    )
+    }
 
     if (updates.length > 0) {
       await this.dependencies.persistUpdates(updates)

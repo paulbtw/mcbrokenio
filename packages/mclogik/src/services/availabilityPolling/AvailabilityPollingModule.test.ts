@@ -1,33 +1,20 @@
 import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
-import { type RequestLimiter } from '../../constants/RateLimit'
-import {
-  APIType,
-  IceType,
-  type ICountryInfos,
-  type Locations,
-  UsLocations
-} from '../../types'
+import { APIType, UsLocations } from '../../types'
 
 import {
   type AvailabilityPollingDependencies,
   AvailabilityPollingModule
 } from './AvailabilityPollingModule'
 
-const TEST_LIMITER: RequestLimiter = {
-  maxRequestsPerSecond: 100,
-  requestsPerLog: 100,
-  concurrentRequests: 5
-}
-
 function createStore(overrides: Partial<Pos> = {}): Pos {
   return {
-    id: 'US-12345',
-    nationalStoreNumber: '12345',
-    name: 'Test Store',
-    latitude: '40.7128',
-    longitude: '-74.0060',
+    id: 'US-1',
+    nationalStoreNumber: '1',
+    name: 'Store',
+    latitude: '1',
+    longitude: '2',
     country: 'US',
     hasMobileOrdering: true,
     errorCounter: 0,
@@ -54,94 +41,61 @@ function createStore(overrides: Partial<Pos> = {}): Pos {
   }
 }
 
-function createCountryInfo(country: Locations = UsLocations.US): ICountryInfos {
-  return {
-    country,
-    getStores: {
-      api: APIType.US,
-      url: 'https://example.com'
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: ['SHAKE1', 'SHAKE2'],
-      [IceType.MCFLURRY]: ['FLURRY1'],
-      [IceType.MCSUNDAE]: ['SUNDAE1']
-    }
-  }
-}
-
-function createProductAvailability() {
+function createAvailability() {
   return {
     milkshake: {
       status: 'PARTIAL_AVAILABLE' as const,
       count: 2,
       unavailable: 1
     },
-    mcFlurry: {
-      status: 'AVAILABLE' as const,
-      count: 1,
-      unavailable: 0
-    },
-    mcSundae: {
-      status: 'UNAVAILABLE' as const,
-      count: 1,
-      unavailable: 1
-    },
-    custom: [
-      {
-        name: 'Apple Pie',
-        status: 'AVAILABLE' as const,
-        count: 1,
-        unavailable: 0
-      }
-    ]
+    mcFlurry: { status: 'AVAILABLE' as const, count: 1, unavailable: 0 },
+    mcSundae: { status: 'UNAVAILABLE' as const, count: 1, unavailable: 1 },
+    custom: []
   }
 }
 
-function createDependencies(
-  options: {
-    stores?: Pos[]
-    countryInfos?: ICountryInfos[]
-  } = {}
-) {
-  const fetchStoreProductAvailability = vi
-    .fn()
-    .mockResolvedValue(createProductAvailability())
-
+function createDependencies(stores: Pos[]) {
   const dependencies: AvailabilityPollingDependencies = {
-    loadPollContext: vi.fn().mockResolvedValue({
-      token: 'test-token',
-      clientId: 'test-client',
-      countryInfos: options.countryInfos ?? [createCountryInfo()]
-    }),
-    findEligibleStores: vi
-      .fn()
-      .mockResolvedValue(options.stores ?? [createStore()]),
-    createProductAvailabilityAdapter: vi.fn().mockReturnValue({
-      fetchStoreProductAvailability
-    }),
+    getMarketCountries: vi.fn().mockReturnValue(['US']),
+    findEligibleStores: vi.fn().mockResolvedValue(stores),
+    fetchProductAvailabilityBatch: vi.fn(),
     persistUpdates: vi.fn().mockResolvedValue(undefined),
-    getRequestLimiter: vi.fn().mockReturnValue(TEST_LIMITER),
     addBreadcrumb: vi.fn(),
     captureBatchSummary: vi.fn(),
     logStoreFailure: vi.fn(),
     now: vi.fn().mockReturnValueOnce(1_000).mockReturnValue(1_250)
   }
 
-  return {
-    dependencies,
-    fetchStoreProductAvailability
-  }
+  return dependencies
 }
 
 describe('AvailabilityPollingModule', () => {
-  it('polls eligible stores and atomically persists successful availability', async () => {
-    const stores = [
-      createStore({ id: 'US-1', nationalStoreNumber: '1', errorCounter: 2 }),
-      createStore({ id: 'US-2', nationalStoreNumber: '2', errorCounter: 1 })
-    ]
-    const { dependencies, fetchStoreProductAvailability } = createDependencies({
-      stores
-    })
+  it('turns typed batch outcomes into availability and health updates', async () => {
+    const success = createStore({ id: 'US-ok', errorCounter: 2 })
+    const failed = createStore({ id: 'US-fail', errorCounter: 2 })
+    const skipped = createStore({ id: 'US-skip', country: 'CA' })
+    const dependencies = createDependencies([success, failed, skipped])
+    vi.mocked(dependencies.fetchProductAvailabilityBatch).mockResolvedValue([
+      { outcome: 'success', store: success, availability: createAvailability() },
+      {
+        outcome: 'failure',
+        store: failed,
+        failure: {
+          kind: 'http',
+          retryable: true,
+          status: 503,
+          code: 'UPSTREAM_DOWN',
+          type: 'ServiceUnavailable',
+          service: 'restaurant-api',
+          message: 'Upstream HTTP request failed'
+        }
+      },
+      {
+        outcome: 'skipped',
+        store: skipped,
+        reason: 'market-not-configured'
+      }
+    ])
     const module = new AvailabilityPollingModule(dependencies)
 
     const result = await module.poll({
@@ -149,282 +103,60 @@ describe('AvailabilityPollingModule', () => {
       countryList: [UsLocations.US]
     })
 
-    expect(dependencies.loadPollContext).toHaveBeenCalledWith(APIType.US, [
-      UsLocations.US
-    ])
+    expect(dependencies.getMarketCountries).toHaveBeenCalledWith(
+      APIType.US,
+      [UsLocations.US]
+    )
     expect(dependencies.findEligibleStores).toHaveBeenCalledWith(['US'])
-    expect(dependencies.createProductAvailabilityAdapter).toHaveBeenCalledWith(
-      APIType.US
-    )
-    expect(fetchStoreProductAvailability).toHaveBeenCalledTimes(2)
-    expect(dependencies.persistUpdates).toHaveBeenCalledTimes(1)
-    expect(dependencies.persistUpdates).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'US-1',
-          milkshakeStatus: 'PARTIAL_AVAILABLE',
-          mcSundaeStatus: 'UNAVAILABLE',
-          errorCounter: 0,
-          isResponsive: true
-        }),
-        expect.objectContaining({
-          id: 'US-2',
-          errorCounter: 0,
-          isResponsive: true
-        })
-      ])
-    )
-    expect(result).toEqual({
-      totalStores: 2,
-      successCount: 2,
-      failedCount: 0,
-      skippedCount: 0,
-      countryBreakdown: {
-        US: { total: 2, success: 2, failed: 0, skipped: 0 }
-      },
-      durationMs: 250
-    })
-    expect(dependencies.captureBatchSummary).toHaveBeenCalledWith({
+    expect(dependencies.fetchProductAvailabilityBatch).toHaveBeenCalledWith({
       apiType: APIType.US,
-      totalStores: 2,
-      successCount: 2,
-      failedCount: 0,
-      countryBreakdown: {
-        US: { total: 2, failed: 0 }
-      },
-      durationMs: 250,
-      sampleErrors: []
+      countryList: [UsLocations.US],
+      stores: [success, failed, skipped]
     })
-  })
-
-  it('records store failures, updates health, and continues the poll', async () => {
-    const stores = [
-      createStore({ id: 'US-fail', errorCounter: 2 }),
-      createStore({ id: 'US-ok', nationalStoreNumber: '67890' })
-    ]
-    const { dependencies, fetchStoreProductAvailability } = createDependencies({
-      stores
-    })
-    const axiosError = Object.assign(
-      new Error('Request failed with status code 400'),
-      {
-        name: 'AxiosError',
-        isAxiosError: true,
-        config: { url: 'https://example.com/stores/12345' },
-        response: {
-          status: 400,
-          data: {
-            status: {
-              code: 40000,
-              type: 'ValidationException',
-              message: 'Invalid store',
-              service: 'Restaurant',
-              errors: [
-                {
-                  code: 40041,
-                  type: 'InvalidStoreException',
-                  message: 'Invalid store',
-                  property: 'Request',
-                  service: 'restaurant-search'
-                }
-              ]
-            }
-          }
-        }
-      }
-    )
-
-    fetchStoreProductAvailability
-      .mockRejectedValueOnce(axiosError)
-      .mockResolvedValueOnce(createProductAvailability())
-
-    const module = new AvailabilityPollingModule(dependencies)
-    const result = await module.poll({ apiType: APIType.US })
-
-    expect(result.failedCount).toBe(1)
-    expect(result.successCount).toBe(1)
-    expect(result.countryBreakdown.US).toEqual({
-      total: 2,
-      success: 1,
-      failed: 1,
-      skipped: 0
-    })
-    expect(dependencies.persistUpdates).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'US-fail',
-          errorCounter: 3,
-          isResponsive: false
-        }),
-        expect.objectContaining({
-          id: 'US-ok',
-          errorCounter: 0,
-          isResponsive: true
-        })
-      ])
-    )
-    expect(dependencies.captureBatchSummary).toHaveBeenCalledWith(
-      expect.objectContaining({
-        failedCount: 1,
-        sampleErrors: [
-          expect.objectContaining({
-            storeId: 'US-fail',
-            requestUrl: 'https://example.com/stores/12345',
-            httpStatus: 400,
-            responseCode: '40000',
-            responseType: 'ValidationException',
-            responseMessage: 'Invalid store',
-            responseService: 'Restaurant',
-            responseErrors: [
-              expect.objectContaining({
-                code: '40041',
-                service: 'restaurant-search'
-              })
-            ]
-          })
-        ]
-      })
-    )
-  })
-
-  it('caps telemetry samples at five unique failure signatures', async () => {
-    const stores = Array.from({ length: 7 }, (_, index) =>
-      createStore({
-        id: `US-${index}`,
-        nationalStoreNumber: String(index)
-      })
-    )
-    const { dependencies, fetchStoreProductAvailability } = createDependencies({
-      stores
-    })
-
-    fetchStoreProductAvailability.mockImplementation(async (store: Pos) => {
-      throw Object.assign(new Error(`Failure ${store.id}`), {
-        name: 'AxiosError',
-        isAxiosError: true,
-        response: { status: 400 + Number(store.nationalStoreNumber) }
-      })
-    })
-
-    const module = new AvailabilityPollingModule(dependencies)
-    await module.poll({ apiType: APIType.US })
-
-    expect(dependencies.captureBatchSummary).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sampleErrors: expect.any(Array)
-      })
-    )
-    const summary = vi.mocked(dependencies.captureBatchSummary).mock
-      .calls[0]?.[0]
-    expect(summary?.sampleErrors).toHaveLength(5)
-    expect(dependencies.logStoreFailure).toHaveBeenCalledTimes(5)
-  })
-
-  it('groups repeated failures under one diagnostic signature', async () => {
-    const stores = [
-      createStore({ id: 'US-1', nationalStoreNumber: '1' }),
-      createStore({ id: 'US-2', nationalStoreNumber: '2' })
-    ]
-    const { dependencies, fetchStoreProductAvailability } = createDependencies({
-      stores
-    })
-    fetchStoreProductAvailability.mockRejectedValue(
-      new Error('Network offline')
-    )
-    const module = new AvailabilityPollingModule(dependencies)
-
-    const result = await module.poll({ apiType: APIType.US })
-
-    expect(result.failedCount).toBe(2)
-    const summary = vi.mocked(dependencies.captureBatchSummary).mock
-      .calls[0]?.[0]
-    expect(summary?.sampleErrors).toHaveLength(1)
-    expect(dependencies.logStoreFailure).toHaveBeenCalledTimes(1)
-  })
-
-  it('treats null responses and unknown thrown values as store failures', async () => {
-    const stores = [
-      createStore({ id: 'US-null', nationalStoreNumber: '1' }),
-      createStore({ id: 'US-unknown', nationalStoreNumber: '2' })
-    ]
-    const { dependencies, fetchStoreProductAvailability } = createDependencies({
-      stores
-    })
-    fetchStoreProductAvailability
-      .mockResolvedValueOnce(null)
-      .mockRejectedValueOnce('offline')
-    const module = new AvailabilityPollingModule(dependencies)
-
-    const result = await module.poll({ apiType: APIType.US })
-
-    expect(result.failedCount).toBe(2)
-    expect(dependencies.captureBatchSummary).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sampleErrors: expect.arrayContaining([
-          expect.objectContaining({
-            errorName: 'Error',
-            errorMessage: 'Product availability request returned null'
-          }),
-          expect.objectContaining({
-            errorName: 'UnknownError',
-            errorMessage: 'Product availability request failed'
-          })
-        ])
-      })
-    )
-  })
-
-  it('counts stores without market configuration as skipped', async () => {
-    const stores = [
-      createStore({ id: 'US-1' }),
-      createStore({ id: 'CA-1', country: 'CA' })
-    ]
-    const { dependencies, fetchStoreProductAvailability } = createDependencies({
-      stores
-    })
-    const module = new AvailabilityPollingModule(dependencies)
-
-    const result = await module.poll({ apiType: APIType.US })
-
-    expect(result).toMatchObject({
-      totalStores: 2,
-      successCount: 1,
-      failedCount: 0,
-      skippedCount: 1
-    })
-    expect(result.countryBreakdown.CA).toEqual({
-      total: 1,
-      success: 0,
-      failed: 0,
-      skipped: 1
-    })
-    expect(fetchStoreProductAvailability).toHaveBeenCalledTimes(1)
     expect(dependencies.persistUpdates).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 'US-1' })
+      expect.objectContaining({
+        id: 'US-ok',
+        milkshakeStatus: 'PARTIAL_AVAILABLE',
+        errorCounter: 0,
+        isResponsive: true
+      }),
+      expect.objectContaining({
+        id: 'US-fail',
+        errorCounter: 3,
+        isResponsive: false
+      })
     ])
-  })
-
-  it('returns an empty summary without persistence or telemetry when no stores are eligible', async () => {
-    const { dependencies } = createDependencies({ stores: [] })
-    const module = new AvailabilityPollingModule(dependencies)
-
-    const result = await module.poll({ apiType: APIType.US })
-
     expect(result).toEqual({
-      totalStores: 0,
-      successCount: 0,
-      failedCount: 0,
-      skippedCount: 0,
-      countryBreakdown: {},
+      totalStores: 3,
+      successCount: 1,
+      failedCount: 1,
+      skippedCount: 1,
+      countryBreakdown: {
+        US: { total: 2, success: 1, failed: 1, skipped: 0 },
+        CA: { total: 1, success: 0, failed: 0, skipped: 1 }
+      },
       durationMs: 250
     })
-    expect(dependencies.persistUpdates).not.toHaveBeenCalled()
-    expect(dependencies.captureBatchSummary).not.toHaveBeenCalled()
+    expect(dependencies.logStoreFailure).toHaveBeenCalledWith({
+      signature:
+        'US|US|http|true|503|UPSTREAM_DOWN|ServiceUnavailable|restaurant-api|Upstream HTTP request failed',
+      apiType: APIType.US,
+      country: 'US',
+      storeId: 'US-fail',
+      nationalStoreNumber: '1',
+      kind: 'http',
+      retryable: true,
+      status: 503,
+      code: 'UPSTREAM_DOWN',
+      type: 'ServiceUnavailable',
+      service: 'restaurant-api',
+      message: 'Upstream HTTP request failed'
+    })
   })
 
-  it('rejects setup failures so the Lambda invocation can retry', async () => {
-    const { dependencies } = createDependencies()
-    vi.mocked(dependencies.loadPollContext).mockRejectedValue(
+  it('rejects batch-wide auth or configuration failures without changing health', async () => {
+    const dependencies = createDependencies([createStore()])
+    vi.mocked(dependencies.fetchProductAvailabilityBatch).mockRejectedValue(
       new Error('Credential lookup failed')
     )
     const module = new AvailabilityPollingModule(dependencies)
@@ -432,20 +164,62 @@ describe('AvailabilityPollingModule', () => {
     await expect(module.poll({ apiType: APIType.US })).rejects.toThrow(
       'Credential lookup failed'
     )
-    expect(dependencies.findEligibleStores).not.toHaveBeenCalled()
     expect(dependencies.persistUpdates).not.toHaveBeenCalled()
+    expect(dependencies.logStoreFailure).not.toHaveBeenCalled()
+    expect(dependencies.captureBatchSummary).not.toHaveBeenCalled()
   })
 
-  it('rejects atomic persistence failures before emitting a completed summary', async () => {
-    const { dependencies } = createDependencies()
-    vi.mocked(dependencies.persistUpdates).mockRejectedValue(
-      new Error('Transaction failed')
+  it('groups and caps sanitized failure samples without affecting all updates', async () => {
+    const stores = Array.from({ length: 7 }, (_, index) =>
+      createStore({ id: `US-${index}`, nationalStoreNumber: String(index) })
+    )
+    const dependencies = createDependencies(stores)
+    vi.mocked(dependencies.fetchProductAvailabilityBatch).mockResolvedValue(
+      stores.map((store, index) => ({
+        outcome: 'failure' as const,
+        store,
+        failure: {
+          kind: 'http' as const,
+          retryable: false,
+          status: 400 + index,
+          message: 'Upstream HTTP request failed'
+        }
+      }))
     )
     const module = new AvailabilityPollingModule(dependencies)
 
-    await expect(module.poll({ apiType: APIType.US })).rejects.toThrow(
-      'Transaction failed'
+    await module.poll({ apiType: APIType.US })
+
+    expect(dependencies.persistUpdates).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'US-0', errorCounter: 1 }),
+        expect.objectContaining({ id: 'US-6', errorCounter: 1 })
+      ])
     )
-    expect(dependencies.captureBatchSummary).not.toHaveBeenCalled()
+    expect(dependencies.logStoreFailure).toHaveBeenCalledTimes(5)
+    expect(dependencies.captureBatchSummary).toHaveBeenCalledWith(
+      expect.objectContaining({ sampleErrors: expect.any(Array) })
+    )
+    const summary = vi.mocked(dependencies.captureBatchSummary).mock
+      .calls[0]?.[0]
+    expect(summary?.sampleErrors).toHaveLength(5)
+  })
+
+  it('returns an empty summary without invoking the network batch', async () => {
+    const dependencies = createDependencies([])
+    const module = new AvailabilityPollingModule(dependencies)
+
+    await expect(
+      module.poll({ apiType: APIType.US })
+    ).resolves.toEqual({
+      totalStores: 0,
+      successCount: 0,
+      failedCount: 0,
+      skippedCount: 0,
+      countryBreakdown: {},
+      durationMs: 250
+    })
+    expect(dependencies.fetchProductAvailabilityBatch).not.toHaveBeenCalled()
+    expect(dependencies.persistUpdates).not.toHaveBeenCalled()
   })
 })

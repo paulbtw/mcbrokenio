@@ -1,0 +1,264 @@
+import {
+  createNetworkFailure,
+  type NetworkFailure
+} from '../../clients/NetworkFailure'
+import { type RequestLimiter } from '../../constants/RateLimit'
+import { type MarketDefinition } from '../../markets/MarketDefinitions'
+import {
+  APIType,
+  type CreatePos,
+  type ILocation,
+  type Locations
+} from '../../types'
+import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
+
+const MAX_CONSECUTIVE_DISCOVERY_FAILURES = 24
+
+interface StoreCatalogRefreshContext {
+  token: string
+  clientId: string
+  markets: MarketDefinition[]
+}
+
+export interface StoreCatalogDiscoveryNetworkDependencies {
+  loadRefreshContext(
+    apiType: APIType,
+    countryList?: Locations[]
+  ): Promise<StoreCatalogRefreshContext>
+  generateLocationMesh(
+    market: MarketDefinition,
+    intervalKilometers: number
+  ): ILocation[]
+  discoverFromLocation(
+    location: ILocation,
+    market: MarketDefinition,
+    token: string,
+    clientId: string
+  ): Promise<CreatePos[]>
+  discoverFromUrl(market: MarketDefinition): Promise<CreatePos[]>
+  getRequestLimiter(apiType: APIType): RequestLimiter
+  getLocationIntervalKilometers(apiType: APIType): number
+}
+
+export interface StoreCatalogDiscoveryBatchRequest {
+  apiType: APIType
+  countryList?: Locations[]
+}
+
+export interface StoreCatalogDiscoveryOutcome {
+  index: number
+  country: string
+  scope: string
+  stores: CreatePos[]
+  failure?: NetworkFailure
+}
+
+export interface StoreCatalogDiscoveryScope {
+  country: string
+  scope: string
+  plannedRequests: number
+}
+
+export interface StoreCatalogDiscoveryBatch {
+  requestsByCountry: Record<string, number>
+  scopes: StoreCatalogDiscoveryScope[]
+  skippedCountries: number
+  circuitOpened: boolean
+  outcomes: StoreCatalogDiscoveryOutcome[]
+}
+
+type DiscoveryRequest =
+  | {
+      index: number
+      kind: 'location'
+      market: MarketDefinition
+      location: ILocation
+    }
+  | {
+      index: number
+      kind: 'url'
+      market: MarketDefinition
+    }
+
+function assertSupportedApiType(apiType: APIType): void {
+  if (apiType === APIType.HK || apiType === APIType.UNKNOWN) {
+    throw new Error(`Store Catalog refresh is not supported for ${apiType}`)
+  }
+}
+
+export class StoreCatalogDiscoveryNetwork {
+  constructor(
+    private readonly dependencies: StoreCatalogDiscoveryNetworkDependencies
+  ) {}
+
+  async discoverBatch(
+    request: StoreCatalogDiscoveryBatchRequest
+  ): Promise<StoreCatalogDiscoveryBatch> {
+    const { apiType, countryList } = request
+    assertSupportedApiType(apiType)
+    const { token, clientId, markets } =
+      await this.dependencies.loadRefreshContext(apiType, countryList)
+    const needsCredentials = apiType !== APIType.EL
+
+    if (needsCredentials && (typeof token !== 'string' || token.length === 0)) {
+      throw new Error(`Bearer token is missing for ${apiType}`)
+    }
+    if (
+      needsCredentials &&
+      (typeof clientId !== 'string' || clientId.length === 0)
+    ) {
+      throw new Error(`Client id is missing for ${apiType}`)
+    }
+
+    const discoveryRequests: DiscoveryRequest[] = []
+    const requestsByCountry: Record<string, number> = {}
+    let skippedCountries = 0
+
+    for (const market of markets) {
+      if (apiType === APIType.EL) {
+        discoveryRequests.push({
+          index: discoveryRequests.length,
+          kind: 'url',
+          market
+        })
+        requestsByCountry[market.country] =
+          (requestsByCountry[market.country] ?? 0) + 1
+        continue
+      }
+
+      if (market.country === 'UK') {
+        skippedCountries++
+        continue
+      }
+      if (market.locationLimits == null) {
+        throw new Error(`No locations found for ${market.country}`)
+      }
+
+      const locations = this.dependencies.generateLocationMesh(
+        market,
+        this.dependencies.getLocationIntervalKilometers(apiType)
+      )
+      requestsByCountry[market.country] =
+        (requestsByCountry[market.country] ?? 0) + locations.length
+
+      for (const location of locations) {
+        discoveryRequests.push({
+          index: discoveryRequests.length,
+          kind: 'location',
+          market,
+          location
+        })
+      }
+    }
+
+    const scopesByScope = new Map<string, StoreCatalogDiscoveryScope>()
+    for (const discoveryRequest of discoveryRequests) {
+      const scope =
+        discoveryRequest.market.catalogScope ??
+        discoveryRequest.market.country
+      const existing = scopesByScope.get(scope)
+      if (existing != null) {
+        existing.plannedRequests++
+      } else {
+        scopesByScope.set(scope, {
+          country: discoveryRequest.market.country,
+          scope,
+          plannedRequests: 1
+        })
+      }
+    }
+
+    if (discoveryRequests.length === 0) {
+      return {
+        requestsByCountry,
+        scopes: [],
+        skippedCountries,
+        circuitOpened: false,
+        outcomes: []
+      }
+    }
+
+    const executor = createRateLimitedExecutor(
+      this.dependencies.getRequestLimiter(apiType),
+      'StoreCatalogDiscoveryNetwork'
+    )
+    const abortController = new AbortController()
+    let consecutiveFailures = 0
+    let circuitOpened = false
+    let programmingDefect: unknown
+
+    const { results: outcomes } = await executor.executeAll(
+      discoveryRequests,
+      async (discoveryRequest): Promise<StoreCatalogDiscoveryOutcome | null> => {
+        const country = discoveryRequest.market.country
+        const scope =
+          discoveryRequest.market.catalogScope ?? country
+
+        try {
+          const stores =
+                  discoveryRequest.kind === 'url'
+              ? await this.dependencies.discoverFromUrl(
+                  discoveryRequest.market
+                )
+              : await this.dependencies.discoverFromLocation(
+                  discoveryRequest.location,
+                  discoveryRequest.market,
+                  token,
+                  clientId
+                )
+          consecutiveFailures = 0
+
+          return {
+            index: discoveryRequest.index,
+            country,
+            scope,
+            stores
+          }
+        } catch (error) {
+          const failure = createNetworkFailure(error)
+          if (failure == null) {
+            programmingDefect ??= error
+            abortController.abort(programmingDefect)
+            return null
+          }
+
+          consecutiveFailures++
+          if (
+            consecutiveFailures >= MAX_CONSECUTIVE_DISCOVERY_FAILURES &&
+            !abortController.signal.aborted
+          ) {
+            circuitOpened = true
+            abortController.abort(
+              new Error(
+                `Store discovery aborted after ${MAX_CONSECUTIVE_DISCOVERY_FAILURES} consecutive failures`
+              )
+            )
+          }
+
+          return {
+            index: discoveryRequest.index,
+            country,
+            scope,
+            stores: [],
+            failure
+          }
+        }
+      },
+      { signal: abortController.signal }
+    )
+
+    if (programmingDefect != null) {
+      throw programmingDefect
+    }
+
+    outcomes.sort((left, right) => left.index - right.index)
+
+    return {
+      requestsByCountry,
+      scopes: Array.from(scopesByScope.values()),
+      skippedCountries,
+      circuitOpened,
+      outcomes
+    }
+  }
+}

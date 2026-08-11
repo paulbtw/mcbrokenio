@@ -63,28 +63,19 @@ describe('captureBatchSummary', () => {
   const createSampleError = (
     overrides: Partial<BatchFailureSample> = {}
   ): BatchFailureSample => ({
-    signature: 'EU|DE|400|40000|ValidationException|Invalid storeUniqueIdType',
+    signature:
+      'EU|DE|http|false|400|40000|ValidationException|Restaurant|Upstream HTTP request failed',
     apiType: 'EU',
     country: 'DE',
     storeId: 'DE-27601435',
     nationalStoreNumber: '27601435',
-    errorName: 'AxiosError',
-    errorMessage: 'Request failed with status code 400',
-    requestUrl: 'https://eu-prod.api.mcd.com/exp/v1/restaurant/27601435?filter=full&storeUniqueIdType=NatlStrNumber',
-    httpStatus: 400,
-    responseCode: '40000',
-    responseType: 'ValidationException',
-    responseMessage: 'Invalid storeUniqueIdType: NatlStrNumber',
-    responseService: 'Restaurant',
-    responseErrors: [
-      {
-        code: '40041',
-        type: 'InvalidStoreUniqueIdTypeException',
-        message: 'Invalid storeUniqueIdType: NatlStrNumber',
-        property: 'Request',
-        service: 'prox_search_api',
-      },
-    ],
+    kind: 'http',
+    retryable: false,
+    status: 400,
+    code: '40000',
+    type: 'ValidationException',
+    service: 'Restaurant',
+    message: 'Upstream HTTP request failed',
     ...overrides,
   })
 

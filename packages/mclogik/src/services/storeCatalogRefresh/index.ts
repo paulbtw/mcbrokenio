@@ -1,20 +1,24 @@
 import { prisma } from '@mcbroken/db/client'
-import axios from 'axios'
 
 import { createStoreDiscoveryClient } from '../../clients/StoreDiscoveryClient'
-import { CountryInfos } from '../../constants/CountryInfos'
 import {
   defaultRequestLimiterAu,
   defaultRequestLimiterEu,
   defaultRequestLimiterUs,
   type RequestLimiter
 } from '../../constants/RateLimit'
+import {
+  getExpectedCatalogScopes,
+  selectMarketDefinitions
+} from '../../markets/MarketDefinitions'
 import { createCatalogLifecycleRepository } from '../../repositories'
-import { APIType, type Locations } from '../../types'
+import { APIType } from '../../types'
 import { getCatalogCycleId } from '../../utils/catalogCycle'
 import { generateCoordinatesMesh } from '../../utils/generateCoordinatesMesh'
-import { getMetaForApi } from '../../utils/getMetaForApi'
+import { getBearerToken } from '../token/getBearerToken'
+import { getClientId } from '../token/getClientId'
 
+import { StoreCatalogDiscoveryNetwork } from './StoreCatalogDiscoveryNetwork'
 import {
   StoreCatalogRefreshModule,
   type StoreCatalogRefreshRequest,
@@ -28,32 +32,6 @@ const URL_DISCOVERY_LIMITER: RequestLimiter = {
 }
 const EU_DISCOVERY_SPACING_KILOMETERS = 50
 const AP_US_DISCOVERY_SPACING_KILOMETERS = 30
-
-interface SanitizedDiscoveryError {
-  name: 'AxiosError' | 'Error' | 'UnknownError'
-  code?: string
-  status?: number
-}
-
-function sanitizeDiscoveryError(error: unknown): SanitizedDiscoveryError {
-  if (axios.isAxiosError(error)) {
-    return {
-      name: 'AxiosError',
-      ...(typeof error.code === 'string' ? { code: error.code } : {}),
-      ...(typeof error.response?.status === 'number'
-        ? { status: error.response.status }
-        : {})
-    }
-  }
-
-  return { name: error instanceof Error ? 'Error' : 'UnknownError' }
-}
-
-function assertSupportedApiType(apiType: APIType): void {
-  if (apiType === APIType.HK || apiType === APIType.UNKNOWN) {
-    throw new Error(`Store Catalog refresh is not supported for ${apiType}`)
-  }
-}
 
 function getRequestLimiter(apiType: APIType): RequestLimiter {
   switch (apiType) {
@@ -88,36 +66,14 @@ function getLocationIntervalKilometers(apiType: APIType): number {
 const storeDiscoveryClient = createStoreDiscoveryClient()
 const catalogLifecycleRepository = createCatalogLifecycleRepository(prisma)
 
-function getExpectedCatalogScopes(apiType: APIType, country: string): string[] {
-  return Object.entries(CountryInfos)
-    .filter(
-      ([, countryInfo]) =>
-        countryInfo.getStores.api === apiType && countryInfo.country === country
-    )
-    .map(([scope]) => scope as Locations)
-}
-
-const storeCatalogRefreshModule = new StoreCatalogRefreshModule({
+const storeCatalogDiscoveryNetwork = new StoreCatalogDiscoveryNetwork({
   async loadRefreshContext(apiType, countryList) {
-    assertSupportedApiType(apiType)
     const needsCredentials = apiType !== APIType.EL
-    const context = await getMetaForApi(apiType, countryList, needsCredentials)
-
-    if (
-      needsCredentials &&
-      (typeof context.token !== 'string' || context.token.length === 0)
-    ) {
-      throw new Error(`Bearer token is missing for ${apiType}`)
+    return {
+      token: needsCredentials ? await getBearerToken(apiType) : '',
+      clientId: needsCredentials ? getClientId(apiType) : '',
+      markets: selectMarketDefinitions(apiType, countryList)
     }
-
-    if (
-      needsCredentials &&
-      (typeof context.clientId !== 'string' || context.clientId.length === 0)
-    ) {
-      throw new Error(`Client id is missing for ${apiType}`)
-    }
-
-    return context
   },
   generateLocationMesh(countryInfo, intervalKilometers) {
     return generateCoordinatesMesh(
@@ -128,19 +84,20 @@ const storeCatalogRefreshModule = new StoreCatalogRefreshModule({
   discoverFromLocation: (...args) =>
     storeDiscoveryClient.discoverFromLocation(...args),
   discoverFromUrl: (...args) => storeDiscoveryClient.discoverFromUrl(...args),
+  getRequestLimiter,
+  getLocationIntervalKilometers
+})
+
+const storeCatalogRefreshModule = new StoreCatalogRefreshModule({
+  discoverStoreCatalogBatch: (input) =>
+    storeCatalogDiscoveryNetwork.discoverBatch(input),
   recordScopeRefresh: (input) =>
     catalogLifecycleRepository.recordScopeRefresh(input),
   getExpectedCatalogScopes,
   getCatalogCycleId,
   currentDate: () => new Date(),
-  getRequestLimiter,
-  getLocationIntervalKilometers,
-  logDiscoveryFailure(error, context) {
-    console.error(
-      'Store Catalog discovery request failed',
-      context,
-      sanitizeDiscoveryError(error)
-    )
+  logDiscoveryFailure(failure, context) {
+    console.error('Store Catalog discovery request failed', context, failure)
   },
   now: Date.now
 })
