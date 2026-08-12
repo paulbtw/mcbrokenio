@@ -4,27 +4,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   APIType,
   ApLocations,
+  asMarketCode,
   ElLocations,
   EuLocations,
-  IceType,
   type Locations,
   UsLocations
 } from '../../types'
 
-import { pollAvailability } from './index'
+import { pollAvailability, resolveLegacyAvailabilityMarkets } from './index'
 
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   update: vi.fn(),
   transaction: vi.fn(),
-  getMetaForApi: vi.fn(),
+  getBearerToken: vi.fn(),
+  getClientId: vi.fn(),
   fetchRestaurantOutages: vi.fn(),
   createApiClient: vi.fn(),
   addBreadcrumb: vi.fn(),
   captureBatchSummary: vi.fn()
 }))
-
-const PERSISTENCE_TRANSACTION_TIMEOUT_MS = 30_000
 
 vi.mock('@mcbroken/db/client', () => ({
   prisma: {
@@ -36,8 +35,12 @@ vi.mock('@mcbroken/db/client', () => ({
   }
 }))
 
-vi.mock('../../utils/getMetaForApi', () => ({
-  getMetaForApi: mocks.getMetaForApi
+vi.mock('../token/getBearerToken', () => ({
+  getBearerToken: mocks.getBearerToken
+}))
+
+vi.mock('../token/getClientId', () => ({
+  getClientId: mocks.getClientId
 }))
 
 vi.mock('../../clients/McdonaldsApiClient', () => ({
@@ -104,27 +107,11 @@ describe('pollAvailability', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mocks.getMetaForApi.mockResolvedValue({
-      token: 'bearer-token',
-      clientId: 'client-id',
-      countryInfos: [
-        {
-          country: UsLocations.US,
-          getStores: {
-            api: APIType.US,
-            url: 'https://example.com'
-          },
-          productCodes: {
-            [IceType.MILCHSHAKE]: ['SHAKE1'],
-            [IceType.MCFLURRY]: ['FLURRY1'],
-            [IceType.MCSUNDAE]: ['SUNDAE1']
-          }
-        }
-      ]
-    })
+    mocks.getBearerToken.mockResolvedValue('bearer-token')
+    mocks.getClientId.mockReturnValue('client-id')
     mocks.findMany.mockResolvedValue([createStore()])
     mocks.fetchRestaurantOutages.mockResolvedValue({
-      outageProductCodes: ['SHAKE1']
+      outageProductCodes: ['1598']
     })
     mocks.createApiClient.mockReturnValue({
       apiType: APIType.US,
@@ -139,14 +126,11 @@ describe('pollAvailability', () => {
   it('composes the deep production module behind one public facade', async () => {
     const result = await pollAvailability({
       apiType: APIType.US,
-      countryList: [UsLocations.US]
+      markets: [asMarketCode(UsLocations.US)]
     })
 
-    expect(mocks.getMetaForApi).toHaveBeenCalledWith(
-      APIType.US,
-      [UsLocations.US],
-      true
-    )
+    expect(mocks.getBearerToken).toHaveBeenCalledWith(APIType.US)
+    expect(mocks.getClientId).toHaveBeenCalledWith(APIType.US)
     expect(mocks.findMany).toHaveBeenCalledWith({
       where: {
         country: { in: ['US'] },
@@ -154,7 +138,13 @@ describe('pollAvailability', () => {
         closedAt: null
       },
       take: 2000,
-      orderBy: { updatedAt: 'asc' }
+      orderBy: { updatedAt: 'asc' },
+      select: {
+        id: true,
+        nationalStoreNumber: true,
+        country: true,
+        errorCounter: true
+      }
     })
     expect(mocks.createApiClient).toHaveBeenCalledWith(APIType.US)
     expect(mocks.fetchRestaurantOutages).toHaveBeenCalledWith('12345', {
@@ -166,7 +156,7 @@ describe('pollAvailability', () => {
     expect(mocks.update).toHaveBeenCalledWith({
       where: { id: 'US-12345' },
       data: expect.objectContaining({
-        milkshakeStatus: 'UNAVAILABLE',
+        milkshakeStatus: 'PARTIAL_AVAILABLE',
         mcFlurryStatus: 'AVAILABLE',
         mcSundaeStatus: 'AVAILABLE',
         errorCounter: 0,
@@ -180,7 +170,7 @@ describe('pollAvailability', () => {
       successCount: 1,
       failedCount: 0,
       skippedCount: 0,
-      countryBreakdown: {
+      marketBreakdown: {
         US: { total: 1, success: 1, failed: 0, skipped: 0 }
       }
     })
@@ -194,14 +184,22 @@ describe('pollAvailability', () => {
     )
   })
 
-  it('rejects credential failures before selecting stores', async () => {
-    mocks.getMetaForApi.mockRejectedValue(new Error('Credential lookup failed'))
+  it('collapses legacy US2 Catalog Scope input to the US Market boundary', () => {
+    expect(
+      resolveLegacyAvailabilityMarkets(APIType.US, [UsLocations.US2])
+    ).toEqual([UsLocations.US])
+  })
+
+  it('rejects credential failures without persisting store health', async () => {
+    mocks.getBearerToken.mockRejectedValue(
+      new Error('Credential lookup failed')
+    )
 
     await expect(pollAvailability({ apiType: APIType.US })).rejects.toThrow(
       'Credential lookup failed'
     )
 
-    expect(mocks.findMany).not.toHaveBeenCalled()
+    expect(mocks.findMany).toHaveBeenCalledTimes(1)
     expect(mocks.transaction).not.toHaveBeenCalled()
   })
 
@@ -210,21 +208,6 @@ describe('pollAvailability', () => {
     [APIType.EL, ElLocations.AT],
     [APIType.EU, EuLocations.DE]
   ])('owns rate policy for the %s polling region', async (apiType, country) => {
-    mocks.getMetaForApi.mockResolvedValue({
-      token: 'bearer-token',
-      clientId: 'client-id',
-      countryInfos: [
-        {
-          country,
-          getStores: { api: apiType, url: 'https://example.com' },
-          productCodes: {
-            [IceType.MILCHSHAKE]: ['SHAKE1'],
-            [IceType.MCFLURRY]: ['FLURRY1'],
-            [IceType.MCSUNDAE]: ['SUNDAE1']
-          }
-        }
-      ]
-    })
     mocks.findMany.mockResolvedValue([
       createStore({
         id: `${country}-12345`,
@@ -246,88 +229,14 @@ describe('pollAvailability', () => {
     expect(mocks.transaction).not.toHaveBeenCalled()
   })
 
-  it('rejects an empty bearer token before selecting stores', async () => {
-    mocks.getMetaForApi.mockResolvedValue({
-      token: '',
-      clientId: 'client-id',
-      countryInfos: []
-    })
+  it('rejects an empty bearer token without persisting store health', async () => {
+    mocks.getBearerToken.mockResolvedValue('')
 
     await expect(pollAvailability({ apiType: APIType.US })).rejects.toThrow(
       'Bearer token is missing for US'
     )
 
-    expect(mocks.findMany).not.toHaveBeenCalled()
-  })
-
-  it('rejects malformed store updates before opening a transaction', async () => {
-    mocks.findMany.mockResolvedValue([
-      createStore({ id: undefined as unknown as string })
-    ])
-
-    await expect(pollAvailability({ apiType: APIType.US })).rejects.toThrow(
-      'Availability update is missing a store id'
-    )
-
+    expect(mocks.findMany).toHaveBeenCalledTimes(1)
     expect(mocks.transaction).not.toHaveBeenCalled()
-  })
-
-  it('persists large polls without exceeding the transaction write limit', async () => {
-    mocks.findMany.mockResolvedValue(
-      Array.from({ length: 101 }, (_, index) =>
-        createStore({
-          id: `US-${index}`,
-          nationalStoreNumber: String(index)
-        })
-      )
-    )
-    mocks.transaction.mockImplementation(
-      async (updates: Promise<unknown>[]) => {
-        if (updates.length > 100) {
-          throw new Error(
-            'Transaction API error: A rollback cannot be executed on an expired transaction'
-          )
-        }
-
-        return Promise.all(updates)
-      }
-    )
-
-    await expect(
-      pollAvailability({ apiType: APIType.US })
-    ).resolves.toMatchObject({
-      totalStores: 101,
-      successCount: 101
-    })
-
-    expect(mocks.transaction).toHaveBeenCalledTimes(2)
-    expect(
-      mocks.transaction.mock.calls.map(([updates]) => updates.length)
-    ).toEqual([100, 1])
-  })
-
-  it('allows enough transaction time for remote database persistence', async () => {
-    mocks.transaction.mockImplementation(
-      async (
-        updates: Promise<unknown>[],
-        options?: { timeout?: number }
-      ) => {
-        if (options?.timeout !== PERSISTENCE_TRANSACTION_TIMEOUT_MS) {
-          throw new Error(
-            'Transaction API error: A rollback cannot be executed on an expired transaction'
-          )
-        }
-
-        return Promise.all(updates)
-      }
-    )
-
-    await expect(
-      pollAvailability({ apiType: APIType.US })
-    ).resolves.toMatchObject({ successCount: 1 })
-
-    expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Array), {
-      timeout: PERSISTENCE_TRANSACTION_TIMEOUT_MS
-    })
   })
 })

@@ -2,6 +2,7 @@ import { ItemStatus, type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
   type PublishedAvailabilitySnapshotDependencies,
   PublishedAvailabilitySnapshotModule
 } from './PublishedAvailabilitySnapshotModule'
@@ -41,19 +42,22 @@ function createStore(overrides: Partial<Pos> = {}): Pos {
 
 function createDependencies(stores: Pos[]) {
   const published = new Map<string, unknown>()
+  const publicationOrder: string[] = []
   const dependencies: PublishedAvailabilitySnapshotDependencies = {
     loadStores: vi.fn().mockResolvedValue(stores),
     publishJson: vi.fn().mockImplementation(async (key, value) => {
+      publicationOrder.push(key)
       published.set(key, value)
     }),
+    currentDate: vi.fn().mockReturnValue(new Date('2026-08-11T08:00:00.000Z')),
     now: vi.fn().mockReturnValueOnce(1_000).mockReturnValue(1_125)
   }
 
-  return { dependencies, published }
+  return { dependencies, publicationOrder, published }
 }
 
 describe('PublishedAvailabilitySnapshotModule', () => {
-  it('publishes markers and the stable lowercase statistics contract from one store view', async () => {
+  it('publishes one canonical snapshot from one Store Catalog view', async () => {
     const stores = [
       createStore(),
       createStore({
@@ -80,7 +84,35 @@ describe('PublishedAvailabilitySnapshotModule', () => {
     const result = await module.publish()
 
     expect(dependencies.loadStores).toHaveBeenCalledTimes(1)
-    expect(dependencies.publishJson).toHaveBeenCalledTimes(2)
+    expect(dependencies.publishJson).toHaveBeenCalledTimes(3)
+    expect(published.get('snapshot.json')).toEqual({
+      schemaVersion: PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
+      publishedAt: '2026-08-11T08:00:00.000Z',
+      markers: expect.objectContaining({
+        type: 'FeatureCollection',
+        features: expect.arrayContaining([
+          expect.objectContaining({
+            properties: expect.objectContaining({ id: 'US-1' })
+          }),
+          expect.objectContaining({
+            properties: expect.objectContaining({
+              id: 'US-2',
+              dot: 'GREY'
+            })
+          })
+        ])
+      }),
+      statistics: expect.any(Array)
+    })
+    const snapshot = published.get('snapshot.json') as {
+      statistics: Array<Record<string, unknown>>
+    }
+    expect(snapshot.statistics.map((row) => row.market)).toEqual([
+      'US',
+      'CA',
+      'UNKNOWN'
+    ])
+    expect(snapshot.statistics.every((row) => !('country' in row))).toBe(true)
     expect(published.get('marker.json')).toEqual(
       expect.objectContaining({
         type: 'FeatureCollection',
@@ -135,7 +167,9 @@ describe('PublishedAvailabilitySnapshotModule', () => {
     expect(result).toEqual({
       storesPublished: 3,
       statisticsRowsPublished: 3,
-      filesPublished: ['marker.json', 'stats.json'],
+      filesPublished: ['snapshot.json', 'marker.json', 'stats.json'],
+      schemaVersion: PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
+      publishedAt: '2026-08-11T08:00:00.000Z',
       durationMs: 125
     })
   })
@@ -177,7 +211,37 @@ describe('PublishedAvailabilitySnapshotModule', () => {
     expect(dependencies.publishJson).not.toHaveBeenCalled()
   })
 
-  it('rejects if either stable snapshot file cannot be published', async () => {
+  it('publishes the canonical snapshot before compatibility representations', async () => {
+    const { dependencies, publicationOrder } = createDependencies([
+      createStore()
+    ])
+    const module = new PublishedAvailabilitySnapshotModule(dependencies)
+
+    await module.publish()
+
+    expect(publicationOrder).toEqual([
+      'snapshot.json',
+      'marker.json',
+      'stats.json'
+    ])
+  })
+
+  it('does not attempt compatibility publication when the canonical snapshot fails', async () => {
+    const { dependencies } = createDependencies([createStore()])
+    vi.mocked(dependencies.publishJson).mockRejectedValueOnce(
+      new Error('storage unavailable')
+    )
+    const module = new PublishedAvailabilitySnapshotModule(dependencies)
+
+    await expect(module.publish()).rejects.toThrow('storage unavailable')
+    expect(dependencies.publishJson).toHaveBeenCalledTimes(1)
+    expect(dependencies.publishJson).toHaveBeenCalledWith(
+      'snapshot.json',
+      expect.any(Object)
+    )
+  })
+
+  it('rejects if a compatibility representation cannot be published', async () => {
     const { dependencies } = createDependencies([createStore()])
     vi.mocked(dependencies.publishJson).mockImplementation(async (key) => {
       if (key === 'stats.json') {
@@ -187,6 +251,10 @@ describe('PublishedAvailabilitySnapshotModule', () => {
     const module = new PublishedAvailabilitySnapshotModule(dependencies)
 
     await expect(module.publish()).rejects.toThrow('storage unavailable')
+    expect(dependencies.publishJson).toHaveBeenCalledWith(
+      'snapshot.json',
+      expect.any(Object)
+    )
     expect(dependencies.publishJson).toHaveBeenCalledWith(
       'marker.json',
       expect.any(Object)

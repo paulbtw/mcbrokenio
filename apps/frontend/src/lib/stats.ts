@@ -25,7 +25,7 @@ function toPercentage(available: number, total: number): number {
 export function getStatsSummary(
   data?: PublishedAvailabilityStatistics[],
 ): StatsSummary {
-  const totalStats = data?.find((item) => item.country === "UNKNOWN");
+  const totalStats = data?.find((item) => item.market === "UNKNOWN");
 
   if (!totalStats) {
     return EMPTY_STATS_SUMMARY;

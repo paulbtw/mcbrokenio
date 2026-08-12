@@ -2,16 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   APIType,
+  asCatalogScope,
   ElLocations,
   EuLocations,
-  IceType,
   UsLocations
 } from '../../types'
 
 import { refreshStoreCatalog } from './index'
 
 const mocks = vi.hoisted(() => ({
-  getMetaForApi: vi.fn(),
+  getBearerToken: vi.fn(),
+  getClientId: vi.fn(),
   generateCoordinatesMesh: vi.fn(),
   discoverFromLocation: vi.fn(),
   discoverFromUrl: vi.fn(),
@@ -20,8 +21,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@mcbroken/db/client', () => ({ prisma: {} }))
 
-vi.mock('../../utils/getMetaForApi', () => ({
-  getMetaForApi: mocks.getMetaForApi
+vi.mock('../token/getBearerToken', () => ({
+  getBearerToken: mocks.getBearerToken
+}))
+
+vi.mock('../token/getClientId', () => ({
+  getClientId: mocks.getClientId
 }))
 
 vi.mock('../../utils/generateCoordinatesMesh', () => ({
@@ -41,30 +46,11 @@ vi.mock('../../clients/StoreDiscoveryClient', () => ({
   })
 }))
 
-function createCountryInfo(
-  country: UsLocations | EuLocations | ElLocations,
-  apiType: APIType
-) {
-  return {
-    country,
-    getStores: { api: apiType, url: 'https://example.com' },
-    locationLimits: {
-      minLatitude: 1,
-      maxLatitude: 2,
-      minLongitude: 3,
-      maxLongitude: 4
-    },
-    productCodes: {
-      [IceType.MILCHSHAKE]: [],
-      [IceType.MCFLURRY]: [],
-      [IceType.MCSUNDAE]: []
-    }
-  }
-}
-
 describe('refreshStoreCatalog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.getBearerToken.mockResolvedValue('token')
+    mocks.getClientId.mockReturnValue('client')
     mocks.generateCoordinatesMesh.mockReturnValue([
       { latitude: 1, longitude: 2 }
     ])
@@ -96,30 +82,23 @@ describe('refreshStoreCatalog', () => {
   })
 
   it('owns credentials, location spacing, discovery, and persistence for US', async () => {
-    const countryInfo = createCountryInfo(UsLocations.US, APIType.US)
-    mocks.getMetaForApi.mockResolvedValue({
-      token: 'token',
-      clientId: 'client',
-      countryInfos: [countryInfo]
-    })
-
     const result = await refreshStoreCatalog({
       apiType: APIType.US,
-      countryList: [UsLocations.US]
+      catalogScopes: [asCatalogScope(UsLocations.US)]
     })
 
-    expect(mocks.getMetaForApi).toHaveBeenCalledWith(
-      APIType.US,
-      [UsLocations.US],
-      true
-    )
+    expect(mocks.getBearerToken).toHaveBeenCalledWith(APIType.US)
+    expect(mocks.getClientId).toHaveBeenCalledWith(APIType.US)
     expect(mocks.generateCoordinatesMesh).toHaveBeenCalledWith(
-      countryInfo.locationLimits,
+      expect.any(Object),
       30
     )
     expect(mocks.discoverFromLocation).toHaveBeenCalledWith(
       { latitude: 1, longitude: 2 },
-      countryInfo,
+      expect.objectContaining({
+        country: UsLocations.US,
+        catalogScope: UsLocations.US
+      }),
       'token',
       'client'
     )
@@ -128,28 +107,18 @@ describe('refreshStoreCatalog', () => {
   })
 
   it('owns the wider location spacing for EU discovery', async () => {
-    const countryInfo = createCountryInfo(EuLocations.DE, APIType.EU)
-    mocks.getMetaForApi.mockResolvedValue({
-      token: 'token',
-      clientId: 'client',
-      countryInfos: [countryInfo]
+    await refreshStoreCatalog({
+      apiType: APIType.EU,
+      catalogScopes: [asCatalogScope(EuLocations.DE)]
     })
 
-    await refreshStoreCatalog({ apiType: APIType.EU })
-
     expect(mocks.generateCoordinatesMesh).toHaveBeenCalledWith(
-      countryInfo.locationLimits,
+      expect.any(Object),
       50
     )
   })
 
   it('uses URL discovery without requesting credentials for EL', async () => {
-    const countryInfo = createCountryInfo(ElLocations.AT, APIType.EL)
-    mocks.getMetaForApi.mockResolvedValue({
-      token: '',
-      clientId: '',
-      countryInfos: [countryInfo]
-    })
     mocks.discoverFromUrl.mockResolvedValue([
       {
         id: 'AT-1',
@@ -162,49 +131,46 @@ describe('refreshStoreCatalog', () => {
       }
     ])
 
-    const result = await refreshStoreCatalog({ apiType: APIType.EL })
+    const result = await refreshStoreCatalog({
+      apiType: APIType.EL,
+      catalogScopes: [asCatalogScope(ElLocations.AT)]
+    })
 
-    expect(mocks.getMetaForApi).toHaveBeenCalledWith(
-      APIType.EL,
-      undefined,
-      false
+    expect(mocks.getBearerToken).not.toHaveBeenCalled()
+    expect(mocks.getClientId).not.toHaveBeenCalled()
+    expect(mocks.discoverFromUrl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        country: ElLocations.AT,
+        catalogScope: ElLocations.AT
+      })
     )
-    expect(mocks.discoverFromUrl).toHaveBeenCalledWith(countryInfo)
     expect(mocks.generateCoordinatesMesh).not.toHaveBeenCalled()
     expect(result.storesPersisted).toBe(1)
   })
 
   it('rejects missing location-discovery credentials before network work', async () => {
-    mocks.getMetaForApi.mockResolvedValue({
-      token: '',
-      clientId: 'client',
-      countryInfos: []
-    })
+    mocks.getBearerToken.mockResolvedValue('')
 
-    await expect(
-      refreshStoreCatalog({ apiType: APIType.US })
-    ).rejects.toThrow('Bearer token is missing for US')
+    await expect(refreshStoreCatalog({ apiType: APIType.US })).rejects.toThrow(
+      'Bearer token is missing for US'
+    )
     expect(mocks.discoverFromLocation).not.toHaveBeenCalled()
     expect(mocks.recordScopeRefresh).not.toHaveBeenCalled()
   })
 
   it('rejects unsupported Store Catalog regions', async () => {
-    await expect(
-      refreshStoreCatalog({ apiType: APIType.HK })
-    ).rejects.toThrow('Store Catalog refresh is not supported for HK')
-    expect(mocks.getMetaForApi).not.toHaveBeenCalled()
+    await expect(refreshStoreCatalog({ apiType: APIType.HK })).rejects.toThrow(
+      'Store Catalog refresh is not supported for HK'
+    )
+    expect(mocks.getBearerToken).not.toHaveBeenCalled()
   })
 
   it('logs only allowlisted Axios failure fields', async () => {
     const consoleError = vi
       .spyOn(console, 'error')
       .mockImplementation(() => undefined)
-    const countryInfo = createCountryInfo(UsLocations.US, APIType.US)
-    mocks.getMetaForApi.mockResolvedValue({
-      token: 'bearer-secret',
-      clientId: 'client-secret',
-      countryInfos: [countryInfo]
-    })
+    mocks.getBearerToken.mockResolvedValue('bearer-secret')
+    mocks.getClientId.mockReturnValue('client-secret')
     mocks.discoverFromLocation.mockRejectedValue(
       Object.assign(
         new Error('Request to https://example.com?key=url-secret failed'),
@@ -225,16 +191,21 @@ describe('refreshStoreCatalog', () => {
     )
 
     await expect(
-      refreshStoreCatalog({ apiType: APIType.US })
+      refreshStoreCatalog({
+        apiType: APIType.US,
+        catalogScopes: [asCatalogScope(UsLocations.US)]
+      })
     ).rejects.toThrow('All store discovery requests failed')
 
     expect(consoleError).toHaveBeenCalledWith(
       'Store Catalog discovery request failed',
-      { apiType: APIType.US, country: UsLocations.US },
+      { apiType: APIType.US, market: UsLocations.US },
       {
-        name: 'AxiosError',
+        kind: 'http',
+        retryable: true,
         code: 'ERR_BAD_RESPONSE',
-        status: 503
+        status: 503,
+        message: 'Upstream HTTP request failed'
       }
     )
     const serializedLog = JSON.stringify(consoleError.mock.calls)

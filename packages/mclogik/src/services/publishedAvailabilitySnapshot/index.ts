@@ -2,17 +2,14 @@ import { prisma } from '@mcbroken/db/client'
 
 import { createS3StorageClient } from '../../clients/StorageClient'
 import { EXPORT_BUCKET } from '../../constants'
-import { createPosRepository } from '../../repositories'
 
 import {
   type PublishAvailabilitySnapshotResult,
   PublishedAvailabilitySnapshotModule
 } from './PublishedAvailabilitySnapshotModule'
 
-const posRepository = createPosRepository(prisma)
 let publishedAvailabilitySnapshotModule:
-  | PublishedAvailabilitySnapshotModule
-  | undefined
+  PublishedAvailabilitySnapshotModule | undefined
 
 function getPublishedAvailabilitySnapshotModule(): PublishedAvailabilitySnapshotModule {
   if (publishedAvailabilitySnapshotModule != null) {
@@ -29,11 +26,37 @@ function getPublishedAvailabilitySnapshotModule(): PublishedAvailabilitySnapshot
     publicRead: true
   })
 
-  publishedAvailabilitySnapshotModule = new PublishedAvailabilitySnapshotModule({
-    loadStores: () => posRepository.findActive(),
-    publishJson: (key, value) => storageClient.uploadJson(key, value),
-    now: Date.now
-  })
+  publishedAvailabilitySnapshotModule = new PublishedAvailabilitySnapshotModule(
+    {
+      loadStores: () =>
+        prisma.pos.findMany({
+          where: { closedAt: null },
+          select: {
+            id: true,
+            name: true,
+            latitude: true,
+            longitude: true,
+            country: true,
+            milkshakeStatus: true,
+            milkshakeCount: true,
+            milkshakeError: true,
+            mcFlurryStatus: true,
+            mcFlurryCount: true,
+            mcFlurryError: true,
+            mcSundaeStatus: true,
+            mcSundaeCount: true,
+            mcSundaeError: true,
+            lastChecked: true,
+            customItems: true,
+            hasMobileOrdering: true,
+            isResponsive: true
+          }
+        }),
+      publishJson: (key, value) => storageClient.uploadJson(key, value),
+      currentDate: () => new Date(),
+      now: Date.now
+    }
+  )
 
   return publishedAvailabilitySnapshotModule
 }
@@ -47,8 +70,14 @@ export async function publishAvailabilitySnapshot(): Promise<PublishAvailability
   return getPublishedAvailabilitySnapshotModule().publish()
 }
 
-export type { CustomItemType, GeoJson, GeoJsonPos } from './createGeoJson'
+export type { CustomItemType, GeoJson, GeoJsonPos } from '../../types/geoJson'
 export type {
+  LegacyPublishedAvailabilityStatistics,
   PublishAvailabilitySnapshotResult,
   PublishedAvailabilityStatistics
+} from './PublishedAvailabilitySnapshotModule'
+export {
+  convertLegacyPublishedAvailabilityStatistics,
+  PUBLISHED_AVAILABILITY_SNAPSHOT_SCHEMA_VERSION,
+  type PublishedAvailabilitySnapshot
 } from './PublishedAvailabilitySnapshotModule'

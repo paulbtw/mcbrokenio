@@ -3,7 +3,7 @@ import { type Prisma } from '@mcbroken/db'
 export enum ApLocations {
   AU = 'AU', // Australia
   AU2 = 'AU2', // Australia
-  HK = 'HK', // Hong Kong
+  HK = 'HK' // Hong Kong
 }
 
 export enum ElLocations {
@@ -66,7 +66,7 @@ export enum ElLocations {
   AE = 'AE', // United Arab Emirates
   UA = 'UA', // Ukraine
   VN = 'VN', // Vietnam
-  ZA = 'ZA', // South Africa
+  ZA = 'ZA' // South Africa
 }
 
 export enum UsLocations {
@@ -76,20 +76,44 @@ export enum UsLocations {
   US3 = 'US3', // United States
   US4 = 'US4', // United States
   US5 = 'US5', // United States Alaska
-  US6 = 'US6', // United States Hawaii
+  US6 = 'US6' // United States Hawaii
 }
 
 export enum EuLocations {
   DE = 'DE', // Germany
   NL = 'NL', // Netherlands
-  UK = 'UK', // United Kingdom
+  UK = 'UK' // United Kingdom
 }
 
 export enum UnknownLocations {
-  UNKNOWN = 'UNKNOWN',
+  UNKNOWN = 'UNKNOWN'
 }
 
-export type Locations = ApLocations | ElLocations | UsLocations | EuLocations | UnknownLocations
+export type Locations =
+  ApLocations | ElLocations | UsLocations | EuLocations | UnknownLocations
+
+declare const MARKET_CODE_BRAND: unique symbol
+declare const CATALOG_SCOPE_BRAND: unique symbol
+
+/** A commercial Market persisted on stores, such as US or CA. */
+export type MarketCode = string & {
+  readonly [MARKET_CODE_BRAND]: 'MarketCode'
+}
+
+/** A scheduled Store Catalog discovery slice, such as US2. */
+export type CatalogScope = Locations & {
+  readonly [CATALOG_SCOPE_BRAND]: 'CatalogScope'
+}
+
+/** Brands a trusted persisted or configured value as a Market code. */
+export function asMarketCode(value: string): MarketCode {
+  return value as MarketCode
+}
+
+/** Brands a configured location key as a Catalog Scope. */
+export function asCatalogScope(value: Locations): CatalogScope {
+  return value as CatalogScope
+}
 
 export interface ILocation {
   latitude: number
@@ -109,21 +133,20 @@ export enum APIType {
   EU = 'EU',
   HK = 'HK',
   UNKNOWN = 'UNKNOWN',
-  US = 'US',
+  US = 'US'
 }
 
 export enum IceType {
   MCFLURRY = 'MCFLURRY',
   MCSUNDAE = 'MCSUNDAE',
-  MILCHSHAKE = 'MILCHSHAKE',
+  MILCHSHAKE = 'MILCHSHAKE'
 }
 
 export const UNAVAILABLE_PRODUCT_MARKER = 'UNAVAILABLE' as const
 export const NOT_APPLICABLE_PRODUCT_MARKER = '__NOT_APPLICABLE__' as const
 
 export type ProductMarker =
-  | typeof UNAVAILABLE_PRODUCT_MARKER
-  | typeof NOT_APPLICABLE_PRODUCT_MARKER
+  typeof UNAVAILABLE_PRODUCT_MARKER | typeof NOT_APPLICABLE_PRODUCT_MARKER
 
 export interface UnavailableProductConfig {
   kind: 'unavailable'
@@ -133,8 +156,7 @@ export interface UnavailableProductConfig {
 export type ProductCodeConfig = string[] | UnavailableProductConfig
 
 export type NormalizedProductCodeConfig =
-  | { kind: 'tracked'; codes: string[] }
-  | { kind: 'unavailable' }
+  { kind: 'tracked'; codes: string[] } | { kind: 'unavailable' }
 
 export interface ICountryInfos {
   country: Locations

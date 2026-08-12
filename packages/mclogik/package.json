@@ -34,6 +34,7 @@
     "./sentry": "./src/sentry/index.ts",
     "./availabilityPolling": "./src/services/availabilityPolling/index.ts",
     "./storeCatalogRefresh": "./src/services/storeCatalogRefresh/index.ts",
-    "./publishedAvailabilitySnapshot": "./src/services/publishedAvailabilitySnapshot/index.ts"
+    "./publishedAvailabilitySnapshot": "./src/services/publishedAvailabilitySnapshot/index.ts",
+    "./publishedAvailabilitySnapshotResponse": "./src/services/publishedAvailabilitySnapshot/publishedAvailabilitySnapshotResponse.ts"
   }
 }

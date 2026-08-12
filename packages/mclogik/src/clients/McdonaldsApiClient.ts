@@ -2,6 +2,12 @@ import axios, { type AxiosInstance } from 'axios'
 
 import { type APIType } from '../types'
 
+import {
+  getUpstreamRecord,
+  requireUpstreamNumberArray,
+  requireUpstreamStringArray
+} from './upstreamResponse'
+
 /**
  * Response from the McDonald's API containing outage information
  */
@@ -59,28 +65,6 @@ export interface ApiClientConfig {
 }
 
 /**
- * Response format for EU/US/AU APIs
- */
-interface RestaurantInfoResponse {
-  response?: {
-    restaurant?: {
-      catalog?: {
-        outageProductCodes?: string[]
-      }
-    }
-  }
-}
-
-/**
- * Response format for EL API
- */
-interface RestaurantStatusResponse {
-  productOutages: {
-    productIDs: number[]
-  }
-}
-
-/**
  * API client for EU, US, and AU regions
  * These all use the same response format
  */
@@ -100,7 +84,7 @@ export class StandardApiClient implements McdonaldsApiClient {
   ): Promise<OutageResponse> {
     const url = `${this.config.baseUrl}/exp/v1/restaurant/${storeNumber}?filter=full&storeUniqueIdType=${this.config.storeIdType}`
 
-    const { data } = await this.httpClient.get<RestaurantInfoResponse>(url, {
+    const { data } = await this.httpClient.get<unknown>(url, {
       headers: {
         authorization: headers.authorization,
         'mcd-clientId': headers.clientId,
@@ -113,8 +97,12 @@ export class StandardApiClient implements McdonaldsApiClient {
       }
     })
 
-    const outageProductCodes =
-      data.response?.restaurant?.catalog?.outageProductCodes ?? []
+    const response = getUpstreamRecord(getUpstreamRecord(data)?.response)
+    const restaurant = getUpstreamRecord(response?.restaurant)
+    const catalog = getUpstreamRecord(restaurant?.catalog)
+    const outageProductCodes = requireUpstreamStringArray(
+      catalog?.outageProductCodes
+    )
 
     return { outageProductCodes }
   }
@@ -138,21 +126,21 @@ export class ElApiClient implements McdonaldsApiClient {
   ): Promise<OutageResponse> {
     const url = `${this.baseUrl}/exp/v1/menu/gmal/restaurants/${storeNumber}/status`
 
-    const { data } = await this.httpClient.get<RestaurantStatusResponse>(
-      url,
-      {
-        headers: {
-          authorization: headers.authorization,
-          'mcd-clientid': headers.clientId,
-          'mcd-sourceapp': 'GMAL'
-        }
+    const { data } = await this.httpClient.get<unknown>(url, {
+      headers: {
+        authorization: headers.authorization,
+        'mcd-clientid': headers.clientId,
+        'mcd-sourceapp': 'GMAL'
       }
-    )
+    })
 
     // EL responses use numbers; normalize to product-code strings.
-    const outageProductCodes = (data.productOutages?.productIDs ?? []).map(
-      (code) => code.toString()
+    const productOutages = getUpstreamRecord(
+      getUpstreamRecord(data)?.productOutages
     )
+    const outageProductCodes = requireUpstreamNumberArray(
+      productOutages?.productIDs
+    ).map((code) => code.toString())
 
     return { outageProductCodes }
   }

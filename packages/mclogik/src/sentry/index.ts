@@ -1,5 +1,8 @@
 import * as Sentry from '@sentry/aws-serverless'
 
+import { type NetworkFailure } from '../clients/networkFailure'
+import { type MarketCode } from '../types'
+
 // Ensures Sentry.init() is only called once per Lambda container
 let initializationAttempted = false
 
@@ -21,10 +24,11 @@ export function initSentry(config: SentryConfig): void {
 
   Sentry.init({
     dsn,
-    environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'production',
+    environment:
+      process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'production',
     initialScope: {
-      tags: { region: config.region },
-    },
+      tags: { region: config.region }
+    }
   })
 }
 
@@ -43,7 +47,7 @@ function logUnhandledError(error: unknown, context?: unknown): void {
       requestId,
       name: error.name,
       message: error.message,
-      stack: error.stack,
+      stack: error.stack
     })
     return
   }
@@ -51,7 +55,7 @@ function logUnhandledError(error: unknown, context?: unknown): void {
   console.error('Unhandled Lambda error', {
     functionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
     requestId,
-    error,
+    error
   })
 }
 
@@ -62,46 +66,33 @@ export function wrapHandler<TEvent = unknown, TResult = unknown>(
     callback?: unknown
   ) => Promise<TResult> | TResult
 ) {
-  return Sentry.wrapHandler(async (event: TEvent, context?: unknown, callback?: unknown) => {
-    try {
-      return await handler(event, context, callback)
-    } catch (error) {
-      logUnhandledError(error, context)
-      throw error
+  return Sentry.wrapHandler(
+    async (event: TEvent, context?: unknown, callback?: unknown) => {
+      try {
+        return await handler(event, context, callback)
+      } catch (error) {
+        logUnhandledError(error, context)
+        throw error
+      }
     }
-  })
+  )
 }
 
 export { Sentry }
 
 // --- Batch summary helpers ---
 
-interface CountryStats {
+interface MarketStats {
   total: number
   failed: number
 }
 
-export interface BatchFailureSample {
+export interface BatchFailureSample extends NetworkFailure {
   signature: string
   apiType: string
-  country: string
+  market: MarketCode
   storeId: string
   nationalStoreNumber: string
-  errorName: string
-  errorMessage: string
-  requestUrl?: string
-  httpStatus?: number
-  responseCode?: string
-  responseType?: string
-  responseMessage?: string
-  responseService?: string
-  responseErrors?: Array<{
-    code?: string
-    type?: string
-    message?: string
-    property?: string
-    service?: string
-  }>
 }
 
 export interface BatchSummary {
@@ -109,33 +100,33 @@ export interface BatchSummary {
   totalStores: number
   successCount: number
   failedCount: number
-  countryBreakdown: Record<string, CountryStats>
+  marketBreakdown: Record<string, MarketStats>
   durationMs: number
   sampleErrors?: BatchFailureSample[]
 }
 
 /**
  * Send a Sentry event summarizing a batch processing run.
- * Only fires when failure rate exceeds 10% or any country is fully down.
+ * Only fires when failure rate exceeds 10% or any Market is fully down.
  */
 export function captureBatchSummary(summary: BatchSummary): void {
-  const { totalStores, failedCount, countryBreakdown, apiType } = summary
+  const { totalStores, failedCount, marketBreakdown, apiType } = summary
 
   if (totalStores === 0) return
 
   const failureRate = failedCount / totalStores
 
-  const countriesFullyDown = Object.entries(countryBreakdown)
+  const marketsFullyDown = Object.entries(marketBreakdown)
     .filter(([, stats]) => stats.failed === stats.total && stats.total > 0)
-    .map(([country]) => country)
+    .map(([market]) => market)
 
-  if (failureRate <= 0.1 && countriesFullyDown.length === 0) return
+  if (failureRate <= 0.1 && marketsFullyDown.length === 0) return
 
-  const level = countriesFullyDown.length > 0 ? 'error' : 'warning'
+  const level = marketsFullyDown.length > 0 ? 'error' : 'warning'
 
   const message =
-    countriesFullyDown.length > 0
-      ? `${apiType} batch: ${countriesFullyDown.join(', ')} fully down (${failedCount}/${totalStores} failed)`
+    marketsFullyDown.length > 0
+      ? `${apiType} batch: ${marketsFullyDown.join(', ')} fully down (${failedCount}/${totalStores} failed)`
       : `${apiType} batch: high failure rate ${(failureRate * 100).toFixed(1)}% (${failedCount}/${totalStores} failed)`
 
   Sentry.withScope((scope) => {
@@ -148,12 +139,12 @@ export function captureBatchSummary(summary: BatchSummary): void {
       failedCount,
       failureRate: `${(failureRate * 100).toFixed(1)}%`,
       durationMs: summary.durationMs,
-      countriesFullyDown,
+      marketsFullyDown
     })
-    scope.setContext('country_breakdown', countryBreakdown)
+    scope.setContext('market_breakdown', marketBreakdown)
     if ((summary.sampleErrors?.length ?? 0) > 0) {
       scope.setContext('sample_errors', {
-        samples: summary.sampleErrors,
+        samples: summary.sampleErrors
       })
     }
 
@@ -172,6 +163,6 @@ export function addBreadcrumb(
     category: 'mcbroken',
     message,
     data,
-    level: 'info',
+    level: 'info'
   })
 }
