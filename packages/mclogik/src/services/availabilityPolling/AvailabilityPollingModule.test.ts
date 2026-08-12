@@ -1,4 +1,3 @@
-import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
 import { APIType, asMarketCode, UsLocations } from '../../types'
@@ -8,36 +7,16 @@ import {
   AvailabilityPollingModule,
   type AvailabilityPollRequest
 } from './AvailabilityPollingModule'
+import { type AvailabilityPollStore } from './availabilityPollTypes'
 
-function createStore(overrides: Partial<Pos> = {}): Pos {
+function createStore(
+  overrides: Partial<AvailabilityPollStore> = {}
+): AvailabilityPollStore {
   return {
     id: 'US-1',
     nationalStoreNumber: '1',
-    name: 'Store',
-    latitude: '1',
-    longitude: '2',
-    country: 'US',
-    hasMobileOrdering: true,
+    market: asMarketCode('US'),
     errorCounter: 0,
-    isResponsive: true,
-    mcFlurryCount: 0,
-    mcFlurryError: 0,
-    mcFlurryStatus: 'UNKNOWN',
-    mcSundaeCount: 0,
-    mcSundaeError: 0,
-    mcSundaeStatus: 'UNKNOWN',
-    milkshakeCount: 0,
-    milkshakeError: 0,
-    milkshakeStatus: 'UNKNOWN',
-    customItems: [],
-    lastChecked: null,
-    lastCatalogSeenAt: new Date('2026-01-01T00:00:00.000Z'),
-    lastCatalogSeenCycle: null,
-    missingCatalogCycles: 0,
-    lastMissingCatalogCycle: null,
-    closedAt: null,
-    createdAt: new Date('2026-01-01T00:00:00.000Z'),
-    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides
   }
 }
@@ -55,7 +34,7 @@ function createAvailability() {
   }
 }
 
-function createDependencies(stores: Pos[]) {
+function createDependencies(stores: AvailabilityPollStore[]) {
   const dependencies: AvailabilityPollingDependencies = {
     getDefaultMarkets: vi.fn().mockReturnValue([asMarketCode('US')]),
     findEligibleStores: vi.fn().mockResolvedValue(stores),
@@ -74,7 +53,10 @@ describe('AvailabilityPollingModule', () => {
   it('turns typed batch outcomes into availability and health updates', async () => {
     const success = createStore({ id: 'US-ok', errorCounter: 2 })
     const failed = createStore({ id: 'US-fail', errorCounter: 2 })
-    const skipped = createStore({ id: 'US-skip', country: 'CA' })
+    const skipped = createStore({
+      id: 'US-skip',
+      market: asMarketCode('CA')
+    })
     const dependencies = createDependencies([success, failed, skipped])
     vi.mocked(dependencies.fetchProductAvailabilityBatch).mockResolvedValue([
       {

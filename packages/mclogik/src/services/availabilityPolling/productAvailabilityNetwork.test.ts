@@ -1,4 +1,3 @@
-import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
 import { InvalidUpstreamResponseError } from '../../clients/networkFailure'
@@ -12,6 +11,7 @@ import {
   UsLocations
 } from '../../types'
 
+import { type AvailabilityPollStore } from './availabilityPollTypes'
 import {
   ProductAvailabilityNetwork,
   type ProductAvailabilityNetworkDependencies
@@ -23,35 +23,15 @@ const TEST_LIMITER: RequestLimiter = {
   requestsPerLog: 1_000
 }
 
-function createStore(id: string, nationalStoreNumber: string): Pos {
+function createStore(
+  id: string,
+  nationalStoreNumber: string
+): AvailabilityPollStore {
   return {
     id,
     nationalStoreNumber,
-    name: id,
-    latitude: '1',
-    longitude: '2',
-    country: 'US',
-    hasMobileOrdering: true,
-    errorCounter: 0,
-    isResponsive: true,
-    mcFlurryCount: 0,
-    mcFlurryError: 0,
-    mcFlurryStatus: 'UNKNOWN',
-    mcSundaeCount: 0,
-    mcSundaeError: 0,
-    mcSundaeStatus: 'UNKNOWN',
-    milkshakeCount: 0,
-    milkshakeError: 0,
-    milkshakeStatus: 'UNKNOWN',
-    customItems: [],
-    lastChecked: null,
-    lastCatalogSeenAt: new Date('2026-01-01T00:00:00.000Z'),
-    lastCatalogSeenCycle: null,
-    missingCatalogCycles: 0,
-    lastMissingCatalogCycle: null,
-    closedAt: null,
-    createdAt: new Date('2026-01-01T00:00:00.000Z'),
-    updatedAt: new Date('2026-01-01T00:00:00.000Z')
+    market: asMarketCode('US'),
+    errorCounter: 0
   }
 }
 
@@ -102,14 +82,16 @@ describe('ProductAvailabilityNetwork', () => {
     const firstGate = new Promise<void>((resolve) => {
       releaseFirst = resolve
     })
-    fetchStoreProductAvailability.mockImplementation(async (store: Pos) => {
-      if (store.id === 'US-1') {
-        await firstGate
-      } else {
-        releaseFirst()
+    fetchStoreProductAvailability.mockImplementation(
+      async (store: AvailabilityPollStore) => {
+        if (store.id === 'US-1') {
+          await firstGate
+        } else {
+          releaseFirst()
+        }
+        return createAvailability()
       }
-      return createAvailability()
-    })
+    )
     const network = new ProductAvailabilityNetwork(dependencies)
     const stores = [createStore('US-1', '1'), createStore('US-2', '2')]
 
@@ -230,6 +212,7 @@ describe('ProductAvailabilityNetwork', () => {
       Object.assign(new Error('Bearer secret at https://private.example'), {
         name: 'AxiosError',
         isAxiosError: true,
+        code: 'ECONNRESET',
         config: { headers: { authorization: 'Bearer secret' } }
       })
     )
@@ -281,6 +264,24 @@ describe('ProductAvailabilityNetwork', () => {
         stores: [createStore('US-1', '1')]
       })
     ).rejects.toThrow('Unexpected response parser defect')
+  })
+
+  it('rejects Axios configuration defects instead of converting them to store health failures', async () => {
+    const { dependencies, fetchStoreProductAvailability } = createDependencies()
+    const configurationDefect = Object.assign(new Error('Invalid URL'), {
+      name: 'AxiosError',
+      isAxiosError: true,
+      code: 'ERR_INVALID_URL'
+    })
+    fetchStoreProductAvailability.mockRejectedValue(configurationDefect)
+    const network = new ProductAvailabilityNetwork(dependencies)
+
+    await expect(
+      network.fetchBatch({
+        apiType: APIType.US,
+        stores: [createStore('US-1', '1')]
+      })
+    ).rejects.toBe(configurationDefect)
   })
 
   it('rejects unsupported regional protocols before authentication', async () => {

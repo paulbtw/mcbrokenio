@@ -11,6 +11,21 @@ const MAX_DIAGNOSTIC_FIELD_LENGTH = 120
 const SAFE_DIAGNOSTIC_IDENTIFIER = /^[A-Za-z0-9_.:-]+$/
 const SENSITIVE_DIAGNOSTIC_CONTENT =
   /authorization|bearer|credential|https?:|secret|token/i
+const RETRYABLE_TRANSPORT_CODES = new Set([
+  'EAI_AGAIN',
+  'ECONNABORTED',
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'EHOSTDOWN',
+  'EHOSTUNREACH',
+  'ENETDOWN',
+  'ENETRESET',
+  'ENETUNREACH',
+  'ENOTFOUND',
+  'EPIPE',
+  'ERR_NETWORK',
+  'ETIMEDOUT'
+])
 
 export type NetworkFailureKind =
   'http' | 'invalid-response' | 'network' | 'timeout'
@@ -68,7 +83,15 @@ function getBoundedIdentifier(value: unknown): string | undefined {
 }
 
 function isRetryableStatus(status: number | undefined): boolean {
-  return status == null || status === 408 || status === 429 || status >= 500
+  return status === 408 || status === 429 || (status != null && status >= 500)
+}
+
+function isRetryableTransportCode(
+  transportCode: string | undefined
+): transportCode is string {
+  return (
+    transportCode != null && RETRYABLE_TRANSPORT_CODES.has(transportCode)
+  )
 }
 
 function getNetworkFailureKind(
@@ -125,11 +148,16 @@ export function createNetworkFailure(
   const code = getBoundedIdentifier(statusData?.code) ?? transportCode
   const type = getBoundedIdentifier(statusData?.type)
   const service = getBoundedIdentifier(statusData?.service)
+
+  if (status == null && !isRetryableTransportCode(transportCode)) {
+    return undefined
+  }
+
   const kind = getNetworkFailureKind(status, transportCode)
 
   return {
     kind,
-    retryable: isRetryableStatus(status),
+    retryable: status == null || isRetryableStatus(status),
     ...(status != null ? { status } : {}),
     ...(code != null ? { code } : {}),
     ...(type != null ? { type } : {}),

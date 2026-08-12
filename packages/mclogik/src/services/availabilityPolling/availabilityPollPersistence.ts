@@ -1,6 +1,6 @@
 import { type PrismaClient } from '@mcbroken/db'
 
-import { type MarketCode, type UpdatePos } from '../../types'
+import { asMarketCode, type MarketCode, type UpdatePos } from '../../types'
 import { chunkArray } from '../../utils/chunkArray'
 
 import { type AvailabilityPollStore } from './availabilityPollTypes'
@@ -25,7 +25,7 @@ export class PrismaAvailabilityPollPersistence implements AvailabilityPollPersis
   async loadEligibleStores(
     marketCodes: MarketCode[]
   ): Promise<AvailabilityPollStore[]> {
-    return this.prisma.pos.findMany({
+    const stores = await this.prisma.pos.findMany({
       where: {
         country: { in: marketCodes },
         hasMobileOrdering: true,
@@ -40,6 +40,11 @@ export class PrismaAvailabilityPollPersistence implements AvailabilityPollPersis
         errorCounter: true
       }
     })
+
+    return stores.map(({ country, ...store }) => ({
+      ...store,
+      market: asMarketCode(country)
+    }))
   }
 
   async saveUpdates(updates: UpdatePos[]): Promise<void> {

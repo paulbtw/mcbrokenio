@@ -1,11 +1,6 @@
 import { type StoreProductAvailability } from '../../clients/ProductAvailability'
 import { type BatchFailureSample, type BatchSummary } from '../../sentry'
-import {
-  APIType,
-  asMarketCode,
-  type MarketCode,
-  type UpdatePos
-} from '../../types'
+import { APIType, type MarketCode, type UpdatePos } from '../../types'
 
 import { type AvailabilityPollStore } from './availabilityPollTypes'
 import { type ProductAvailabilityBatchOutcome } from './productAvailabilityNetwork'
@@ -80,12 +75,11 @@ function createBatchFailureSample(
   outcome: ProductAvailabilityBatchOutcome & { outcome: 'failure' }
 ): BatchFailureSample {
   const { store, failure } = outcome
-  const market = asMarketCode(store.country)
 
   return {
-    signature: createFailureSignature(apiType, market, outcome),
+    signature: createFailureSignature(apiType, store.market, outcome),
     apiType,
-    market,
+    market: store.market,
     storeId: store.id,
     nationalStoreNumber: store.nationalStoreNumber,
     ...failure
@@ -170,9 +164,9 @@ export class AvailabilityPollingModule {
     const marketBreakdown: Record<string, AvailabilityPollMarketResult> = {}
     for (const store of stores) {
       const marketResult =
-        marketBreakdown[store.country] ?? createMarketResult()
+        marketBreakdown[store.market] ?? createMarketResult()
       marketResult.total++
-      marketBreakdown[store.country] = marketResult
+      marketBreakdown[store.market] = marketResult
     }
 
     const outcomes = await this.dependencies.fetchProductAvailabilityBatch({
@@ -188,7 +182,7 @@ export class AvailabilityPollingModule {
     const samplesBySignature = new Map<string, BatchFailureSample>()
 
     for (const outcome of outcomes) {
-      const marketResult = marketBreakdown[outcome.store.country]
+      const marketResult = marketBreakdown[outcome.store.market]
       if (marketResult == null) {
         throw new Error(
           `Product availability batch returned unknown store ${outcome.store.id}`

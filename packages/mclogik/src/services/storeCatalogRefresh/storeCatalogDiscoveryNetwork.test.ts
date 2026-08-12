@@ -245,6 +245,7 @@ describe('StoreCatalogDiscoveryNetwork', () => {
       Object.assign(new Error('Bearer secret at https://private.example'), {
         name: 'AxiosError',
         isAxiosError: true,
+        code: 'ECONNRESET',
         config: { headers: { authorization: 'Bearer secret' } }
       })
     )
@@ -295,5 +296,20 @@ describe('StoreCatalogDiscoveryNetwork', () => {
     await expect(
       network.discoverBatch({ apiType: APIType.US })
     ).rejects.toThrow('Unexpected response parser defect')
+  })
+
+  it('rejects Axios configuration defects instead of persisting incomplete observations', async () => {
+    const { dependencies, discoverFromLocation } = createDependencies()
+    const configurationDefect = Object.assign(new Error('Unsupported option'), {
+      name: 'AxiosError',
+      isAxiosError: true,
+      code: 'ERR_BAD_OPTION'
+    })
+    discoverFromLocation.mockRejectedValue(configurationDefect)
+    const network = new StoreCatalogDiscoveryNetwork(dependencies)
+
+    await expect(
+      network.discoverBatch({ apiType: APIType.US })
+    ).rejects.toBe(configurationDefect)
   })
 })

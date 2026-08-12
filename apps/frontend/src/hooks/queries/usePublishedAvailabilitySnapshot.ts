@@ -1,8 +1,9 @@
-import type {
-  GeoJson,
-  LegacyPublishedAvailabilityStatistics,
-  PublishedAvailabilitySnapshot,
-} from "@mcbroken/mclogik/publishedAvailabilitySnapshot";
+import type { PublishedAvailabilitySnapshot } from "@mcbroken/mclogik/publishedAvailabilitySnapshot";
+import {
+  requireLegacyAvailabilityMarkers,
+  requireLegacyAvailabilityStatistics,
+  requirePublishedAvailabilitySnapshot,
+} from "@mcbroken/mclogik/publishedAvailabilitySnapshotResponse";
 import type { MarketCode } from "@mcbroken/mclogik/types";
 import { type QueryFunction } from "@tanstack/react-query";
 import axios from "axios";
@@ -22,12 +23,15 @@ function isMissingSnapshot(error: unknown): boolean {
 async function fetchLegacySnapshotAssets(
   signal?: AbortSignal,
 ): Promise<PublishedAvailabilitySnapshot> {
-  const [{ data: markers }, { data: statistics }] = await Promise.all([
-    axios.get<GeoJson>("/marker.json", { signal }),
-    axios.get<LegacyPublishedAvailabilityStatistics[]>("/stats.json", {
-      signal,
-    }),
-  ]);
+  const [{ data: markerResponse }, { data: statisticsResponse }] =
+    await Promise.all([
+      axios.get<unknown>("/marker.json", { signal }),
+      axios.get<unknown>("/stats.json", {
+        signal,
+      }),
+    ]);
+  const markers = requireLegacyAvailabilityMarkers(markerResponse);
+  const statistics = requireLegacyAvailabilityStatistics(statisticsResponse);
 
   return {
     schemaVersion: 2,
@@ -45,12 +49,9 @@ export async function fetchPublishedAvailabilitySnapshot(
   signal?: AbortSignal,
 ): Promise<PublishedAvailabilitySnapshot> {
   try {
-    const { data } = await axios.get<PublishedAvailabilitySnapshot>(
-      "/snapshot.json",
-      { signal },
-    );
+    const { data } = await axios.get<unknown>("/snapshot.json", { signal });
 
-    return data;
+    return requirePublishedAvailabilitySnapshot(data);
   } catch (error) {
     if (!isMissingSnapshot(error)) throw error;
 

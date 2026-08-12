@@ -1,8 +1,8 @@
-import { type Pos } from '@mcbroken/db'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
   APIType,
+  asMarketCode,
   IceType,
   type ICountryInfos,
   type ProductCodeConfig,
@@ -14,6 +14,7 @@ import {
   calculateStoreProductAvailability,
   checkProductAvailability,
   createStoreProductAvailabilityFetcher,
+  type ProductAvailabilityStore,
   StoreProductAvailabilityFetcher
 } from './ProductAvailability'
 
@@ -295,34 +296,11 @@ describe('StoreProductAvailabilityFetcher', () => {
     fetchRestaurantOutages: vi.fn()
   })
 
-  const createMockPos = (overrides: Partial<Pos> = {}): Pos => ({
-    id: 'store-123',
+  const createMockStore = (
+    overrides: Partial<ProductAvailabilityStore> = {}
+  ): ProductAvailabilityStore => ({
     nationalStoreNumber: '12345',
-    name: 'Test Store',
-    latitude: '40.7128',
-    longitude: '-74.0060',
-    country: 'US',
-    hasMobileOrdering: true,
-    errorCounter: 0,
-    isResponsive: true,
-    mcFlurryCount: 0,
-    mcFlurryError: 0,
-    mcFlurryStatus: 'UNKNOWN',
-    mcSundaeCount: 0,
-    mcSundaeError: 0,
-    mcSundaeStatus: 'UNKNOWN',
-    milkshakeCount: 0,
-    milkshakeError: 0,
-    milkshakeStatus: 'UNKNOWN',
-    customItems: [],
-    lastChecked: null,
-    lastCatalogSeenAt: new Date(),
-    lastCatalogSeenCycle: null,
-    missingCatalogCycles: 0,
-    lastMissingCatalogCycle: null,
-    closedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    market: asMarketCode('US'),
     ...overrides
   })
 
@@ -347,11 +325,11 @@ describe('StoreProductAvailabilityFetcher', () => {
       })
 
       const fetcher = new StoreProductAvailabilityFetcher(mockApiClient)
-      const pos = createMockPos()
+      const store = createMockStore()
       const countryInfo = createCountryInfo()
 
       const result = await fetcher.fetchStoreProductAvailability(
-        pos,
+        store,
         countryInfo,
         'test-token',
         'test-client-id'
@@ -379,11 +357,11 @@ describe('StoreProductAvailabilityFetcher', () => {
       })
 
       const fetcher = new StoreProductAvailabilityFetcher(mockApiClient)
-      const pos = createMockPos()
+      const store = createMockStore()
       const countryInfo = createCountryInfo()
 
       const result = await fetcher.fetchStoreProductAvailability(
-        pos,
+        store,
         countryInfo,
         'test-token',
         'test-client-id'
@@ -401,12 +379,12 @@ describe('StoreProductAvailabilityFetcher', () => {
       )
 
       const fetcher = new StoreProductAvailabilityFetcher(mockApiClient)
-      const pos = createMockPos()
+      const store = createMockStore()
       const countryInfo = createCountryInfo()
 
       await expect(
         fetcher.fetchStoreProductAvailability(
-          pos,
+          store,
           countryInfo,
           'test-token',
           'test-client-id'

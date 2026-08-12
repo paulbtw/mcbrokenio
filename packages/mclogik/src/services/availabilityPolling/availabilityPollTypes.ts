@@ -1,7 +1,9 @@
-import { type Pos } from '@mcbroken/db'
+import { type MarketCode } from '../../types'
 
-/** The one persisted store projection shared across an Availability Poll. */
-export type AvailabilityPollStore = Pick<
-  Pos,
-  'id' | 'nationalStoreNumber' | 'country' | 'errorCounter'
->
+/** The domain store projection shared across one Availability Poll. */
+export interface AvailabilityPollStore {
+  id: string
+  nationalStoreNumber: string
+  market: MarketCode
+  errorCounter: number
+}

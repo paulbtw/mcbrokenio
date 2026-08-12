@@ -7,7 +7,7 @@ import {
 import { type StoreProductAvailability } from '../../clients/ProductAvailability'
 import { type RequestLimiter } from '../../constants/RateLimit'
 import { type MarketDefinition } from '../../markets/marketDefinitions'
-import { type APIType, asMarketCode, type MarketCode } from '../../types'
+import { type APIType, type MarketCode } from '../../types'
 import { createRateLimitedExecutor } from '../../utils/RateLimitedExecutor'
 
 import { type AvailabilityPollStore } from './availabilityPollTypes'
@@ -116,7 +116,7 @@ export class ProductAvailabilityNetwork {
     const plannedRequests: PlannedAvailabilityRequest[] = []
 
     stores.forEach((store, index) => {
-      const market = marketsByCode.get(asMarketCode(store.country))
+      const market = marketsByCode.get(store.market)
       if (market == null) {
         outcomes[index] = {
           outcome: 'skipped',

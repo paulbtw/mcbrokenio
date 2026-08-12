@@ -24,8 +24,49 @@ describe("Published Availability Snapshot query", () => {
     const snapshot = {
       schemaVersion: 2 as const,
       publishedAt: "2026-08-11T08:00:00.000Z",
-      markers: { type: "FeatureCollection" as const, features: [] },
-      statistics: [],
+      markers: {
+        type: "FeatureCollection" as const,
+        features: [
+          {
+            type: "Feature" as const,
+            geometry: {
+              type: "Point" as const,
+              coordinates: [13.4, 52.5, 0] as [number, number, number],
+            },
+            properties: {
+              hasMilchshake: "AVAILABLE" as const,
+              milkshakeCount: 1,
+              milkshakeErrorCount: 0,
+              hasMcSundae: "UNAVAILABLE" as const,
+              mcSundaeCount: 1,
+              mcSundaeErrorCount: 1,
+              hasMcFlurry: "PARTIAL_AVAILABLE" as const,
+              mcFlurryCount: 2,
+              mcFlurryErrorCount: 1,
+              lastChecked: null,
+              customItems: [],
+              name: "Berlin",
+              dot: "YELLOW" as const,
+              hasMobileOrdering: true,
+              isResponsive: true,
+              id: "DE-1",
+            },
+          },
+        ],
+      },
+      statistics: [
+        {
+          market: "DE",
+          total: 1,
+          trackable: 1,
+          availablemilkshakes: 1,
+          totalmilkshakes: 1,
+          availablemcflurry: 0,
+          totalmcflurry: 1,
+          availablemcsundae: 0,
+          totalmcsundae: 1,
+        },
+      ],
     };
     vi.mocked(axios.get).mockResolvedValue({ data: snapshot });
     const signal = new AbortController().signal;
@@ -34,6 +75,46 @@ describe("Published Availability Snapshot query", () => {
       snapshot,
     );
     expect(axios.get).toHaveBeenCalledWith("/snapshot.json", { signal });
+  });
+
+  it.each([
+    [
+      "unsupported schema version",
+      {
+        schemaVersion: 1,
+        publishedAt: "2026-08-11T08:00:00.000Z",
+        markers: { type: "FeatureCollection", features: [] },
+        statistics: [],
+      },
+    ],
+    [
+      "malformed markers",
+      {
+        schemaVersion: 2,
+        publishedAt: "2026-08-11T08:00:00.000Z",
+        markers: {
+          type: "FeatureCollection",
+          features: [{ type: "Feature" }],
+        },
+        statistics: [],
+      },
+    ],
+    [
+      "malformed statistics",
+      {
+        schemaVersion: 2,
+        publishedAt: "2026-08-11T08:00:00.000Z",
+        markers: { type: "FeatureCollection", features: [] },
+        statistics: [{ market: "US", total: "one" }],
+      },
+    ],
+  ])("rejects a canonical snapshot with %s", async (_reason, snapshot) => {
+    vi.mocked(axios.get).mockResolvedValue({ data: snapshot });
+
+    await expect(fetchPublishedAvailabilitySnapshot()).rejects.toThrow(
+      "Published availability snapshot response was invalid",
+    );
+    expect(axios.get).toHaveBeenCalledTimes(1);
   });
 
   it.each([403, 404])(

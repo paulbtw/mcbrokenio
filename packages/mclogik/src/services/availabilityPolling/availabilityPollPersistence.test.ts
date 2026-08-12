@@ -25,10 +25,17 @@ type _EligibleMarketInputIsBranded = Expect<
   Equal<EligibleMarketInput, MarketCode[]>
 >
 
-const STORE_PROJECTION: AvailabilityPollStore = {
+const PERSISTED_STORE_PROJECTION = {
   id: 'US-1',
   nationalStoreNumber: '1',
   country: 'US',
+  errorCounter: 0
+}
+
+const STORE_PROJECTION: AvailabilityPollStore = {
+  id: 'US-1',
+  nationalStoreNumber: '1',
+  market: asMarketCode('US'),
   errorCounter: 0
 }
 
@@ -57,7 +64,7 @@ describe('PrismaAvailabilityPollPersistence', () => {
     const { client, findMany } = createPrisma()
     const persistence = new PrismaAvailabilityPollPersistence(client)
 
-    findMany.mockResolvedValue([STORE_PROJECTION])
+    findMany.mockResolvedValue([PERSISTED_STORE_PROJECTION])
 
     await expect(
       persistence.loadEligibleStores([

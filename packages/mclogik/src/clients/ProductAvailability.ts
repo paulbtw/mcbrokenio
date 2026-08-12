@@ -1,6 +1,10 @@
-import { ItemStatus, type Pos } from '@mcbroken/db'
+import { ItemStatus } from '@mcbroken/db'
 
-import { type ICountryInfos, type ProductCodeConfig } from '../types'
+import {
+  type ICountryInfos,
+  type MarketCode,
+  type ProductCodeConfig
+} from '../types'
 import { normalizeProductCodeConfig } from '../utils/productCodeConfig'
 
 import {
@@ -26,6 +30,11 @@ export interface StoreProductAvailability {
   mcFlurry: ProductAvailability
   mcSundae: ProductAvailability
   custom: ProductAvailability[]
+}
+
+export interface ProductAvailabilityStore {
+  nationalStoreNumber: string
+  market: MarketCode
 }
 
 /**
@@ -135,14 +144,14 @@ export class StoreProductAvailabilityFetcher {
   /**
    * Fetch and calculate product availability for a store.
    *
-   * @param pos - Store to check
+   * @param store - Store to check
    * @param countryInfo - Country configuration with product codes
    * @param token - Bearer token for API authentication
    * @param clientId - Client ID for API authentication
    * @returns Product availability; network failures reject for polling health tracking
    */
   async fetchStoreProductAvailability(
-    pos: Pos,
+    store: ProductAvailabilityStore,
     countryInfo: ICountryInfos,
     token: string,
     clientId: string
@@ -150,11 +159,11 @@ export class StoreProductAvailabilityFetcher {
     const headers: McdonaldsRequestHeaders = {
       authorization: `Bearer ${token}`,
       clientId,
-      marketId: pos.country
+      marketId: store.market
     }
 
     const response = await this.apiClient.fetchRestaurantOutages(
-      pos.nationalStoreNumber,
+      store.nationalStoreNumber,
       headers
     )
 

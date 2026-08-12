@@ -46,6 +46,17 @@ describe('createNetworkFailure', () => {
     })
   })
 
+  it.each(['ERR_INVALID_URL', 'ERR_BAD_OPTION', 'ERR_NOT_SUPPORT'])(
+    'leaves the Axios configuration defect %s unclassified',
+    (code) => {
+      expect(createNetworkFailure(createAxiosFailure({ code }))).toBeUndefined()
+    }
+  )
+
+  it('leaves response-less Axios errors without a transport code unclassified', () => {
+    expect(createNetworkFailure(createAxiosFailure({}))).toBeUndefined()
+  })
+
   it.each([
     [400, false],
     [408, true],
