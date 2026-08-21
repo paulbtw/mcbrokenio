@@ -9,12 +9,14 @@ import {
   BASIC_TOKEN_EU,
   BASIC_TOKEN_US
 } from '../../constants'
+import { MCDONALDS_USER_AGENT } from '../../constants/mcdonaldsIdentity'
 import { APIType } from '../../types'
 
 const logger = new Logger('getBearerToken')
 // Two short retries absorb transient token read stalls without hiding sustained endpoint failures.
 const MAX_TOKEN_REQUEST_ATTEMPTS = 3
 const TOKEN_RETRY_BASE_DELAY_MS = 250
+const TOKEN_REQUEST_TIMEOUT_MS = 10_000
 
 type BearerAPIType = Exclude<APIType, APIType.UNKNOWN | APIType.HK>
 
@@ -40,12 +42,14 @@ export const getBearerTokenMeta: Record<
   }
 }
 
-function getHeaders(basicToken: string) {
+function getTokenRequestConfig(basicToken: string) {
   return {
     headers: {
       authorization: `Basic ${basicToken}`,
-      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
-    }
+      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'User-Agent': MCDONALDS_USER_AGENT
+    },
+    timeout: TOKEN_REQUEST_TIMEOUT_MS
   }
 }
 
@@ -63,7 +67,7 @@ function getErrorCode(error: unknown): string | undefined {
 }
 
 function isReadTimeout(error: unknown): boolean {
-  return getErrorCode(error) === 'ETIMEDOUT'
+  return ['ECONNABORTED', 'ETIMEDOUT'].includes(getErrorCode(error) ?? '')
 }
 
 export async function getBearerToken(apiType: APIType) {
@@ -84,7 +88,7 @@ export async function getBearerToken(apiType: APIType) {
       const { data } = await axios.post<unknown>(
         url,
         null,
-        getHeaders(basicToken)
+        getTokenRequestConfig(basicToken)
       )
       const response = getUpstreamRecord(getUpstreamRecord(data)?.response)
       const token = response?.token

@@ -58,8 +58,10 @@ describe('StandardApiClient', () => {
             'mcd-clientId': 'test-client-id',
             'mcd-sourceapp': 'GMA',
             'mcd-marketid': 'US',
-            'accept-language': 'en-US'
-          })
+            'accept-language': 'en-US',
+            'User-Agent': 'mcbroken/1.0'
+          }),
+          timeout: 10_000
         })
       )
     })
@@ -251,8 +253,10 @@ describe('ElApiClient', () => {
           headers: expect.objectContaining({
             authorization: 'Bearer test-token',
             'mcd-clientid': 'test-client-id',
-            'mcd-sourceapp': 'GMAL'
-          })
+            'mcd-sourceapp': 'GMAL',
+            'User-Agent': 'mcbroken/1.0'
+          }),
+          timeout: 10_000
         })
       )
     })

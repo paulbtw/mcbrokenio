@@ -40,7 +40,7 @@ describe('AxiosStoreDiscoveryClient', () => {
         }
       })
     } as unknown as AxiosInstance
-    const client = new AxiosStoreDiscoveryClient(httpClient, 'key', () => 'ua')
+    const client = new AxiosStoreDiscoveryClient(httpClient, 'key')
     const countryInfo = createCountryInfo()
 
     const stores = await client.discoverFromLocation(
@@ -57,7 +57,7 @@ describe('AxiosStoreDiscoveryClient', () => {
           authorization: 'Bearer token',
           'mcd-clientid': 'client-id',
           'mcd-marketid': 'US',
-          'User-Agent': 'ua'
+          'User-Agent': 'mcbroken/1.0'
         }),
         timeout: 10_000
       }
@@ -98,7 +98,10 @@ describe('AxiosStoreDiscoveryClient', () => {
 
     expect(httpClient.get).toHaveBeenCalledWith(
       'https://example.com/stores??acceptOffers=all&lab=false&key=secret-key',
-      { timeout: 10_000 }
+      {
+        headers: { 'User-Agent': 'mcbroken/1.0' },
+        timeout: 10_000
+      }
     )
     expect(stores).toEqual([
       expect.objectContaining({

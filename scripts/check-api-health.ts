@@ -16,8 +16,14 @@
  */
 
 import 'dotenv/config'
+
+import { MCDONALDS_USER_AGENT } from '@mcbroken/mclogik/constants'
 import axios from 'axios'
 
+import { KEY } from '../packages/mclogik/src/constants'
+import { CountryInfos } from '../packages/mclogik/src/constants/CountryInfos'
+import { getBearerToken } from '../packages/mclogik/src/services/token/getBearerToken'
+import { getClientId } from '../packages/mclogik/src/services/token/getClientId'
 import {
   APIType,
   ApLocations,
@@ -28,10 +34,8 @@ import {
   type Locations,
   UsLocations,
 } from '../packages/mclogik/src/types'
-import { KEY } from '../packages/mclogik/src/constants'
-import { CountryInfos } from '../packages/mclogik/src/constants/CountryInfos'
-import { getBearerToken } from '../packages/mclogik/src/services/token/getBearerToken'
-import { getClientId } from '../packages/mclogik/src/services/token/getClientId'
+
+const API_HEALTH_REQUEST_TIMEOUT_MS = 10_000
 
 // VPN region groupings
 const VPN_REGIONS = {
@@ -133,7 +137,8 @@ async function checkCountryApi(
       }
 
       const response = await axios.get(getElStoreListHealthCheckUrl(url), {
-        timeout: 10000,
+        timeout: API_HEALTH_REQUEST_TIMEOUT_MS,
+        headers: { 'User-Agent': MCDONALDS_USER_AGENT },
         validateStatus: (status) => status < 500,
       })
 
@@ -166,8 +171,9 @@ async function checkCountryApi(
     const testUrl = `${url}latitude=${latitude}&longitude=${longitude}`
 
     const response = await axios.get(testUrl, {
-      timeout: 10000,
+      timeout: API_HEALTH_REQUEST_TIMEOUT_MS,
       headers: {
+        'User-Agent': MCDONALDS_USER_AGENT,
         authorization: `Bearer ${token}`,
         'mcd-clientid': clientId,
         'mcd-sourceapp': 'GMA',

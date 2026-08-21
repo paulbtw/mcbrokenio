@@ -25,6 +25,12 @@ function createReadTimeoutError() {
   })
 }
 
+function createAxiosTimeoutError() {
+  return Object.assign(new Error('timeout of 10000ms exceeded'), {
+    code: 'ECONNABORTED'
+  })
+}
+
 describe('getBearerToken', () => {
   beforeEach(() => {
     vi.mocked(axios.post).mockReset()
@@ -40,11 +46,40 @@ describe('getBearerToken', () => {
     })
 
     await expect(getBearerToken(APIType.US)).resolves.toBe('bearer-token')
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://us-prod.api.mcd.com/v1/security/auth/token',
+      null,
+      {
+        headers: {
+          authorization: 'Basic us-client:secret',
+          'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'User-Agent': 'mcbroken/1.0'
+        },
+        timeout: 10_000
+      }
+    )
   })
 
   it('retries a transient read timeout before failing the availability poll', async () => {
     vi.useFakeTimers()
     const timeoutError = createReadTimeoutError()
+    vi.mocked(axios.post)
+      .mockRejectedValueOnce(timeoutError)
+      .mockResolvedValueOnce({
+        data: { response: { token: 'bearer-token' } }
+      })
+
+    const tokenPromise = getBearerToken(APIType.US)
+
+    await vi.runAllTimersAsync()
+
+    await expect(tokenPromise).resolves.toBe('bearer-token')
+    expect(axios.post).toHaveBeenCalledTimes(2)
+  })
+
+  it('retries a configured Axios timeout before failing the availability poll', async () => {
+    vi.useFakeTimers()
+    const timeoutError = createAxiosTimeoutError()
     vi.mocked(axios.post)
       .mockRejectedValueOnce(timeoutError)
       .mockResolvedValueOnce({

@@ -9,4 +9,10 @@ export const { API_KEY_AP } = process.env
 export const { EXPORT_BUCKET } = process.env
 
 export { CountryInfos } from './CountryInfos'
-export { defaultRequestLimiterAu, defaultRequestLimiterEu, defaultRequestLimiterUs, type RequestLimiter } from './RateLimit'
+export { MCDONALDS_USER_AGENT } from './mcdonaldsIdentity'
+export {
+  defaultRequestLimiterAu,
+  defaultRequestLimiterEu,
+  defaultRequestLimiterUs,
+  type RequestLimiter
+} from './RateLimit'

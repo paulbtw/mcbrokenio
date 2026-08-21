@@ -164,7 +164,8 @@ packages/mclogik/src/
 │       ├── getBearerToken.ts
 │       └── getClientId.ts
 ├── constants/
-│   └── index.ts                 # Regional configs
+│   ├── index.ts                 # Regional configs
+│   └── mcdonaldsIdentity.ts     # Stable identity for upstream requests
 ├── clients/
 │   ├── McdonaldsApiClient.ts    # Regional network adapters
 │   ├── networkFailure.ts        # Sanitized typed transport failures
@@ -175,8 +176,7 @@ packages/mclogik/src/
 │   └── marketDefinitions.ts     # Market and Catalog Scope selection
 └── utils/
     ├── generateCoordinatesMesh.ts
-    ├── chunkArray.ts
-    └── randomUserAgent.ts
+    └── chunkArray.ts
 ```
 
 ## Database Schema

@@ -1,8 +1,8 @@
 import axios, { type AxiosInstance } from 'axios'
 
 import { KEY } from '../constants'
+import { MCDONALDS_USER_AGENT } from '../constants/mcdonaldsIdentity'
 import { type CreatePos, type ICountryInfos, type ILocation } from '../types'
-import { randomUserAgent } from '../utils/randomUserAgent'
 
 import { InvalidUpstreamResponseError } from './networkFailure'
 import {
@@ -10,7 +10,7 @@ import {
   requireUpstreamStringArray
 } from './upstreamResponse'
 
-const STORE_DISCOVERY_TIMEOUT_MS = 10_000
+const STORE_DISCOVERY_REQUEST_TIMEOUT_MS = 10_000
 
 function requireRestaurantCollection(value: unknown): unknown[] {
   if (!Array.isArray(value)) {
@@ -104,8 +104,7 @@ export interface StoreDiscoveryClient {
 export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
   constructor(
     private readonly httpClient: AxiosInstance = axios,
-    private readonly apiKey = KEY,
-    private readonly createUserAgent: () => string | undefined = randomUserAgent
+    private readonly apiKey = KEY
   ) {}
 
   async discoverFromLocation(
@@ -118,9 +117,9 @@ export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
     const { data } = await this.httpClient.get<unknown>(
       `${getStores.url}latitude=${latitude}&longitude=${longitude}`,
       {
-        timeout: STORE_DISCOVERY_TIMEOUT_MS,
+        timeout: STORE_DISCOVERY_REQUEST_TIMEOUT_MS,
         headers: {
-          'User-Agent': this.createUserAgent(),
+          'User-Agent': MCDONALDS_USER_AGENT,
           authorization: `Bearer ${token}`,
           'mcd-clientid': clientId,
           'mcd-marketid': country,
@@ -142,7 +141,10 @@ export class AxiosStoreDiscoveryClient implements StoreDiscoveryClient {
     const { getStores } = countryInfo
     const { data } = await this.httpClient.get<unknown>(
       `${getStores.url}?acceptOffers=all&lab=false&key=${this.apiKey}`,
-      { timeout: STORE_DISCOVERY_TIMEOUT_MS }
+      {
+        headers: { 'User-Agent': MCDONALDS_USER_AGENT },
+        timeout: STORE_DISCOVERY_REQUEST_TIMEOUT_MS
+      }
     )
 
     const restaurants = requireRestaurantCollection(

@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios'
 
+import { MCDONALDS_USER_AGENT } from '../constants/mcdonaldsIdentity'
 import { type APIType } from '../types'
 
 import {
@@ -7,6 +8,8 @@ import {
   requireUpstreamNumberArray,
   requireUpstreamStringArray
 } from './upstreamResponse'
+
+const PRODUCT_AVAILABILITY_REQUEST_TIMEOUT_MS = 10_000
 
 /**
  * Response from the McDonald's API containing outage information
@@ -91,10 +94,12 @@ export class StandardApiClient implements McdonaldsApiClient {
         'mcd-sourceapp': this.config.sourceApp,
         'mcd-marketid': headers.marketId,
         'mcd-uuid': '"',
+        'User-Agent': MCDONALDS_USER_AGENT,
         ...(this.config.acceptLanguage && {
           'accept-language': this.config.acceptLanguage
         })
-      }
+      },
+      timeout: PRODUCT_AVAILABILITY_REQUEST_TIMEOUT_MS
     })
 
     const response = getUpstreamRecord(getUpstreamRecord(data)?.response)
@@ -130,8 +135,10 @@ export class ElApiClient implements McdonaldsApiClient {
       headers: {
         authorization: headers.authorization,
         'mcd-clientid': headers.clientId,
-        'mcd-sourceapp': 'GMAL'
-      }
+        'mcd-sourceapp': 'GMAL',
+        'User-Agent': MCDONALDS_USER_AGENT
+      },
+      timeout: PRODUCT_AVAILABILITY_REQUEST_TIMEOUT_MS
     })
 
     // EL responses use numbers; normalize to product-code strings.
